@@ -1,0 +1,31 @@
+{
+  "name": "gdi-monolith",
+  "version": "1.0.0",
+  "description": "Monolito profesional React + Node.js + PostgreSQL",
+  "main": "server/src/server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build": "cd client && npm run build",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "cd client && npm test",
+    "test:server": "cd server && npm test",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "prisma:migrate": "cd server && npx prisma migrate dev",
+    "prisma:generate": "cd server && npx prisma generate",
+    "prisma:studio": "cd server && npx prisma studio"
+  },
+  "keywords": [
+    "react",
+    "nodejs",
+    "postgresql",
+    "monolith",
+    "fullstack"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

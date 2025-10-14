@@ -1,0 +1,560 @@
+// ==================== WAREHOUSES & BOXES ====================
+
+model Warehouse {
+  id           Int       @id @default(autoincrement())
+  companyId    Int       @map("company_id")
+  name         String    @db.VarChar
+  code         String    @db.VarChar
+  email        String?   @db.VarChar
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  company      Company   @relation(fields: [companyId], references: [id])
+  boxWarehouses BoxWarehouse[]
+
+  @@map("warehouses")
+}
+
+model Box {
+  id        Int       @id @default(autoincrement())
+  code      String    @db.VarChar
+  companyId Int       @map("company_id")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  company   Company   @relation(fields: [companyId], references: [id])
+  boxWarehouses BoxWarehouse[]
+  boxProceedings BoxProceeding[]
+
+  @@map("boxes")
+}
+
+model BoxWarehouse {
+  id          Int       @id @default(autoincrement())
+  warehouseId Int       @map("warehouse_id")
+  boxId       Int       @map("box_id")
+  island      String?   @db.VarChar
+  shelving    String?   @db.VarChar
+  shelf       String?   @db.VarChar
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  box         Box       @relation(fields: [boxId], references: [id])
+
+  @@map("box_warehouse")
+}
+
+model BoxProceeding {
+  id           Int       @id @default(autoincrement())
+  boxId        Int       @map("box_id")
+  proceedingId Int       @map("proceeding_id")
+  folder       String?   @db.VarChar
+  book         String?   @db.VarChar
+  other        String?   @db.VarChar
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  box          Box        @relation(fields: [boxId], references: [id])
+  proceeding   Proceeding @relation(fields: [proceedingId], references: [id])
+
+  @@map("box_proceeding")
+}
+
+// ==================== CORRESPONDENCE ====================
+
+model CorrespondenceType {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar
+  companyId   Int       @map("company_id")
+  description String?   @db.VarChar
+  expiration  Int?
+  areaId      Int       @map("area_id")
+  public      Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  company     Company   @relation(fields: [companyId], references: [id])
+  area        Area      @relation(fields: [areaId], references: [id])
+  correspondences Correspondence[]
+
+  @@map("correspondence_types")
+}
+
+model Correspondence {
+  id                  Int       @id @default(autoincrement())
+  title               String    @db.VarChar
+  comments            String?   @db.Text
+  answer              String?   @db.Text
+  inSettled           String?   @map("in_settled") @db.VarChar
+  outSettled          String?   @map("out_settled") @db.VarChar
+  status              String?   @db.VarChar
+  userType            String?   @map("user_type") @db.VarChar
+  userId              Int       @map("user_id")
+  correspondenceTypeId Int      @map("correspondence_type_id")
+  companyId           Int       @map("company_id")
+  code                String?   @db.VarChar
+  physicalDelivered   Boolean   @default(false) @map("physical_delivered")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  company             Company   @relation(fields: [companyId], references: [id])
+  user                User      @relation(fields: [userId], references: [id])
+  correspondenceType  CorrespondenceType @relation(fields: [correspondenceTypeId], references: [id])
+  correspondenceThreads CorrespondenceThread[]
+  correspondenceDocuments CorrespondenceDocument[]
+  sentEmails          SentEmail[]
+
+  @@map("correspondences")
+}
+
+model CorrespondenceThread {
+  id               Int       @id @default(autoincrement())
+  correspondenceId Int       @map("correspondence_id")
+  fromId           Int       @map("from_id")
+  toId             Int       @map("to_id")
+  message          String?   @db.Text
+  answer           String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  correspondence   Correspondence @relation(fields: [correspondenceId], references: [id])
+  from             User           @relation("CorrespondenceThreadFrom", fields: [fromId], references: [id])
+  to               User           @relation("CorrespondenceThreadTo", fields: [toId], references: [id])
+
+  @@map("correspondence_threads")
+}
+
+model CorrespondenceDocument {
+  id               Int       @id @default(autoincrement())
+  correspondenceId Int       @map("correspondence_id")
+  documentId       Int       @map("document_id")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  correspondence   Correspondence @relation(fields: [correspondenceId], references: [id])
+  document         Document       @relation(fields: [documentId], references: [id])
+
+  @@map("correspondence_document")
+}
+
+// ==================== EXTERNAL USERS ====================
+
+model ExternalUser {
+  id           Int       @id @default(autoincrement())
+  email        String    @db.VarChar
+  phone        String?   @db.VarChar
+  dni          String?   @db.VarChar
+  name         String    @db.VarChar
+  lastName     String    @map("last_name") @db.VarChar
+  state        String?   @db.VarChar
+  city         String?   @db.VarChar
+  address      String?   @db.VarChar
+  companyId    Int       @map("company_id")
+  password     String?   @db.VarChar
+  rememberToken String?  @map("remember_token") @db.VarChar
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  company      Company   @relation(fields: [companyId], references: [id])
+  externalUserProceedings ExternalUserProceeding[]
+
+  @@map("external_users")
+}
+
+model ExternalUserProceeding {
+  id             Int       @id @default(autoincrement())
+  externalUserId Int       @map("external_user_id")
+  proceedingId   Int       @map("proceeding_id")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  externalUser   ExternalUser @relation(fields: [externalUserId], references: [id])
+  proceeding     Proceeding   @relation(fields: [proceedingId], references: [id])
+
+  @@map("external_user_proceeding")
+}
+
+// ==================== EMAILS ====================
+
+model SentEmail {
+  id              Int       @id @default(autoincrement())
+  hash            String    @db.BpChar
+  headers         String?   @db.Text
+  subject         String?   @db.VarChar
+  content         String?   @db.Text
+  opens           Int?
+  clicks          Int?
+  messageId       String?   @map("message_id") @db.VarChar
+  meta            String?   @db.Text
+  recipientEmail  String?   @map("recipient_email") @db.VarChar
+  recipientName   String?   @map("recipient_name") @db.VarChar
+  senderEmail     String?   @map("sender_email") @db.VarChar
+  senderName      String?   @map("sender_name") @db.VarChar
+  clickedAt       DateTime? @map("clicked_at") @db.Timestamp
+  openedAt        DateTime? @map("opened_at") @db.Timestamp
+  correspondenceId Int?     @map("correspondence_id")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  correspondence  Correspondence? @relation(fields: [correspondenceId], references: [id])
+  urlClicked      SentEmailUrlClicked[]
+
+  @@map("sent_emails")
+}
+
+model SentEmailUrlClicked {
+  id          Int       @id @default(autoincrement())
+  sentEmailId Int       @map("sent_email_id")
+  url         String    @db.Text
+  hash        String    @db.BpChar
+  clicks      Int?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  sentEmail   SentEmail @relation(fields: [sentEmailId], references: [id])
+
+  @@map("sent_emails_url_clicked")
+}
+
+// ==================== TEMPLATES ====================
+
+model Template {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar
+  description String?   @db.VarChar
+  content     String    @db.Text
+  companyId   Int       @map("company_id")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  company     Company   @relation(fields: [companyId], references: [id])
+
+  @@map("templates")
+}
+
+// ==================== PERMISSIONS & ROLES ====================
+
+model Permission {
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar
+  guardName       String    @map("guard_name") @db.VarChar
+  permissionLevel Int?      @map("permission_level")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  modelHasPermissions ModelHasPermission[]
+  roleHasPermissions  RoleHasPermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar
+  guardName  String    @map("guard_name") @db.VarChar
+  roleLevel  Int?      @map("role_level")
+  companyId  Int?      @map("company_id")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  company    Company?  @relation(fields: [companyId], references: [id])
+  modelHasRoles ModelHasRole[]
+  roleHasPermissions RoleHasPermission[]
+
+  @@map("roles")
+}
+
+model ModelHasPermission {
+  permissionId Int    @map("permission_id")
+  modelType    String @map("model_type") @db.VarChar
+  modelId      Int    @map("model_id")
+
+  // Relations
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  user         User?      @relation(fields: [modelId], references: [id])
+
+  @@id([permissionId, modelId, modelType])
+  @@map("model_has_permissions")
+}
+
+model RoleHasPermission {
+  permissionId Int @map("permission_id")
+  roleId       Int @map("role_id")
+
+  // Relations
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id])
+
+  @@id([permissionId, roleId])
+  @@map("role_has_permissions")
+}
+
+model ModelHasRole {
+  roleId    Int    @map("role_id")
+  modelType String @map("model_type") @db.VarChar
+  modelId   Int    @map("model_id")
+
+  // Relations
+  role      Role   @relation(fields: [roleId], references: [id])
+  user      User?  @relation(fields: [modelId], references: [id])
+
+  @@id([roleId, modelId, modelType])
+  @@map("model_has_roles")
+}
+
+// ==================== AUDIT & TRACKING ====================
+
+model ActionEvent {
+  id              Int       @id @default(autoincrement())
+  batchId         String    @map("batch_id") @db.BpChar
+  userId          Int       @map("user_id")
+  name            String    @db.VarChar
+  actionableType  String    @map("actionable_type") @db.VarChar
+  actionableId    Int       @map("actionable_id")
+  targetType      String    @map("target_type") @db.VarChar
+  targetId        Int       @map("target_id")
+  modelType       String    @map("model_type") @db.VarChar
+  modelId         Int       @map("model_id")
+  fields          String?   @db.Text
+  status          String?   @db.VarChar
+  exception       String?   @db.Text
+  original        String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@map("action_events")
+}
+
+model Audit {
+  id             Int       @id @default(autoincrement())
+  userType       String?   @map("user_type") @db.VarChar
+  userId         Int?      @map("user_id")
+  event          String    @db.VarChar
+  auditableType  String    @map("auditable_type") @db.VarChar
+  auditableId    Int       @map("auditable_id")
+  oldValues      String?   @map("old_values") @db.Text
+  newValues      String?   @map("new_values") @db.Text
+  url            String?   @db.Text
+  ipAddress      String?   @map("ip_address") @db.Inet
+  userAgent      String?   @map("user_agent") @db.VarChar
+  tags           String?   @db.VarChar
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("audits")
+}
+
+model PendingTransition {
+  id                 Int       @id @default(autoincrement())
+  modelType          String    @map("model_type") @db.VarChar
+  modelId            Int       @map("model_id")
+  field              String    @db.VarChar
+  from               String    @db.VarChar
+  to                 String    @db.VarChar
+  customProperties   Json?     @map("custom_properties") @db.Json
+  responsibleType    String?   @map("responsible_type") @db.VarChar
+  responsibleId      Int?      @map("responsible_id")
+  transitionAt       DateTime  @map("transition_at") @db.Timestamp
+  appliedAt          DateTime? @map("applied_at") @db.Timestamp
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("pending_transitions")
+}
+
+model StateHistory {
+  id                 Int       @id @default(autoincrement())
+  modelType          String    @map("model_type") @db.VarChar
+  modelId            Int       @map("model_id")
+  field              String    @db.VarChar
+  from               String    @db.VarChar
+  to                 String    @db.VarChar
+  customProperties   Json?     @map("custom_properties") @db.Json
+  responsibleType    String?   @map("responsible_type") @db.VarChar
+  responsibleId      Int?      @map("responsible_id")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("state_histories")
+}
+
+// ==================== METRICS & ANALYTICS ====================
+
+model Metric {
+  id        Int       @id @default(autoincrement())
+  modelName String    @map("model_name") @db.VarChar
+  modelId   Int       @map("model_id")
+  count     Float     @db.Real
+  date      DateTime  @db.Date
+  period    String    @db.VarChar
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  @@map("metrics")
+}
+
+model Visit {
+  id           Int       @id @default(autoincrement())
+  primaryKey   String    @map("primary_key") @db.VarChar
+  secondaryKey String    @map("secondary_key") @db.VarChar
+  score        Int
+  list         Json      @db.Json
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp
+
+  @@map("visits")
+}
+
+// ==================== AUTHENTICATION & SESSIONS ====================
+
+model OtpVerification {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  phone      String    @db.VarChar
+  code       Int
+  verifiedAt DateTime? @map("verified_at") @db.Timestamp
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamp
+
+  // Relations
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@map("otp_verifications")
+}
+
+model Session {
+  id           String   @id @db.VarChar
+  userId       Int?     @map("user_id")
+  ipAddress    String?  @map("ip_address") @db.VarChar
+  userAgent    String?  @map("user_agent") @db.Text
+  payload      String   @db.Text
+  lastActivity Int      @map("last_activity")
+
+  // Relations
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@map("sessions")
+}
+
+model PasswordReset {
+  email     String   @db.VarChar
+  token     String   @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
+
+  @@map("password_resets")
+}
+
+// ==================== SUBSCRIPTIONS ====================
+
+model Subscription {
+  id           Int       @id @default(autoincrement())
+  companyId    Int       @map("company_id")
+  name         String    @db.VarChar
+  stripeId     String    @map("stripe_id") @db.VarChar
+  stripeStatus String    @map("stripe_status") @db.VarChar
+  stripePlan   String    @map("stripe_plan") @db.VarChar
+  quantity     Int
+  trialEndsAt  DateTime? @map("trial_ends_at") @db.Timestamp
+  endsAt       DateTime? @map("ends_at") @db.Timestamp
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  company      Company   @relation(fields: [companyId], references: [id])
+  subscriptionItems SubscriptionItem[]
+
+  @@map("subscriptions")
+}
+
+model SubscriptionItem {
+  id             Int       @id @default(autoincrement())
+  subscriptionId Int       @map("subscription_id")
+  stripeId       String    @map("stripe_id") @db.VarChar
+  stripePlan     String    @map("stripe_plan") @db.VarChar
+  quantity       Int
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  // Relations
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@map("subscription_items")
+}
+
+// ==================== SYSTEM TABLES ====================
+
+model Tag {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar
+  value       String    @db.VarChar
+  description String?   @db.VarChar
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp
+
+  @@map("tags")
+}
+
+model Notification {
+  id             Int       @id @default(autoincrement())
+  type           String    @db.VarChar
+  notifiableType String    @map("notifiable_type") @db.VarChar
+  notifiableId   Int       @map("notifiable_id")
+  data           String    @db.Text
+  readAt         DateTime? @map("read_at") @db.Timestamp
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("notifications")
+}
+
+model Migration {
+  id        Int    @id @default(autoincrement())
+  migration String @db.VarChar
+  batch     Int
+
+  @@map("migrations")
+}
+
+model FailedJob {
+  id         Int      @id @default(autoincrement())
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.Text
+  exception  String   @db.Text
+  failedAt   DateTime @default(now()) @map("failed_at") @db.Timestamp
+
+  @@map("failed_jobs")
+}
