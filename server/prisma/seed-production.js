@@ -13,6 +13,14 @@ async function main() {
     await prisma.company.deleteMany();
   }
 
+  // Verificar si ya existen datos
+  const existingUsers = await prisma.user.count();
+  if (existingUsers > 0) {
+    console.log('ℹ️  Los datos ya existen. Saltando seed...');
+    console.log('✅ Seed completado (sin cambios)');
+    return;
+  }
+
   // Crear empresas
   console.log('📦 Creando empresas...');
   const companies = await Promise.all([
