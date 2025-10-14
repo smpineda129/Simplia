@@ -34,7 +34,16 @@ const CompanyModalForm = ({ open, onClose, onSave, company }) => {
       setError('');
       await onSave(values);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al guardar la empresa');
+      console.error('Error completo:', err.response?.data);
+      const errorMessage = err.response?.data?.message || 'Error al guardar la empresa';
+      const validationErrors = err.response?.data?.errors;
+      
+      if (validationErrors && validationErrors.length > 0) {
+        const errorList = validationErrors.map(e => e.msg || e.message).join(', ');
+        setError(`${errorMessage}: ${errorList}`);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setSubmitting(false);
     }
