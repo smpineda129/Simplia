@@ -19,33 +19,24 @@ async function main() {
     prisma.company.create({
       data: {
         name: 'Empresa Demo 1',
+        identifier: 'ED1-2024',
         short: 'ED1',
-        nit: '900123456-1',
-        address: 'Calle 123 #45-67',
-        city: 'Bogotá',
-        phone: '+57 1 234 5678',
         email: 'contacto@empresa1.com',
       },
     }),
     prisma.company.create({
       data: {
         name: 'Empresa Demo 2',
+        identifier: 'ED2-2024',
         short: 'ED2',
-        nit: '900234567-2',
-        address: 'Carrera 45 #67-89',
-        city: 'Medellín',
-        phone: '+57 4 345 6789',
         email: 'contacto@empresa2.com',
       },
     }),
     prisma.company.create({
       data: {
         name: 'Empresa Demo 3',
+        identifier: 'ED3-2024',
         short: 'ED3',
-        nit: '900345678-3',
-        address: 'Avenida 67 #89-12',
-        city: 'Cali',
-        phone: '+57 2 456 7890',
         email: 'contacto@empresa3.com',
       },
     }),
