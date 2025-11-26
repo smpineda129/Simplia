@@ -181,7 +181,7 @@ model Correspondence {
   deletedAt                                        DateTime?                 @map("deleted_at") @db.Timestamp(0)
   code                                             String?                   @db.VarChar(191)
   physical_delivered                               Boolean                   @default(false)
-  type                                             String                    @db.VarChar(255)
+  type                                             String                    @default("general") @db.VarChar(255)
   tracking_number                                  String?                   @unique @db.VarChar(255)
   content                                          String?
   priority                                         String?                   @default("medium")
