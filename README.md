@@ -62,24 +62,36 @@ npm run install:all
 
 ### 2. Configurar variables de entorno
 
-Copia `.env.example` a `.env` y configura tus valores:
+Copia `server/.env.example` a `server/.env` y configura tus valores:
 
 ```bash
+cd server
 cp .env.example .env
+```
+
+**Importante:** Edita el archivo `server/.env` y configura la URL de tu base de datos PostgreSQL externa:
+
+```env
+DATABASE_URL="postgresql://usuario:contraseña@host:puerto/nombre_bd?schema=public"
+```
+
+Ejemplo:
+```env
+DATABASE_URL="postgresql://gdi_user:mypassword@db.example.com:5432/gdi_production?schema=public"
 ```
 
 ### 3. Configurar base de datos
 
-Asegúrate de tener PostgreSQL instalado y ejecutándose.
+La aplicación se conecta a una base de datos PostgreSQL externa ya desplegada.
 
 ```bash
 # Generar cliente Prisma
 npm run prisma:generate
 
-# Ejecutar migraciones
+# Ejecutar migraciones en la base de datos externa
 npm run prisma:migrate
 
-# (Opcional) Abrir Prisma Studio
+# (Opcional) Abrir Prisma Studio para ver los datos
 npm run prisma:studio
 ```
 
@@ -124,6 +136,7 @@ Consulta la carpeta `/docs` para más información:
 
 - [Arquitectura](./docs/architecture.md)
 - [Configuración inicial](./docs/setup.md)
+- [Configuración de Base de Datos Externa](./docs/database-setup.md)
 - [Referencia API](./docs/api-reference.md)
 - [Módulos](./docs/modules.md)
 

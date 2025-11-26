@@ -25,7 +25,7 @@ class WarehouseService {
         orderBy: { createdAt: 'desc' },
         include: {
           company: { select: { id: true, name: true, short: true } },
-          _count: { select: { boxes: true } },
+          _count: { select: { box_warehouse: true } },
         },
       }),
       prisma.warehouse.count({ where }),
@@ -47,9 +47,11 @@ class WarehouseService {
       where: { id: parseInt(id), deletedAt: null },
       include: {
         company: true,
-        boxes: {
-          where: { deletedAt: null },
-          orderBy: { code: 'asc' },
+        box_warehouse: {
+          where: { deleted_at: null },
+          include: {
+            boxes: true,
+          },
         },
       },
     });
@@ -66,8 +68,8 @@ class WarehouseService {
       data: {
         name: data.name,
         code: data.code,
-        companyId: parseInt(data.companyId),
-        address: data.address,
+        companyId: BigInt(data.companyId),
+        email: data.email,
       },
       include: {
         company: true,
@@ -91,7 +93,7 @@ class WarehouseService {
       data: {
         name: data.name,
         code: data.code,
-        address: data.address,
+        email: data.email,
       },
       include: {
         company: true,
@@ -125,8 +127,7 @@ class WarehouseService {
 
     const where = {
       deletedAt: null,
-      ...(companyId && { companyId: parseInt(companyId) }),
-      ...(warehouseId && { warehouseId: parseInt(warehouseId) }),
+      ...(companyId && { companyId: BigInt(companyId) }),
       ...(search && {
         code: { contains: search, mode: 'insensitive' },
       }),
@@ -140,7 +141,11 @@ class WarehouseService {
         orderBy: { createdAt: 'desc' },
         include: {
           company: { select: { id: true, name: true, short: true } },
-          warehouse: { select: { id: true, name: true, code: true } },
+          box_warehouse: {
+            include: {
+              warehouses: { select: { id: true, name: true, code: true } },
+            },
+          },
         },
       }),
       prisma.box.count({ where }),
@@ -162,7 +167,11 @@ class WarehouseService {
       where: { id: parseInt(id), deletedAt: null },
       include: {
         company: true,
-        warehouse: true,
+        box_warehouse: {
+          include: {
+            warehouses: true,
+          },
+        },
       },
     });
 
@@ -177,15 +186,10 @@ class WarehouseService {
     const box = await prisma.box.create({
       data: {
         code: data.code,
-        warehouseId: parseInt(data.warehouseId),
-        companyId: parseInt(data.companyId),
-        island: data.island,
-        shelf: data.shelf,
-        level: data.level,
+        companyId: BigInt(data.companyId),
       },
       include: {
         company: true,
-        warehouse: true,
       },
     });
 
@@ -205,14 +209,9 @@ class WarehouseService {
       where: { id: parseInt(id) },
       data: {
         code: data.code,
-        island: data.island,
-        shelf: data.shelf,
-        level: data.level,
-        ...(data.warehouseId && { warehouseId: parseInt(data.warehouseId) }),
       },
       include: {
         company: true,
-        warehouse: true,
       },
     });
 

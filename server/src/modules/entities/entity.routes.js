@@ -6,9 +6,9 @@ import { authenticate } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
-// Categories routes
-router.get('/categories', authenticate, entityController.getAllCategories);
-router.post('/categories', authenticate, createCategoryValidation, validate, entityController.createCategory);
+// Categories routes - DISABLED (tabla entity_categories no existe en BD importada)
+// router.get('/categories', authenticate, entityController.getAllCategories);
+// router.post('/categories', authenticate, createCategoryValidation, validate, entityController.createCategory);
 
 // Entities routes
 router.get('/', authenticate, entityController.getAll);

@@ -7,8 +7,7 @@ class RoleService {
     const skip = (page - 1) * limit;
 
     const where = {
-      companyId: companyId ? parseInt(companyId) : null,
-      deletedAt: null,
+      ...(companyId && { companyId: BigInt(companyId) }),
     };
 
     if (search) {
@@ -25,9 +24,6 @@ class RoleService {
         take: parseInt(limit),
         orderBy: { roleLevel: 'asc' },
         include: {
-          company: {
-            select: { id: true, name: true },
-          },
           roleHasPermissions: {
             include: {
               permission: true,
@@ -51,11 +47,8 @@ class RoleService {
 
   async getRoleById(id) {
     const role = await prisma.role.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: BigInt(id) },
       include: {
-        company: {
-          select: { id: true, name: true },
-        },
         roleHasPermissions: {
           include: {
             permission: {

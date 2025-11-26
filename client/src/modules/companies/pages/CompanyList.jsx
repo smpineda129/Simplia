@@ -118,8 +118,7 @@ const CompanyList = () => {
                 <Search />
               </InputAdornment>
             ),
-          }}
-        />
+          }} />
       </Box>
 
       {loading ? (
@@ -133,16 +132,14 @@ const CompanyList = () => {
           onDelete={handleDelete}
           page={page}
           onPageChange={setPage}
-          pagination={pagination}
-        />
+          pagination={pagination} />
       )}
 
       <CompanyModalForm
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSave={handleSave}
-        company={selectedCompany}
-      />
+        company={selectedCompany} />
 
       <Snackbar
         open={snackbar.open}

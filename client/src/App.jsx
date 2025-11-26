@@ -5,8 +5,6 @@ import AuthLayout from './layouts/AuthLayout';
 import LoginPage from './modules/auth/pages/LoginPage';
 import DashboardPage from './modules/dashboard/pages/DashboardPage';
 import { UserList, UserProfile, UserProfileView } from './modules/users';
-import { InventoryList } from './modules/inventory';
-import { ReportsDashboard } from './modules/reports';
 import { CompanyList } from './modules/companies';
 import CompanyDetail from './modules/companies/pages/CompanyDetail';
 import { AreaList } from './modules/areas';
@@ -50,8 +48,6 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/roles" element={<RoleList />} />
           <Route path="/permissions" element={<PermissionList />} />
-          <Route path="/inventory" element={<InventoryList />} />
-          <Route path="/reports" element={<ReportsDashboard />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 

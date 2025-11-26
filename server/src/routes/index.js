@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import authRoutes from '../modules/auth/auth.routes.js';
 import userRoutes from '../modules/users/user.routes.js';
-import inventoryRoutes from '../modules/inventory/inventory.routes.js';
-import reportsRoutes from '../modules/reports/reports.routes.js';
 import companyRoutes from '../modules/companies/company.routes.js';
 import areaRoutes from '../modules/areas/area.routes.js';
 import retentionRoutes from '../modules/retentions/retention.routes.js';
@@ -20,8 +18,6 @@ const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
-router.use('/inventory', inventoryRoutes);
-router.use('/reports', reportsRoutes);
 router.use('/companies', companyRoutes);
 router.use('/areas', areaRoutes);
 router.use('/retentions', retentionRoutes);

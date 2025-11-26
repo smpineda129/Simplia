@@ -9,7 +9,7 @@ class CorrespondenceService {
     // Obtener el último radicado del año
     const lastCorrespondence = await prisma.correspondence.findFirst({
       where: {
-        [type === 'incoming' ? 'incomingRadicado' : 'outgoingRadicado']: {
+        [type === 'incoming' ? 'in_settled' : 'out_settled']: {
           startsWith: `${prefix}-${year}-`,
         },
       },
@@ -19,8 +19,8 @@ class CorrespondenceService {
     let sequence = 1;
     if (lastCorrespondence) {
       const radicado = type === 'incoming' 
-        ? lastCorrespondence.incomingRadicado 
-        : lastCorrespondence.outgoingRadicado;
+        ? lastCorrespondence.in_settled 
+        : lastCorrespondence.out_settled;
       
       if (radicado) {
         const parts = radicado.split('-');
@@ -43,7 +43,7 @@ class CorrespondenceService {
       ...(search && {
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
-          { incomingRadicado: { contains: search, mode: 'insensitive' } },
+          { in_settled: { contains: search, mode: 'insensitive' } },
           { recipientName: { contains: search, mode: 'insensitive' } },
         ],
       }),
@@ -63,20 +63,21 @@ class CorrespondenceService {
               short: true,
             },
           },
-          correspondenceType: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          assignedUser: {
+          // TODO: Agregar relación correspondenceType al schema
+          // correspondenceType: {
+          //   select: {
+          //     id: true,
+          //     name: true,
+          //   },
+          // },
+          users_correspondences_sender_idTousers: {
             select: {
               id: true,
               name: true,
               email: true,
             },
           },
-          createdByUser: {
+          users_correspondences_recipient_idTousers: {
             select: {
               id: true,
               name: true,
@@ -107,36 +108,7 @@ class CorrespondenceService {
       where: { id: parseInt(id), deletedAt: null },
       include: {
         company: true,
-        correspondenceType: true,
-        assignedUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-        createdByUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-        threads: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'asc' },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
+        threads: true,
       },
     });
 
@@ -166,44 +138,16 @@ class CorrespondenceService {
         title: data.title,
         companyId: parseInt(data.companyId),
         correspondenceTypeId: parseInt(data.correspondenceTypeId),
-        recipientType: data.recipientType,
-        recipientName: data.recipientName,
-        recipientEmail: data.recipientEmail,
-        advisorCode: data.advisorCode,
-        assignedUserId: data.assignedUserId ? parseInt(data.assignedUserId) : null,
-        createdByUserId: createdBy,
         comments: data.comments,
-        incomingRadicado,
+        // Campos obligatorios en el schema
+        user_type: data.recipientType || 'internal',
+        user_id: Number(createdBy),
+        type: data.recipientType || 'internal',
+        in_settled: incomingRadicado,
         status: data.assignedUserId ? 'assigned' : 'registered',
       },
       include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
-        correspondenceType: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        assignedUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        createdByUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        company: true,
       },
     });
 
@@ -232,8 +176,6 @@ class CorrespondenceService {
       },
       include: {
         company: true,
-        correspondenceType: true,
-        assignedUser: true,
       },
     });
 
@@ -305,14 +247,11 @@ class CorrespondenceService {
     const updated = await prisma.correspondence.update({
       where: { id: parseInt(id) },
       data: {
-        outgoingRadicado,
+        out_settled: outgoingRadicado,
         status: 'closed',
-        closedAt: new Date(),
       },
       include: {
         company: true,
-        correspondenceType: true,
-        assignedUser: true,
       },
     });
 
@@ -328,7 +267,7 @@ class CorrespondenceService {
 
     const updated = await prisma.correspondence.update({
       where: { id: parseInt(id) },
-      data: { deliveredPhysically: true },
+      data: { physical_delivered: true },
     });
 
     return updated;

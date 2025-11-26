@@ -3,13 +3,17 @@ import { config } from '../config/env.js';
 
 export const tokenService = {
   generateAccessToken: (userId) => {
-    return jwt.sign({ userId }, config.jwt.secret, {
+    // Convertir BigInt a String para evitar errores de serialización
+    const userIdStr = typeof userId === 'bigint' ? userId.toString() : userId;
+    return jwt.sign({ userId: userIdStr }, config.jwt.secret, {
       expiresIn: config.jwt.expiresIn,
     });
   },
 
   generateRefreshToken: (userId) => {
-    return jwt.sign({ userId }, config.jwt.refreshSecret, {
+    // Convertir BigInt a String para evitar errores de serialización
+    const userIdStr = typeof userId === 'bigint' ? userId.toString() : userId;
+    return jwt.sign({ userId: userIdStr }, config.jwt.refreshSecret, {
       expiresIn: config.jwt.refreshExpiresIn,
     });
   },

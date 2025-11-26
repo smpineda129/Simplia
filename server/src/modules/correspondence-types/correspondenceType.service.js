@@ -24,22 +24,6 @@ class CorrespondenceTypeService {
         skip,
         take: parseInt(limit),
         orderBy: { createdAt: 'desc' },
-        include: {
-          company: {
-            select: {
-              id: true,
-              name: true,
-              short: true,
-            },
-          },
-          area: {
-            select: {
-              id: true,
-              name: true,
-              code: true,
-            },
-          },
-        },
       }),
       prisma.correspondenceType.count({ where }),
     ]);
@@ -58,22 +42,6 @@ class CorrespondenceTypeService {
   async getById(id) {
     const type = await prisma.correspondenceType.findFirst({
       where: { id: parseInt(id), deletedAt: null },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
-        area: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-      },
     });
 
     if (!type) {
@@ -84,30 +52,17 @@ class CorrespondenceTypeService {
   }
 
   async create(data) {
+    // Filtrar solo los campos permitidos (sin id)
+    const { id, createdAt, updatedAt, deletedAt, ...allowedData } = data;
+    
     const type = await prisma.correspondenceType.create({
       data: {
-        name: data.name,
-        description: data.description,
-        expiration: data.expiration ? parseInt(data.expiration) : null,
-        public: data.public || false,
-        companyId: parseInt(data.companyId),
-        areaId: data.areaId ? parseInt(data.areaId) : null,
-      },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
-        area: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
+        name: allowedData.name,
+        description: allowedData.description,
+        expiration: allowedData.expiration ? parseInt(allowedData.expiration) : 30, // Default 30 días
+        public: allowedData.public !== undefined ? allowedData.public : true,
+        companyId: parseInt(allowedData.companyId),
+        areaId: allowedData.areaId ? parseInt(allowedData.areaId) : null,
       },
     });
 
@@ -126,28 +81,12 @@ class CorrespondenceTypeService {
     const updated = await prisma.correspondenceType.update({
       where: { id: parseInt(id) },
       data: {
-        name: data.name,
-        description: data.description,
-        expiration: data.expiration ? parseInt(data.expiration) : null,
-        public: data.public,
+        ...(data.name && { name: data.name }),
+        ...(data.description && { description: data.description }),
+        ...(data.expiration && { expiration: parseInt(data.expiration) }),
+        ...(data.public !== undefined && { public: data.public }),
         ...(data.companyId && { companyId: parseInt(data.companyId) }),
-        areaId: data.areaId ? parseInt(data.areaId) : null,
-      },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
-        area: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
+        ...(data.areaId !== undefined && { areaId: data.areaId ? parseInt(data.areaId) : null }),
       },
     });
 

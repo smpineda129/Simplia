@@ -14,13 +14,12 @@ import {
   CardContent,
   Chip,
 } from '@mui/material';
-import { ArrowBack, Business, AccountTree, Mail, Warehouse, Inventory } from '@mui/icons-material';
+import { ArrowBack, Business, AccountTree, Mail, Warehouse, Inventory, ReplayCircleFilled } from '@mui/icons-material';
 import { companyService } from '../index';
 import CompanyAreas from '../components/CompanyAreas';
 import CompanyCorrespondenceTypes from '../components/CompanyCorrespondenceTypes';
 import CompanyWarehouses from '../components/CompanyWarehouses';
 import CompanyBoxes from '../components/CompanyBoxes';
-
 const CompanyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();

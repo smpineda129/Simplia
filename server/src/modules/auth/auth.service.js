@@ -7,7 +7,7 @@ export const authService = {
   register: async (userData) => {
     const { email, password, name } = userData;
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: { email },
     });
 
@@ -49,8 +49,11 @@ export const authService = {
   login: async (credentials) => {
     const { email, password } = credentials;
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: { 
+        email,
+        deletedAt: null
+      },
       include: {
         company: {
           select: {

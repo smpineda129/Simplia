@@ -5,8 +5,8 @@ import { dirname, resolve } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Cargar variables de entorno desde la raíz del proyecto
-dotenv.config({ path: resolve(__dirname, '../../../.env') });
+// Cargar variables de entorno desde la carpeta server
+dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 export const config = {
   port: process.env.PORT || 5000,

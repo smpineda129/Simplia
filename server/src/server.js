@@ -2,6 +2,11 @@ import app from './app.js';
 import { config } from './config/env.js';
 import { connectDB, disconnectDB } from './db/prisma.js';
 
+// Serializar BigInt a String en JSON
+BigInt.prototype.toJSON = function() {
+  return this.toString();
+};
+
 const startServer = async () => {
   try {
     // Conectar a la base de datos

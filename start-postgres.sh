@@ -2,8 +2,8 @@
 
 echo "🔧 Limpiando procesos anteriores..."
 
-# Matar cualquier proceso en el puerto 5432
-lsof -ti:5432 | xargs kill -9 2>/dev/null
+# Matar cualquier proceso en el puerto 5433
+lsof -ti:5433 | xargs kill -9 2>/dev/null
 
 # Esperar un momento
 sleep 2
@@ -17,7 +17,7 @@ docker rm -f gdi-postgres 2>/dev/null
 docker run --name gdi-postgres \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=gdi_db \
-  -p 5432:5432 \
+  -p 5433:5432 \
   -d postgres:14
 
 # Verificar si funcionó
@@ -25,7 +25,7 @@ if [ $? -eq 0 ]; then
     echo "✅ PostgreSQL está corriendo!"
     echo ""
     echo "📝 Tu archivo .env debe tener:"
-    echo 'DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gdi_db?schema=public"'
+    echo 'DATABASE_URL="postgresql://postgres:postgres@localhost:5433/gdi_db?schema=public"'
     echo ""
     echo "🚀 Ahora ejecuta:"
     echo "  npm run prisma:migrate"

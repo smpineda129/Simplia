@@ -61,7 +61,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
             <TableRow key={user.id} hover>
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell>
+              <TableCell className='max-w-[10vw]'>
                 <Chip
                   label={user.role}
                   color={getRoleColor(user.role)}

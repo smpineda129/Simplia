@@ -22,8 +22,6 @@ import {
 import {
   Dashboard,
   People,
-  Inventory,
-  Assessment,
   Business,
   AccountTree,
   Description,
@@ -95,8 +93,6 @@ const MainLayout = () => {
     { text: 'Permisos', icon: <VpnKey />, path: '/permissions' },
     { text: 'Roles', icon: <Security />, path: '/roles' },
     { text: 'Usuarios', icon: <People />, path: '/users' },
-    { text: 'Inventario', icon: <Inventory />, path: '/inventory' },
-    { text: 'Reportes', icon: <Assessment />, path: '/reports' },
   ];
 
   const drawer = (
