@@ -1,10 +1,21 @@
-# Arquitectura del Proyecto
+# Arquitectura del Proyecto GDI
 
-Este documento describe la arquitectura general del proyecto GDI, un monolito fullstack moderno.
+Este documento describe la arquitectura general del Sistema de Gestión Documental Integral (GDI), un monolito fullstack moderno diseñado para la gestión empresarial de documentos.
 
 ## Visión General
 
-GDI es un proyecto monolito que combina frontend y backend en un solo repositorio, facilitando el desarrollo y mantenimiento mientras mantiene una clara separación de responsabilidades.
+**GDI (Gestión Documental Integral)** es un sistema completo de gestión documental empresarial que combina frontend y backend en un solo repositorio monolítico, facilitando el desarrollo y mantenimiento mientras mantiene una clara separación de responsabilidades.
+
+### Propósito del Sistema
+
+GDI proporciona una solución integral para:
+- Gestión de correspondencia con radicados automáticos
+- Control de expedientes y archivos físicos/digitales
+- Tablas de Retención Documental (TRD)
+- Gestión de bodegas y ubicaciones físicas
+- Sistema de plantillas dinámicas
+- Control de acceso basado en roles y permisos (RBAC)
+- Soporte multi-tenant para múltiples empresas
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -422,6 +433,190 @@ npx prisma generate
 - PM2 para process management
 - Prometheus + Grafana para métricas
 
+## Módulos del Sistema
+
+### Módulos Implementados
+
+1. **Auth (Autenticación)**: Sistema JWT con refresh tokens
+2. **Users (Usuarios)**: Gestión completa con roles y permisos
+3. **Companies (Empresas)**: Multi-tenancy
+4. **Areas (Áreas)**: Departamentos y áreas organizacionales
+5. **Correspondences (Correspondencia)**: Radicados automáticos y tracking
+6. **Documents (Documentos)**: Gestión documental digital/física
+7. **Templates (Plantillas)**: Sistema de templates dinámicos
+8. **Proceedings (Expedientes)**: Gestión de expedientes
+9. **Retentions (Retenciones)**: Tablas de Retención Documental
+10. **Entities (Entidades)**: Gestión de entidades externas
+11. **Warehouses (Bodegas)**: Ubicaciones físicas y cajas
+12. **Roles**: Sistema de roles
+13. **Permissions**: Sistema de permisos granulares
+14. **Correspondence Types**: Tipos de correspondencia
+
+### Características Clave por Módulo
+
+#### Correspondencia
+- Generación automática de radicados de entrada y salida
+- Número de seguimiento único (tracking number)
+- Estados: registered, in_transit, delivered
+- Prioridades: low, medium, high, urgent
+- Hilos de conversación (threads)
+- Adjuntos JSON
+
+#### Expedientes
+- Código único de expediente
+- Vinculación con tablas de retención (TRD)
+- Estados de préstamo: custody, loan, returned
+- Vinculación con cajas físicas
+- Hilos de seguimiento
+
+#### Retenciones (TRD)
+- Series y subseries documentales
+- Tiempos de retención local y central
+- Disposiciones finales: CT, E, M, D, S
+- Vinculación con expedientes
+
+#### Bodegas
+- Gestión de ubicaciones físicas
+- Cajas con ubicación detallada (isla, estantería, estante)
+- Vinculación de cajas con expedientes
+
+## Diagrama de Relaciones de Base de Datos
+
+```
+┌──────────────┐
+│   Company    │
+└──────┬───────┘
+       │
+       ├─────────────┬─────────────┬─────────────┬─────────────┐
+       │             │             │             │             │
+       ▼             ▼             ▼             ▼             ▼
+   ┌──────┐     ┌──────┐     ┌──────┐     ┌──────┐     ┌──────┐
+   │ User │     │ Area │     │ Doc  │     │Proc. │     │Wareh.│
+   └──┬───┘     └──┬───┘     └──────┘     └──┬───┘     └──────┘
+      │            │                          │
+      │            │                          │
+      ▼            ▼                          ▼
+┌──────────────────────────┐        ┌──────────────┐
+│   Correspondence         │        │ Retention    │
+│  - in_settled (RAD)      │        │ - TRD        │
+│  - out_settled (RAD)     │        │ - Lines      │
+│  - tracking_number       │        └──────────────┘
+│  - threads               │
+└──────────────────────────┘
+```
+
+## Flujos de Negocio Principales
+
+### Flujo de Correspondencia
+
+```
+1. Usuario crea correspondencia
+   ↓
+2. Sistema genera radicado de entrada (in_settled)
+   ↓
+3. Se asigna área de destino y destinatario
+   ↓
+4. Estado inicial: "registered"
+   ↓
+5. Destinatario recibe y procesa
+   ↓
+6. Puede crear threads de respuesta
+   ↓
+7. Al responder, se genera radicado de salida (out_settled)
+   ↓
+8. Estado final: "delivered"
+```
+
+### Flujo de Expedientes
+
+```
+1. Crear expediente con código único
+   ↓
+2. Vincular con línea de retención (TRD)
+   ↓
+3. Agregar documentos al expediente
+   ↓
+4. Asignar a caja física
+   ↓
+5. Ubicar caja en bodega (isla/estante/estantería)
+   ↓
+6. Gestionar préstamos (custody → loan → returned)
+   ↓
+7. Aplicar disposición final según TRD
+```
+
+## Patrones de Diseño Implementados
+
+### Backend
+
+1. **Repository Pattern**: Prisma actúa como capa de abstracción de datos
+2. **Service Layer Pattern**: Lógica de negocio separada de controladores
+3. **Middleware Pattern**: Autenticación, validación, manejo de errores
+4. **Factory Pattern**: Generación de radicados y tracking numbers
+5. **Strategy Pattern**: Diferentes estrategias de validación por módulo
+
+### Frontend
+
+1. **Container/Presentational Pattern**: Separación de lógica y UI
+2. **Custom Hooks Pattern**: Lógica reutilizable
+3. **Context Pattern**: Estado global (autenticación, tema)
+4. **Module Pattern**: Organización por características de negocio
+
+## Decisiones de Arquitectura
+
+### ¿Por qué Monolito?
+
+**Ventajas**:
+- Simplicidad en desarrollo y despliegue
+- Transacciones ACID nativas
+- Menor latencia entre componentes
+- Más fácil de debuggear
+- Ideal para equipos pequeños/medianos
+
+**Preparado para Microservicios**:
+- Módulos independientes y desacoplados
+- Comunicación a través de servicios
+- Fácil extracción de módulos a servicios separados
+
+### ¿Por qué Prisma?
+
+- Type-safety completo
+- Migraciones automáticas
+- Excelente DX (Developer Experience)
+- Prisma Studio para visualización de datos
+- Soporte completo para PostgreSQL
+
+### ¿Por qué PostgreSQL?
+
+- ACID compliant
+- Excelente para datos relacionales complejos
+- JSON support para metadatos flexibles
+- Escalabilidad probada
+- Herramientas maduras de backup y replicación
+
+## Consideraciones de Rendimiento
+
+### Base de Datos
+
+- **Índices**: Creados en campos de búsqueda frecuente
+- **Paginación**: Implementada en todos los listados
+- **Soft Deletes**: Usando campo `deletedAt`
+- **Eager/Lazy Loading**: Controlado por Prisma select
+
+### API
+
+- **Validación temprana**: En capa de validación antes de lógica
+- **Async/Await**: Operaciones no bloqueantes
+- **Error Handling**: Centralizado y eficiente
+- **Logging**: Estructurado con Morgan
+
+### Frontend
+
+- **Code Splitting**: Lazy loading de rutas
+- **Memoization**: React.memo para componentes pesados
+- **Debouncing**: En búsquedas y filtros
+- **Virtual Scrolling**: Para listas largas (recomendado)
+
 ## Conclusión
 
 Esta arquitectura proporciona:
@@ -432,3 +627,14 @@ Esta arquitectura proporciona:
 - ✅ Testing comprehensivo
 - ✅ Documentación integrada
 - ✅ Seguridad robusta
+- ✅ Multi-tenancy nativo
+- ✅ Sistema RBAC completo
+- ✅ Trazabilidad y auditoría
+- ✅ Preparado para crecimiento
+
+## Referencias
+
+- [Guía del Desarrollador](./DEVELOPER_GUIDE.md)
+- [Referencia de API](./api-reference.md)
+- [Configuración de BD](./database-setup.md)
+- [Guía de Módulos](./modules.md)
