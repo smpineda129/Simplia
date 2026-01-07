@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
@@ -20,6 +20,42 @@ import { RoleList } from './modules/roles';
 import { PermissionList } from './modules/permissions';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import { useAuth } from './hooks/useAuth';
+
+// Guards auxiliares para Companies
+const CompanyListGuard = () => {
+  const { user } = useAuth();
+  const isOwner = user?.roles?.includes('Owner');
+
+  if (isOwner) {
+    return <CompanyList />;
+  }
+
+  if (user?.companyId) {
+    return <Navigate to={`/companies/${user.companyId}`} replace />;
+  }
+
+  return <Navigate to="/403" replace />;
+};
+
+const CompanyDetailGuard = () => {
+  const { user } = useAuth();
+  const params = useParams(); // Necesitamos useParams aquí
+  const isOwner = user?.roles?.includes('Owner');
+  const targetId = parseInt(params.id);
+
+  if (isOwner) {
+    return <CompanyDetail />;
+  }
+
+  // Verificar si es su propia empresa
+  if (user?.companyId && parseInt(user.companyId) === targetId) {
+    return <CompanyDetail />;
+  }
+
+  return <ForbiddenPage />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -37,7 +73,7 @@ function App() {
             path="/companies"
             element={
               <ProtectedRoute requiredPermission="company.view">
-                <CompanyList />
+                <CompanyListGuard />
               </ProtectedRoute>
             }
           />
@@ -45,7 +81,7 @@ function App() {
             path="/companies/:id"
             element={
               <ProtectedRoute requiredPermission="company.view">
-                <CompanyDetail />
+                <CompanyDetailGuard />
               </ProtectedRoute>
             }
           />

@@ -26,6 +26,9 @@ const DashboardPage = () => {
     return user.allPermissions.includes(permission);
   };
 
+  // Check if user is Owner
+  const isOwner = user?.roles?.includes('Owner');
+
   const cards = [
     {
       title: 'Usuarios',
@@ -37,10 +40,10 @@ const DashboardPage = () => {
     },
     {
       title: 'Empresas',
-      value: 'Ver todas',
+      value: isOwner ? 'Ver todas' : 'Mi Empresa',
       icon: <Business sx={{ fontSize: 40 }} />,
       color: '#f50057',
-      path: '/companies',
+      path: isOwner ? '/companies' : `/companies/${user?.companyId}`,
       permission: 'company.view',
     },
     {

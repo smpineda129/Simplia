@@ -89,9 +89,17 @@ const MainLayout = () => {
     return user.allPermissions.includes(permission);
   };
 
+  // Check if user is Owner
+  const isOwner = user?.roles?.includes('Owner');
+
   const menuItems = [
     { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard', permission: null },
-    { text: 'Empresas', icon: <Business />, path: '/companies', permission: 'company.view' },
+    {
+      text: 'Empresas',
+      icon: <Business />,
+      path: isOwner ? '/companies' : `/companies/${user?.companyId}`,
+      permission: 'company.view'
+    },
     { text: 'Correspondencia', icon: <Send />, path: '/correspondences', permission: 'correspondence.view' },
     { text: 'Plantillas', icon: <Article />, path: '/templates', permission: 'template.view' },
     { text: 'Expedientes', icon: <Folder />, path: '/proceedings', permission: 'proceeding.view' },
