@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { ArrowBack, AccountCircle, Email, Phone, Business } from '@mui/icons-material';
 import userService from '../services/userService';
+import UserAssociations from '../components/UserAssociations';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 
 const UserProfileView = () => {
@@ -81,11 +82,19 @@ const UserProfileView = () => {
             <Typography variant="h5" align="center" gutterBottom>
               {user.name}
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <Chip
-                label={user.role || 'Usuario'}
-                color={user.role === 'SUPER_ADMIN' ? 'error' : user.role === 'ADMIN' ? 'warning' : 'default'}
-              />
+            <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {(user.roles && user.roles.length > 0) ? (
+                user.roles.map((roleName) => (
+                  <Chip
+                    key={roleName}
+                    label={roleName}
+                    color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
+                    variant="outlined"
+                  />
+                ))
+              ) : (
+                <Chip label={user.role || 'Usuario'} color="default" />
+              )}
             </Box>
           </Grid>
 
@@ -172,6 +181,9 @@ const UserProfileView = () => {
           </Grid>
         </Grid>
       </Paper>
+
+      {/* User Associations Section */}
+      <UserAssociations userId={id} />
     </Box>
   );
 };

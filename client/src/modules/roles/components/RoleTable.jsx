@@ -34,10 +34,12 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
                   <TableCell>
                     <Box>
                       <Box sx={{ fontWeight: 500 }}>{role.name}</Box>
-                      {role.company && (
+                      {role.company ? (
                         <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
                           {role.company.name}
                         </Box>
+                      ) : (
+                        <Chip label="Sistema" size="small" sx={{ mt: 0.5, height: 20, fontSize: '0.7rem', bgcolor: 'grey.100' }} />
                       )}
                     </Box>
                   </TableCell>
@@ -66,23 +68,29 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Editar">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => onEdit(role)}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
+                    <Tooltip title={!role.companyId ? "Los roles del sistema no se pueden editar" : "Editar"}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => onEdit(role)}
+                          disabled={!role.companyId}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </span>
                     </Tooltip>
-                    <Tooltip title="Eliminar">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => onDelete(role.id)}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
+                    <Tooltip title={!role.companyId ? "Los roles del sistema no se pueden eliminar" : "Eliminar"}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => onDelete(role.id)}
+                          disabled={!role.companyId}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                   </TableCell>
                 </TableRow>

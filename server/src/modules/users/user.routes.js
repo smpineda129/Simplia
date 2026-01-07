@@ -5,6 +5,7 @@ import { validate } from '../../middlewares/validate.js';
 import { authenticate, authorize } from '../../middlewares/auth.js';
 import { hasPermission } from '../../middlewares/permission.middleware.js';
 import userRoleController from './userRole.controller.js';
+import userAreaController from './userArea.controller.js';
 
 const router = Router();
 
@@ -178,7 +179,7 @@ router.delete(
  *       200:
  *         description: Lista de roles del usuario
  */
-router.get('/:userId/roles', userRoleController.getUserRoles);
+router.get('/:userId/roles', hasPermission('user.view'), userRoleController.getUserRoles);
 
 /**
  * @swagger
@@ -198,7 +199,7 @@ router.get('/:userId/roles', userRoleController.getUserRoles);
  *       200:
  *         description: Lista de permisos del usuario
  */
-router.get('/:userId/permissions', userRoleController.getUserPermissions);
+router.get('/:userId/permissions', hasPermission('user.view'), userRoleController.getUserPermissions);
 
 /**
  * @swagger
@@ -229,7 +230,7 @@ router.get('/:userId/permissions', userRoleController.getUserPermissions);
  *       200:
  *         description: Rol asignado exitosamente
  */
-router.post('/:userId/roles', authorize('ADMIN'), userRoleController.assignRole);
+router.post('/:userId/roles', hasPermission('user.attach-role'), userRoleController.assignRole);
 
 /**
  * @swagger
@@ -254,7 +255,7 @@ router.post('/:userId/roles', authorize('ADMIN'), userRoleController.assignRole)
  *       200:
  *         description: Rol removido exitosamente
  */
-router.delete('/:userId/roles/:roleId', authorize('ADMIN'), userRoleController.removeRole);
+router.delete('/:userId/roles/:roleId', hasPermission('user.detach-role'), userRoleController.removeRole);
 
 /**
  * @swagger
@@ -287,6 +288,46 @@ router.delete('/:userId/roles/:roleId', authorize('ADMIN'), userRoleController.r
  *       200:
  *         description: Roles sincronizados exitosamente
  */
-router.post('/:userId/roles/sync', authorize('ADMIN'), userRoleController.syncRoles);
+router.post('/:userId/roles/sync', hasPermission('user.attach-role'), userRoleController.syncRoles);
+
+// ==================== RUTAS DE ÁREAS DE USUARIOS ====================
+
+/**
+ * @swagger
+ * /api/users/{userId}/areas:
+ *   post:
+ *     summary: Asignar un área a un usuario
+ *     tags: [Users]
+ */
+router.post('/:userId/areas', hasPermission('user.attach-area'), userAreaController.assignArea);
+
+/**
+ * @swagger
+ * /api/users/{userId}/areas/{areaId}:
+ *   delete:
+ *     summary: Remover un área de un usuario
+ *     tags: [Users]
+ */
+router.delete('/:userId/areas/:areaId', hasPermission('user.detach-area'), userAreaController.removeArea);
+
+// ==================== RUTAS DE PERMISOS DIRECTOS DE USUARIOS ====================
+
+/**
+ * @swagger
+ * /api/users/{userId}/permissions:
+ *   post:
+ *     summary: Asignar un permiso directo a un usuario
+ *     tags: [Users]
+ */
+router.post('/:userId/permissions', hasPermission('user.attach-permission'), userRoleController.assignPermission);
+
+/**
+ * @swagger
+ * /api/users/{userId}/permissions/{permissionId}:
+ *   delete:
+ *     summary: Remover un permiso directo de un usuario
+ *     tags: [Users]
+ */
+router.delete('/:userId/permissions/:permissionId', hasPermission('user.detach-permission'), userRoleController.removePermission);
 
 export default router;

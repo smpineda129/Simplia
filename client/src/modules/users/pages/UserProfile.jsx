@@ -9,10 +9,12 @@ import {
   TextField,
   Alert,
   Snackbar,
+  Chip,
 } from '@mui/material';
 import { AccountCircle, Edit, Save } from '@mui/icons-material';
 import { useAuth } from '../../../hooks/useAuth';
 import userService from '../services/userService';
+import UserAssociations from '../components/UserAssociations';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 
 const UserProfile = () => {
@@ -51,12 +53,12 @@ const UserProfile = () => {
     try {
       setLoading(true);
       await userService.update(user.userId, formData);
-      
+
       // Actualizar el contexto de autenticación
       if (updateUser) {
         updateUser({ ...user, ...formData });
       }
-      
+
       showSnackbar('Perfil actualizado exitosamente', 'success');
       setEditing(false);
     } catch (error) {
@@ -109,9 +111,23 @@ const UserProfile = () => {
             <Typography variant="h5" align="center" gutterBottom>
               {user.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary" align="center" gutterBottom>
-              Rol: {user.role || 'Usuario'}
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+              {(user.roles && user.roles.length > 0) ? (
+                user.roles.map((roleName) => (
+                  <Chip
+                    key={roleName}
+                    label={roleName}
+                    size="small"
+                    color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
+                    variant="outlined"
+                  />
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Rol: {user.role || 'Usuario'}
+                </Typography>
+              )}
+            </Box>
             <Typography variant="body2" color="text.secondary" align="center" gutterBottom>
               {user.email}
             </Typography>
@@ -261,12 +277,12 @@ const UserProfile = () => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Rol"
-                  value={user.role || 'N/A'}
-                  disabled
-                />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Roles</Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                    {user.roles?.map(r => <Chip key={r} label={r} size="small" />) || <Chip label={user.role || 'Usuario'} size="small" />}
+                  </Box>
+                </Box>
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -309,6 +325,9 @@ const UserProfile = () => {
           )}
         </Grid>
       </Paper>
+
+      {/* User Associations Section */}
+      <UserAssociations userId={user.userId || user.id} />
 
       <Snackbar
         open={snackbar.open}

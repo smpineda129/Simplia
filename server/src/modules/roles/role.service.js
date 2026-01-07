@@ -7,7 +7,14 @@ class RoleService {
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(companyId && { companyId: BigInt(companyId) }),
+      ...(companyId ? {
+        OR: [
+          { companyId: BigInt(companyId) },
+          { companyId: null }
+        ]
+      } : {
+        companyId: null
+      })
     };
 
     if (search) {
@@ -98,6 +105,10 @@ class RoleService {
   }
 
   async updateRole(id, data) {
+    const role = await this.getRoleById(id);
+    if (!role.companyId) {
+      throw new Error('No se pueden modificar roles del sistema');
+    }
     const { name, guardName, roleLevel, companyId, permissions } = data;
 
     // Actualizar rol
@@ -133,11 +144,15 @@ class RoleService {
   }
 
   async deleteRole(id) {
+    const role = await this.getRoleById(id);
+    if (!role.companyId) {
+      throw new Error('No se pueden eliminar roles del sistema');
+    }
     // Verificar si hay usuarios con este rol
     const usersWithRole = await prisma.modelHasRole.count({
       where: {
         roleId: parseInt(id),
-        modelType: 'User',
+        modelType: 'App\\Models\\User',
       },
     });
 
@@ -170,6 +185,10 @@ class RoleService {
   }
 
   async syncRolePermissions(roleId, permissionIds) {
+    const role = await this.getRoleById(roleId);
+    if (!role.companyId) {
+      throw new Error('No se pueden modificar permisos de roles del sistema');
+    }
     // Eliminar permisos existentes
     await prisma.roleHasPermission.deleteMany({
       where: { roleId: parseInt(roleId) },

@@ -25,6 +25,49 @@ const userService = {
     const response = await axiosInstance.delete(`/users/${id}`);
     return response.data;
   },
+
+  // Role management
+  assignRole: async (userId, roleId) => {
+    const response = await axiosInstance.post(`/users/${userId}/roles`, { roleId });
+    return response.data;
+  },
+
+  removeRole: async (userId, roleId) => {
+    const response = await axiosInstance.delete(`/users/${userId}/roles/${roleId}`);
+    return response.data;
+  },
+
+  getUserRoles: async (userId) => {
+    const response = await axiosInstance.get(`/users/${userId}/roles`);
+    return response.data;
+  },
+
+  // Area management
+  assignArea: async (userId, areaId) => {
+    const response = await axiosInstance.post(`/users/${userId}/areas`, { areaId });
+    return response.data;
+  },
+
+  removeArea: async (userId, areaId) => {
+    const response = await axiosInstance.delete(`/users/${userId}/areas/${areaId}`);
+    return response.data;
+  },
+
+  // Permission management
+  assignPermission: async (userId, permissionId) => {
+    const response = await axiosInstance.post(`/users/${userId}/permissions`, { permissionId });
+    return response.data;
+  },
+
+  removePermission: async (userId, permissionId) => {
+    const response = await axiosInstance.delete(`/users/${userId}/permissions/${permissionId}`);
+    return response.data;
+  },
+
+  getUserPermissions: async (userId) => {
+    const response = await axiosInstance.get(`/users/${userId}/permissions`);
+    return response.data;
+  },
 };
 
 export default userService;
