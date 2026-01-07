@@ -24,6 +24,7 @@ export const authenticate = async (req, res, next) => {
         email: true,
         name: true,
         role: true,
+        companyId: true,
       },
     });
 
@@ -33,6 +34,17 @@ export const authenticate = async (req, res, next) => {
         message: 'Usuario no encontrado',
       });
     }
+
+    // Fetch Roles manually
+    const userRoles = await prisma.modelHasRole.findMany({
+      where: {
+        modelId: user.id,
+        modelType: 'App\\Models\\User',
+      },
+      include: { role: true },
+    });
+
+    user.roles = userRoles.map((ur) => ur.role.name);
 
     req.user = user;
     next();

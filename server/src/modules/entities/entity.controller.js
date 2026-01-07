@@ -3,6 +3,11 @@ import entityService from './entity.service.js';
 class EntityController {
   async getAll(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, categoryId, page, limit } = req.query;
       const result = await entityService.getAll({ search, companyId, categoryId, page, limit });
 

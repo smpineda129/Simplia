@@ -3,6 +3,11 @@ import correspondenceTypeService from './correspondenceType.service.js';
 class CorrespondenceTypeController {
   async getAll(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, areaId, publicOnly, page, limit } = req.query;
       const result = await correspondenceTypeService.getAll({ search, companyId, areaId, publicOnly, page, limit });
 

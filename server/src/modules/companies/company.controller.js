@@ -3,8 +3,14 @@ import companyService from './company.service.js';
 class CompanyController {
   async getAll(req, res) {
     try {
-      const { search, page, limit } = req.query;
-      const result = await companyService.getAll({ search, page, limit });
+      // Enforce company scope for non-owners
+      const isOwner = req.user.roles.includes('Owner');
+      if (!isOwner && req.user.companyId) {
+        req.query.id = req.user.companyId;
+      }
+
+      const { search, page, limit, id } = req.query;
+      const result = await companyService.getAll({ search, page, limit, id });
 
       res.json({
         success: true,

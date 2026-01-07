@@ -3,6 +3,11 @@ import documentService from './document.service.js';
 class DocumentController {
   async getAll(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, proceedingId, page, limit } = req.query;
       const result = await documentService.getAll({ search, companyId, proceedingId, page, limit });
 
