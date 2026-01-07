@@ -3,7 +3,7 @@ import { userController } from './user.controller.js';
 import { userValidation } from './user.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate, authorize } from '../../middlewares/auth.js';
-import { hasPermission } from '../../middlewares/permission.middleware.js';
+import { hasPermission, isSelfOrHasPermission } from '../../middlewares/permission.middleware.js';
 import userRoleController from './userRole.controller.js';
 import userAreaController from './userArea.controller.js';
 
@@ -48,7 +48,7 @@ router.get('/', hasPermission('user.view'), userController.getAll);
  *       404:
  *         description: Usuario no encontrado
  */
-router.get('/:id', hasPermission('user.view'), userValidation.getById, validate, userController.getById);
+router.get('/:id', isSelfOrHasPermission('user.view', 'id'), userValidation.getById, validate, userController.getById);
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.delete(
  *       200:
  *         description: Lista de roles del usuario
  */
-router.get('/:userId/roles', hasPermission('user.view'), userRoleController.getUserRoles);
+router.get('/:userId/roles', isSelfOrHasPermission('user.view', 'userId'), userRoleController.getUserRoles);
 
 /**
  * @swagger
@@ -199,7 +199,7 @@ router.get('/:userId/roles', hasPermission('user.view'), userRoleController.getU
  *       200:
  *         description: Lista de permisos del usuario
  */
-router.get('/:userId/permissions', hasPermission('user.view'), userRoleController.getUserPermissions);
+router.get('/:userId/permissions', isSelfOrHasPermission('user.view', 'userId'), userRoleController.getUserPermissions);
 
 /**
  * @swagger

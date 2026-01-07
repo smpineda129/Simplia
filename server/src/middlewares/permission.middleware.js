@@ -95,3 +95,38 @@ export const hasPermission = (permissionName) => {
         }
     };
 };
+
+/**
+ * Middleware que permite el acceso si el usuario es el mismo del recurso
+ * o si tiene el permiso especificado.
+ * 
+ * @param {string} permissionName - Nombre del permiso
+ * @param {string} paramName - Nombre del parámetro que contiene el ID del usuario (ej. 'id' o 'userId')
+ */
+export const isSelfOrHasPermission = (permissionName, paramName = 'id') => {
+    return async (req, res, next) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'No autenticado',
+                });
+            }
+
+            // Verificar si es el mismo usuario
+            const targetId = req.params[paramName];
+            if (targetId && String(req.user.id) === String(targetId)) {
+                return next();
+            }
+
+            // Si no es el mismo usuario, verificar permiso
+            return hasPermission(permissionName)(req, res, next);
+        } catch (error) {
+            console.error('Error en isSelfOrHasPermission:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor al verificar acceso',
+            });
+        }
+    };
+};
