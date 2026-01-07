@@ -42,7 +42,6 @@ async function main() {
   });
 
   if (ownerRole) {
-    // Check if assignment exists
     const hasRole = await prisma.modelHasRole.findUnique({
       where: {
         roleId_modelId_modelType: {
@@ -91,16 +90,9 @@ async function main() {
   });
   console.log('✅ Usuario gerente creado:', manager.email);
 
-  // Crear items de inventario
-  // Inventory items seeding removed because InventoryItem model does not exist in schema
-  // const inventoryItems = [ ... ];
-  // for (const item of inventoryItems) { ... }
-
   console.log('🎉 Seed completado exitosamente');
   console.log('\n📊 Resumen:');
   console.log(`   - ${await prisma.user.count()} usuarios`);
-  console.log(`   - ${await prisma.user.count()} usuarios`);
-  // console.log(`   - ${await prisma.inventoryItem.count()} items de inventario`);
   console.log('\n🔑 Credenciales de acceso:');
   console.log('   Admin: admin@gdi.com / admin123');
   console.log('   Manager: manager@gdi.com / manager123');

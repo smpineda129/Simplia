@@ -13,7 +13,6 @@ async function generateActionPermissions(model, actionNames, permissionLevel = 1
     const modelName = toSnakeCase(model);
 
     // Find or create Owner role
-    // We check for name and guardName. 
     let owner = await prisma.role.findFirst({
         where: { name: 'Owner', guardName: 'web' }
     });
@@ -82,9 +81,6 @@ async function generateActionPermissions(model, actionNames, permissionLevel = 1
 
 export async function seedPermissions() {
     console.log('🛡️  Iniciando generación de permisos...');
-
-    // EJEMPLO: Define tus modelos y acciones aquí.
-    // Puedes agregar las 142 permisos en bloques como este.
 
     const permissionsConfig = [
         { model: 'role', actions: ['view', 'create', 'update', 'delete', 'attach-user', 'detach-user', 'attach-permission', 'detach-permission'] },
