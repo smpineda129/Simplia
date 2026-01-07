@@ -1,6 +1,7 @@
 import express from 'express';
 import warehouseController from './warehouse.controller.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -38,7 +39,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de cajas
  */
-router.get('/boxes', authenticate, warehouseController.getAllBoxes);
+router.get('/boxes', authenticate, hasPermission('warehouse.view'), warehouseController.getAllBoxes);
 
 /**
  * @swagger
@@ -60,7 +61,7 @@ router.get('/boxes', authenticate, warehouseController.getAllBoxes);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/boxes/:id', authenticate, warehouseController.getBoxById);
+router.get('/boxes/:id', authenticate, hasPermission('warehouse.view'), warehouseController.getBoxById);
 
 /**
  * @swagger
@@ -87,7 +88,7 @@ router.get('/boxes/:id', authenticate, warehouseController.getBoxById);
  *       201:
  *         description: Caja creada exitosamente
  */
-router.post('/boxes', authenticate, warehouseController.createBox);
+router.post('/boxes', authenticate, hasPermission('warehouse.create'), warehouseController.createBox);
 
 /**
  * @swagger
@@ -113,7 +114,7 @@ router.post('/boxes', authenticate, warehouseController.createBox);
  *       200:
  *         description: Caja actualizada exitosamente
  */
-router.put('/boxes/:id', authenticate, warehouseController.updateBox);
+router.put('/boxes/:id', authenticate, hasPermission('warehouse.update'), warehouseController.updateBox);
 
 /**
  * @swagger
@@ -133,7 +134,7 @@ router.put('/boxes/:id', authenticate, warehouseController.updateBox);
  *       200:
  *         description: Caja eliminada exitosamente
  */
-router.delete('/boxes/:id', authenticate, warehouseController.deleteBox);
+router.delete('/boxes/:id', authenticate, hasPermission('warehouse.delete'), warehouseController.deleteBox);
 
 /**
  * @swagger
@@ -162,7 +163,7 @@ router.delete('/boxes/:id', authenticate, warehouseController.deleteBox);
  *       200:
  *         description: Lista de bodegas
  */
-router.get('/', authenticate, warehouseController.getAllWarehouses);
+router.get('/', authenticate, hasPermission('warehouse.view'), warehouseController.getAllWarehouses);
 
 /**
  * @swagger
@@ -184,7 +185,7 @@ router.get('/', authenticate, warehouseController.getAllWarehouses);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, warehouseController.getWarehouseById);
+router.get('/:id', authenticate, hasPermission('warehouse.view'), warehouseController.getWarehouseById);
 
 /**
  * @swagger
@@ -216,7 +217,7 @@ router.get('/:id', authenticate, warehouseController.getWarehouseById);
  *       201:
  *         description: Bodega creada exitosamente
  */
-router.post('/', authenticate, warehouseController.createWarehouse);
+router.post('/', authenticate, hasPermission('warehouse.create'), warehouseController.createWarehouse);
 
 /**
  * @swagger
@@ -242,7 +243,7 @@ router.post('/', authenticate, warehouseController.createWarehouse);
  *       200:
  *         description: Bodega actualizada exitosamente
  */
-router.put('/:id', authenticate, warehouseController.updateWarehouse);
+router.put('/:id', authenticate, hasPermission('warehouse.update'), warehouseController.updateWarehouse);
 
 /**
  * @swagger
@@ -262,6 +263,6 @@ router.put('/:id', authenticate, warehouseController.updateWarehouse);
  *       200:
  *         description: Bodega eliminada exitosamente
  */
-router.delete('/:id', authenticate, warehouseController.deleteWarehouse);
+router.delete('/:id', authenticate, hasPermission('warehouse.delete'), warehouseController.deleteWarehouse);
 
 export default router;

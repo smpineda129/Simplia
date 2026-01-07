@@ -3,6 +3,7 @@ import correspondenceTypeController from './correspondenceType.controller.js';
 import { createCorrespondenceTypeValidation, updateCorrespondenceTypeValidation } from './correspondenceType.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -40,7 +41,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de tipos de correspondencia
  */
-router.get('/', authenticate, correspondenceTypeController.getAll);
+router.get('/', authenticate, hasPermission('correspondence_type.view'), correspondenceTypeController.getAll);
 
 /**
  * @swagger
@@ -62,7 +63,7 @@ router.get('/', authenticate, correspondenceTypeController.getAll);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, correspondenceTypeController.getById);
+router.get('/:id', authenticate, hasPermission('correspondence_type.view'), correspondenceTypeController.getById);
 
 /**
  * @swagger
@@ -102,7 +103,7 @@ router.get('/:id', authenticate, correspondenceTypeController.getById);
  *       201:
  *         description: Tipo de correspondencia creado exitosamente
  */
-router.post('/', authenticate, createCorrespondenceTypeValidation, validate, correspondenceTypeController.create);
+router.post('/', authenticate, hasPermission('correspondence_type.create'), createCorrespondenceTypeValidation, validate, correspondenceTypeController.create);
 
 /**
  * @swagger
@@ -128,7 +129,7 @@ router.post('/', authenticate, createCorrespondenceTypeValidation, validate, cor
  *       200:
  *         description: Tipo de correspondencia actualizado exitosamente
  */
-router.put('/:id', authenticate, updateCorrespondenceTypeValidation, validate, correspondenceTypeController.update);
+router.put('/:id', authenticate, hasPermission('correspondence_type.update'), updateCorrespondenceTypeValidation, validate, correspondenceTypeController.update);
 
 /**
  * @swagger
@@ -148,6 +149,6 @@ router.put('/:id', authenticate, updateCorrespondenceTypeValidation, validate, c
  *       200:
  *         description: Tipo de correspondencia eliminado exitosamente
  */
-router.delete('/:id', authenticate, correspondenceTypeController.delete);
+router.delete('/:id', authenticate, hasPermission('correspondence_type.delete'), correspondenceTypeController.delete);
 
 export default router;

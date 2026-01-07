@@ -3,6 +3,7 @@ import proceedingController from './proceeding.controller.js';
 import { createProceedingValidation, updateProceedingValidation } from './proceeding.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -40,7 +41,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de expedientes
  */
-router.get('/', authenticate, proceedingController.getAll);
+router.get('/', authenticate, hasPermission('proceeding.view'), proceedingController.getAll);
 
 /**
  * @swagger
@@ -62,7 +63,7 @@ router.get('/', authenticate, proceedingController.getAll);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, proceedingController.getById);
+router.get('/:id', authenticate, hasPermission('proceeding.view'), proceedingController.getById);
 
 /**
  * @swagger
@@ -106,7 +107,7 @@ router.get('/:id', authenticate, proceedingController.getById);
  *       201:
  *         description: Expediente creado exitosamente
  */
-router.post('/', authenticate, createProceedingValidation, validate, proceedingController.create);
+router.post('/', authenticate, hasPermission('proceeding.create'), createProceedingValidation, validate, proceedingController.create);
 
 /**
  * @swagger
@@ -132,7 +133,7 @@ router.post('/', authenticate, createProceedingValidation, validate, proceedingC
  *       200:
  *         description: Expediente actualizado exitosamente
  */
-router.put('/:id', authenticate, updateProceedingValidation, validate, proceedingController.update);
+router.put('/:id', authenticate, hasPermission('proceeding.update'), updateProceedingValidation, validate, proceedingController.update);
 
 /**
  * @swagger
@@ -152,6 +153,6 @@ router.put('/:id', authenticate, updateProceedingValidation, validate, proceedin
  *       200:
  *         description: Expediente eliminado exitosamente
  */
-router.delete('/:id', authenticate, proceedingController.delete);
+router.delete('/:id', authenticate, hasPermission('proceeding.delete'), proceedingController.delete);
 
 export default router;

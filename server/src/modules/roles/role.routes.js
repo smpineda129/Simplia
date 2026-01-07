@@ -1,6 +1,7 @@
 import express from 'express';
 import roleController from './role.controller.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de roles
  */
-router.get('/', authenticate, roleController.getAllRoles);
+router.get('/', authenticate, hasPermission('role.view'), roleController.getAllRoles);
 
 /**
  * @swagger
@@ -45,7 +46,7 @@ router.get('/', authenticate, roleController.getAllRoles);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, roleController.getRoleById);
+router.get('/:id', authenticate, hasPermission('role.view'), roleController.getRoleById);
 
 /**
  * @swagger
@@ -78,7 +79,7 @@ router.get('/:id', authenticate, roleController.getRoleById);
  *       201:
  *         description: Rol creado exitosamente
  */
-router.post('/', authenticate, roleController.createRole);
+router.post('/', authenticate, hasPermission('role.create'), roleController.createRole);
 
 /**
  * @swagger
@@ -104,7 +105,7 @@ router.post('/', authenticate, roleController.createRole);
  *       200:
  *         description: Rol actualizado exitosamente
  */
-router.put('/:id', authenticate, roleController.updateRole);
+router.put('/:id', authenticate, hasPermission('role.update'), roleController.updateRole);
 
 /**
  * @swagger
@@ -124,7 +125,7 @@ router.put('/:id', authenticate, roleController.updateRole);
  *       200:
  *         description: Rol eliminado exitosamente
  */
-router.delete('/:id', authenticate, roleController.deleteRole);
+router.delete('/:id', authenticate, hasPermission('role.delete'), roleController.deleteRole);
 
 /**
  * @swagger
@@ -144,7 +145,7 @@ router.delete('/:id', authenticate, roleController.deleteRole);
  *       200:
  *         description: Lista de permisos del rol
  */
-router.get('/:id/permissions', authenticate, roleController.getRolePermissions);
+router.get('/:id/permissions', authenticate, hasPermission('role.view'), roleController.getRolePermissions);
 
 /**
  * @swagger
@@ -177,6 +178,6 @@ router.get('/:id/permissions', authenticate, roleController.getRolePermissions);
  *       200:
  *         description: Permisos sincronizados exitosamente
  */
-router.post('/:id/permissions/sync', authenticate, roleController.syncRolePermissions);
+router.post('/:id/permissions/sync', authenticate, hasPermission('role.assign-permissions'), roleController.syncRolePermissions);
 
 export default router;

@@ -3,6 +3,7 @@ import areaController from './area.controller.js';
 import { createAreaValidation, updateAreaValidation, assignUsersValidation } from './area.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -46,7 +47,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de áreas
  */
-router.get('/', authenticate, areaController.getAll);
+router.get('/', authenticate, hasPermission('area.view'), areaController.getAll);
 
 /**
  * @swagger
@@ -68,7 +69,7 @@ router.get('/', authenticate, areaController.getAll);
  *       404:
  *         description: Área no encontrada
  */
-router.get('/:id', authenticate, areaController.getById);
+router.get('/:id', authenticate, hasPermission('area.view'), areaController.getById);
 
 /**
  * @swagger
@@ -99,7 +100,7 @@ router.get('/:id', authenticate, areaController.getById);
  *       201:
  *         description: Área creada exitosamente
  */
-router.post('/', authenticate, createAreaValidation, validate, areaController.create);
+router.post('/', authenticate, hasPermission('area.create'), createAreaValidation, validate, areaController.create);
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router.post('/', authenticate, createAreaValidation, validate, areaController.cr
  *       200:
  *         description: Área actualizada exitosamente
  */
-router.put('/:id', authenticate, updateAreaValidation, validate, areaController.update);
+router.put('/:id', authenticate, hasPermission('area.update'), updateAreaValidation, validate, areaController.update);
 
 /**
  * @swagger
@@ -145,7 +146,7 @@ router.put('/:id', authenticate, updateAreaValidation, validate, areaController.
  *       200:
  *         description: Área eliminada exitosamente
  */
-router.delete('/:id', authenticate, areaController.delete);
+router.delete('/:id', authenticate, hasPermission('area.delete'), areaController.delete);
 
 /**
  * @swagger
@@ -178,7 +179,7 @@ router.delete('/:id', authenticate, areaController.delete);
  *       200:
  *         description: Usuarios asignados exitosamente
  */
-router.post('/:id/users', authenticate, assignUsersValidation, validate, areaController.assignUsers);
+router.post('/:id/users', authenticate, hasPermission('area.attach-user'), assignUsersValidation, validate, areaController.assignUsers);
 
 /**
  * @swagger
@@ -203,6 +204,6 @@ router.post('/:id/users', authenticate, assignUsersValidation, validate, areaCon
  *       200:
  *         description: Usuario removido exitosamente
  */
-router.delete('/:id/users/:userId', authenticate, areaController.removeUser);
+router.delete('/:id/users/:userId', authenticate, hasPermission('area.detach-user'), areaController.removeUser);
 
 export default router;

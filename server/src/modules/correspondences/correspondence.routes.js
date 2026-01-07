@@ -8,6 +8,7 @@ import {
 } from './correspondence.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de correspondencias
  */
-router.get('/', authenticate, correspondenceController.getAll);
+router.get('/', authenticate, hasPermission('correspondence.view'), correspondenceController.getAll);
 
 /**
  * @swagger
@@ -69,7 +70,7 @@ router.get('/', authenticate, correspondenceController.getAll);
  *       200:
  *         description: Estadísticas de correspondencia
  */
-router.get('/stats', authenticate, correspondenceController.getStats);
+router.get('/stats', authenticate, hasPermission('correspondence.view'), correspondenceController.getStats);
 
 /**
  * @swagger
@@ -91,7 +92,7 @@ router.get('/stats', authenticate, correspondenceController.getStats);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, correspondenceController.getById);
+router.get('/:id', authenticate, hasPermission('correspondence.view'), correspondenceController.getById);
 
 /**
  * @swagger
@@ -141,7 +142,7 @@ router.get('/:id', authenticate, correspondenceController.getById);
  *       201:
  *         description: Correspondencia creada exitosamente con radicado automático
  */
-router.post('/', authenticate, createCorrespondenceValidation, validate, correspondenceController.create);
+router.post('/', authenticate, hasPermission('correspondence.create'), createCorrespondenceValidation, validate, correspondenceController.create);
 
 /**
  * @swagger
@@ -167,7 +168,7 @@ router.post('/', authenticate, createCorrespondenceValidation, validate, corresp
  *       200:
  *         description: Correspondencia actualizada exitosamente
  */
-router.put('/:id', authenticate, updateCorrespondenceValidation, validate, correspondenceController.update);
+router.put('/:id', authenticate, hasPermission('correspondence.update'), updateCorrespondenceValidation, validate, correspondenceController.update);
 
 /**
  * @swagger
@@ -187,7 +188,7 @@ router.put('/:id', authenticate, updateCorrespondenceValidation, validate, corre
  *       200:
  *         description: Correspondencia eliminada exitosamente
  */
-router.delete('/:id', authenticate, correspondenceController.delete);
+router.delete('/:id', authenticate, hasPermission('correspondence.delete'), correspondenceController.delete);
 
 /**
  * @swagger
@@ -225,7 +226,7 @@ router.delete('/:id', authenticate, correspondenceController.delete);
  *       201:
  *         description: Hilo creado exitosamente
  */
-router.post('/:id/threads', authenticate, createThreadValidation, validate, correspondenceController.createThread);
+router.post('/:id/threads', authenticate, hasPermission('correspondence.thread'), createThreadValidation, validate, correspondenceController.createThread);
 
 /**
  * @swagger
@@ -256,7 +257,7 @@ router.post('/:id/threads', authenticate, createThreadValidation, validate, corr
  *       200:
  *         description: Respuesta registrada exitosamente con radicado de salida
  */
-router.post('/:id/respond', authenticate, respondValidation, validate, correspondenceController.respond);
+router.post('/:id/respond', authenticate, hasPermission('correspondence.create'), respondValidation, validate, correspondenceController.respond);
 
 /**
  * @swagger
@@ -276,6 +277,6 @@ router.post('/:id/respond', authenticate, respondValidation, validate, correspon
  *       200:
  *         description: Correspondencia marcada como entregada
  */
-router.post('/:id/mark-delivered', authenticate, correspondenceController.markAsDelivered);
+router.post('/:id/mark-delivered', authenticate, hasPermission('correspondence.update'), correspondenceController.markAsDelivered);
 
 export default router;

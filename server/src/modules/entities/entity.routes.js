@@ -3,6 +3,7 @@ import entityController from './entity.controller.js';
 import { createEntityValidation, updateEntityValidation, createCategoryValidation } from './entity.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de entidades
  */
-router.get('/', authenticate, entityController.getAll);
+router.get('/', authenticate, hasPermission('entity.view'), entityController.getAll);
 
 /**
  * @swagger
@@ -66,7 +67,7 @@ router.get('/', authenticate, entityController.getAll);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, entityController.getById);
+router.get('/:id', authenticate, hasPermission('entity.view'), entityController.getById);
 
 /**
  * @swagger
@@ -99,7 +100,7 @@ router.get('/:id', authenticate, entityController.getById);
  *       201:
  *         description: Entidad creada exitosamente
  */
-router.post('/', authenticate, createEntityValidation, validate, entityController.create);
+router.post('/', authenticate, hasPermission('entity.create'), createEntityValidation, validate, entityController.create);
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router.post('/', authenticate, createEntityValidation, validate, entityControlle
  *       200:
  *         description: Entidad actualizada exitosamente
  */
-router.put('/:id', authenticate, updateEntityValidation, validate, entityController.update);
+router.put('/:id', authenticate, hasPermission('entity.update'), updateEntityValidation, validate, entityController.update);
 
 /**
  * @swagger
@@ -145,6 +146,6 @@ router.put('/:id', authenticate, updateEntityValidation, validate, entityControl
  *       200:
  *         description: Entidad eliminada exitosamente
  */
-router.delete('/:id', authenticate, entityController.delete);
+router.delete('/:id', authenticate, hasPermission('entity.delete'), entityController.delete);
 
 export default router;

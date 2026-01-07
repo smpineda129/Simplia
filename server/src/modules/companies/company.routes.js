@@ -3,6 +3,7 @@ import companyController from './company.controller.js';
 import { createCompanyValidation, updateCompanyValidation } from './company.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de empresas
  */
-router.get('/', authenticate, companyController.getAll);
+router.get('/', authenticate, hasPermission('company.view'), companyController.getAll);
 
 /**
  * @swagger
@@ -63,7 +64,7 @@ router.get('/', authenticate, companyController.getAll);
  *       404:
  *         description: Empresa no encontrada
  */
-router.get('/:id', authenticate, companyController.getById);
+router.get('/:id', authenticate, hasPermission('company.view'), companyController.getById);
 
 /**
  * @swagger
@@ -83,7 +84,7 @@ router.get('/:id', authenticate, companyController.getById);
  *       200:
  *         description: Estadísticas de la empresa
  */
-router.get('/:id/stats', authenticate, companyController.getStats);
+router.get('/:id/stats', authenticate, hasPermission('company.view'), companyController.getStats);
 
 /**
  * @swagger
@@ -118,7 +119,7 @@ router.get('/:id/stats', authenticate, companyController.getStats);
  *       201:
  *         description: Empresa creada exitosamente
  */
-router.post('/', authenticate, createCompanyValidation, validate, companyController.create);
+router.post('/', authenticate, hasPermission('company.create'), createCompanyValidation, validate, companyController.create);
 
 /**
  * @swagger
@@ -144,7 +145,7 @@ router.post('/', authenticate, createCompanyValidation, validate, companyControl
  *       200:
  *         description: Empresa actualizada exitosamente
  */
-router.put('/:id', authenticate, updateCompanyValidation, validate, companyController.update);
+router.put('/:id', authenticate, hasPermission('company.update'), updateCompanyValidation, validate, companyController.update);
 
 /**
  * @swagger
@@ -164,6 +165,6 @@ router.put('/:id', authenticate, updateCompanyValidation, validate, companyContr
  *       200:
  *         description: Empresa eliminada exitosamente
  */
-router.delete('/:id', authenticate, companyController.delete);
+router.delete('/:id', authenticate, hasPermission('company.delete'), companyController.delete);
 
 export default router;
