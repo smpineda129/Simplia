@@ -14,7 +14,8 @@
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "prisma:migrate": "cd server && npx prisma migrate dev",
     "prisma:generate": "cd server && npx prisma generate",
-    "prisma:studio": "cd server && npx prisma studio"
+    "prisma:studio": "cd server && npx prisma studio",
+    "prisma:seed": "cd server && npx prisma db seed"
   },
   "keywords": [
     "react",
