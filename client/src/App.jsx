@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
 import LoginPage from './modules/auth/pages/LoginPage';
+import ForbiddenPage from './modules/auth/pages/ForbiddenPage';
 import DashboardPage from './modules/dashboard/pages/DashboardPage';
 import { UserList, UserProfile, UserProfileView } from './modules/users';
 import { CompanyList } from './modules/companies';
@@ -26,28 +27,141 @@ function App() {
         {/* Rutas de autenticación */}
         <Route element={<AuthLayout />}>
           <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/403" element={<ForbiddenPage />} />
         </Route>
 
         {/* Rutas protegidas */}
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/companies" element={<CompanyList />} />
-          <Route path="/companies/:id" element={<CompanyDetail />} />
-          <Route path="/areas" element={<AreaList />} />
-          <Route path="/retentions" element={<RetentionList />} />
-          <Route path="/retentions/:id" element={<RetentionDetail />} />
-          <Route path="/correspondence-types" element={<CorrespondenceTypeList />} />
-          <Route path="/templates" element={<TemplateList />} />
-          <Route path="/proceedings" element={<ProceedingList />} />
-          <Route path="/correspondences" element={<CorrespondenceList />} />
-          <Route path="/correspondences/:id" element={<CorrespondenceDetail />} />
-          <Route path="/entities" element={<EntityList />} />
-          <Route path="/warehouses" element={<WarehouseList />} />
-          <Route path="/users" element={<UserList />} />
-          <Route path="/users/:id" element={<UserProfileView />} />
+          <Route
+            path="/companies"
+            element={
+              <ProtectedRoute requiredPermission="company.view">
+                <CompanyList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/companies/:id"
+            element={
+              <ProtectedRoute requiredPermission="company.view">
+                <CompanyDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/areas"
+            element={
+              <ProtectedRoute requiredPermission="area.view">
+                <AreaList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/retentions"
+            element={
+              <ProtectedRoute requiredPermission="retention.view">
+                <RetentionList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/retentions/:id"
+            element={
+              <ProtectedRoute requiredPermission="retention.view">
+                <RetentionDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/correspondence-types"
+            element={
+              <ProtectedRoute requiredPermission="correspondence_type.view">
+                <CorrespondenceTypeList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates"
+            element={
+              <ProtectedRoute requiredPermission="template.view">
+                <TemplateList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/proceedings"
+            element={
+              <ProtectedRoute requiredPermission="proceeding.view">
+                <ProceedingList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/correspondences"
+            element={
+              <ProtectedRoute requiredPermission="correspondence.view">
+                <CorrespondenceList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/correspondences/:id"
+            element={
+              <ProtectedRoute requiredPermission="correspondence.view">
+                <CorrespondenceDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/entities"
+            element={
+              <ProtectedRoute requiredPermission="entity.view">
+                <EntityList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/warehouses"
+            element={
+              <ProtectedRoute requiredPermission="warehouse.view">
+                <WarehouseList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute requiredPermission="user.view">
+                <UserList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:id"
+            element={
+              <ProtectedRoute requiredPermission="user.view">
+                <UserProfileView />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/profile" element={<UserProfile />} />
-          <Route path="/roles" element={<RoleList />} />
-          <Route path="/permissions" element={<PermissionList />} />
+          <Route
+            path="/roles"
+            element={
+              <ProtectedRoute requiredPermission="role.view">
+                <RoleList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/permissions"
+            element={
+              <ProtectedRoute requiredPermission="permission.view">
+                <PermissionList />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 
