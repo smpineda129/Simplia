@@ -3,6 +3,7 @@ import { userController } from './user.controller.js';
 import { userValidation } from './user.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate, authorize } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 import userRoleController from './userRole.controller.js';
 
 const router = Router();
@@ -24,7 +25,7 @@ router.use(authenticate);
  *       401:
  *         description: No autenticado
  */
-router.get('/', userController.getAll);
+router.get('/', hasPermission('user.view'), userController.getAll);
 
 /**
  * @swagger
@@ -46,7 +47,7 @@ router.get('/', userController.getAll);
  *       404:
  *         description: Usuario no encontrado
  */
-router.get('/:id', userValidation.getById, validate, userController.getById);
+router.get('/:id', hasPermission('user.view'), userValidation.getById, validate, userController.getById);
 
 /**
  * @swagger
@@ -84,7 +85,7 @@ router.get('/:id', userValidation.getById, validate, userController.getById);
  */
 router.post(
   '/',
-  authorize('ADMIN'),
+  hasPermission('user.create'),
   userValidation.create,
   validate,
   userController.create
@@ -125,6 +126,7 @@ router.post(
  */
 router.put(
   '/:id',
+  hasPermission('user.update'),
   userValidation.update,
   validate,
   userController.update
@@ -150,7 +152,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  authorize('ADMIN'),
+  hasPermission('user.delete'),
   userValidation.delete,
   validate,
   userController.delete
