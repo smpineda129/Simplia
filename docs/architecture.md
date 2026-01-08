@@ -1,10 +1,10 @@
 # Arquitectura del Proyecto GDI
 
-Este documento describe la arquitectura general del Sistema de Gestión Documental Integral (GDI), un monolito fullstack moderno diseñado para la gestión empresarial de documentos.
+Este documento describe la arquitectura general del Sistema de Gestión Documental Inteligente (GDI), un monolito fullstack moderno diseñado para la gestión empresarial de documentos.
 
 ## Visión General
 
-**GDI (Gestión Documental Integral)** es un sistema completo de gestión documental empresarial que combina frontend y backend en un solo repositorio monolítico, facilitando el desarrollo y mantenimiento mientras mantiene una clara separación de responsabilidades.
+**GDI (Gestión Documental Inteligente)** es un sistema completo de gestión documental empresarial que combina frontend y backend en un solo repositorio monolítico, facilitando el desarrollo y mantenimiento mientras mantiene una clara separación de responsabilidades.
 
 ### Propósito del Sistema
 

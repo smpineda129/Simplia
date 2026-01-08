@@ -5,10 +5,10 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'GDI API - Sistema de Gestión Documental Integral',
+      title: 'GDI API - Sistema de Gestión Documental Inteligente',
       version: '1.0.0',
       description: `
-# Sistema de Gestión Documental Integral (GDI)
+# Sistema de Gestión Documental Inteligente (GDI)
 
 API completa para la gestión documental empresarial con las siguientes características:
 
