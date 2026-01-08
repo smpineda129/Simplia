@@ -1,6 +1,6 @@
 # Documentación del Sistema GDI
 
-Bienvenido a la documentación del Sistema de Gestión Documental Integral (GDI).
+Bienvenido a la documentación del Sistema de Gestión Documental Inteligente (GDI).
 
 ## 📚 Índice de Documentación
 
