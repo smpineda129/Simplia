@@ -13,6 +13,8 @@ import entityRoutes from '../modules/entities/entity.routes.js';
 import warehouseRoutes from '../modules/warehouses/warehouse.routes.js';
 import roleRoutes from '../modules/roles/role.routes.js';
 import permissionRoutes from '../modules/permissions/permission.routes.js';
+import { authenticate } from '../middlewares/auth.js';
+import { hasPermission } from '../middlewares/permission.middleware.js';
 
 const router = Router();
 
@@ -37,6 +39,15 @@ router.get('/health', (req, res) => {
     success: true,
     message: 'API funcionando correctamente',
     timestamp: new Date().toISOString(),
+  });
+});
+
+// Ruta de prueba para permisos
+router.get('/test-permission', authenticate, hasPermission('user.view'), (req, res) => {
+  res.json({
+    success: true,
+    message: 'Acceso autorizado: Tienes permiso para ver usuarios.',
+    user: req.user.email
   });
 });
 

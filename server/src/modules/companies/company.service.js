@@ -2,11 +2,12 @@ import { prisma } from '../../db/prisma.js';
 
 class CompanyService {
   async getAll(filters = {}) {
-    const { search, page = 1, limit = 10 } = filters;
+    const { search, id, page = 1, limit = 10 } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
       deletedAt: null,
+      ...(id && { id: parseInt(id) }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },

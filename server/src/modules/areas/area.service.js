@@ -194,6 +194,43 @@ class AreaService {
 
     return { message: 'Usuario removido del área' };
   }
+
+  async assignArea(userId, areaId) {
+    // Check if already assigned
+    const existing = await prisma.areaUser.findFirst({
+      where: {
+        userId: parseInt(userId),
+        areaId: parseInt(areaId),
+        deletedAt: null
+      }
+    });
+
+    if (existing) {
+      return { message: 'El usuario ya pertenece a esta área' };
+    }
+
+    await prisma.areaUser.create({
+      data: {
+        userId: parseInt(userId),
+        areaId: parseInt(areaId)
+      }
+    });
+
+    return { message: 'Área asignada exitosamente' };
+  }
+
+  async removeArea(userId, areaId) {
+    await prisma.areaUser.updateMany({
+      where: {
+        userId: parseInt(userId),
+        areaId: parseInt(areaId),
+        deletedAt: null
+      },
+      data: { deletedAt: new Date() }
+    });
+
+    return { message: 'Área removida exitosamente' };
+  }
 }
 
 export default new AreaService();

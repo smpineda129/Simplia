@@ -3,6 +3,11 @@ import areaService from './area.service.js';
 class AreaController {
   async getAll(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, page, limit } = req.query;
       const result = await areaService.getAll({ search, companyId, page, limit });
 

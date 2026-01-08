@@ -3,6 +3,7 @@ import documentController from './document.controller.js';
 import { createDocumentValidation, updateDocumentValidation } from './document.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ const router = express.Router();
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
-router.get('/', authenticate, documentController.getAll);
+router.get('/', authenticate, hasPermission('document.view'), documentController.getAll);
 
 /**
  * @swagger
@@ -65,7 +66,7 @@ router.get('/', authenticate, documentController.getAll);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, documentController.getById);
+router.get('/:id', authenticate, hasPermission('document.view'), documentController.getById);
 
 /**
  * @swagger
@@ -106,7 +107,7 @@ router.get('/:id', authenticate, documentController.getById);
  *       201:
  *         description: Documento creado exitosamente
  */
-router.post('/', authenticate, createDocumentValidation, validate, documentController.create);
+router.post('/', authenticate, hasPermission('document.create'), createDocumentValidation, validate, documentController.create);
 
 /**
  * @swagger
@@ -132,7 +133,7 @@ router.post('/', authenticate, createDocumentValidation, validate, documentContr
  *       200:
  *         description: Documento actualizado exitosamente
  */
-router.put('/:id', authenticate, updateDocumentValidation, validate, documentController.update);
+router.put('/:id', authenticate, hasPermission('document.update'), updateDocumentValidation, validate, documentController.update);
 
 /**
  * @swagger
@@ -152,6 +153,6 @@ router.put('/:id', authenticate, updateDocumentValidation, validate, documentCon
  *       200:
  *         description: Documento eliminado exitosamente
  */
-router.delete('/:id', authenticate, documentController.delete);
+router.delete('/:id', authenticate, hasPermission('document.delete'), documentController.delete);
 
 export default router;

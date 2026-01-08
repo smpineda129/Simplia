@@ -11,7 +11,7 @@ class UserRoleService {
       SELECT * FROM model_has_roles 
       WHERE model_id = ${userId} 
       AND role_id = ${roleId} 
-      AND model_type = 'User'
+      AND model_type = 'App\\Models\\User'
     `;
 
     if (existing.length > 0) {
@@ -21,7 +21,7 @@ class UserRoleService {
     // Asignar rol
     await prisma.$executeRaw`
       INSERT INTO model_has_roles (role_id, model_type, model_id)
-      VALUES (${roleId}, 'User', ${userId})
+      VALUES (${roleId}, 'App\\Models\\User', ${userId})
     `;
 
     return { message: 'Rol asignado exitosamente' };
@@ -35,7 +35,7 @@ class UserRoleService {
       DELETE FROM model_has_roles 
       WHERE model_id = ${userId} 
       AND role_id = ${roleId} 
-      AND model_type = 'User'
+      AND model_type = 'App\\Models\\User'
     `;
 
     return { message: 'Rol removido exitosamente' };
@@ -49,7 +49,7 @@ class UserRoleService {
     await prisma.$executeRaw`
       DELETE FROM model_has_roles 
       WHERE model_id = ${userId} 
-      AND model_type = 'User'
+      AND model_type = 'App\\Models\\User'
     `;
 
     // Asignar nuevos roles
@@ -57,7 +57,7 @@ class UserRoleService {
       for (const roleId of roleIds) {
         await prisma.$executeRaw`
           INSERT INTO model_has_roles (role_id, model_type, model_id)
-          VALUES (${roleId}, 'User', ${userId})
+          VALUES (${roleId}, 'App\\Models\\User', ${userId})
         `;
       }
     }
@@ -74,7 +74,7 @@ class UserRoleService {
       FROM roles r
       INNER JOIN model_has_roles mhr ON mhr.role_id = r.id
       WHERE mhr.model_id = ${userId} 
-      AND mhr.model_type = 'User'
+      AND mhr.model_type = 'App\\Models\\User'
     `;
 
     return roles;
@@ -89,7 +89,7 @@ class UserRoleService {
       FROM roles r
       INNER JOIN model_has_roles mhr ON mhr.role_id = r.id
       WHERE mhr.model_id = ${userId} 
-      AND mhr.model_type = 'User'
+      AND mhr.model_type = 'App\\Models\\User'
       AND r.name = ${roleName}
     `;
 
@@ -97,19 +97,59 @@ class UserRoleService {
   }
 
   /**
-   * Obtener permisos de un usuario (a través de sus roles)
+   * Obtener permisos de un usuario (Inherited through roles + Direct)
    */
   async getUserPermissions(userId) {
     const permissions = await prisma.$queryRaw`
-      SELECT DISTINCT p.*
+      SELECT DISTINCT p.*, 
+             CASE WHEN mhp.model_id IS NOT NULL THEN 1 ELSE 0 END as is_direct
       FROM permissions p
-      INNER JOIN role_has_permissions rhp ON rhp.permission_id = p.id
-      INNER JOIN model_has_roles mhr ON mhr.role_id = rhp.role_id
-      WHERE mhr.model_id = ${userId}
-      AND mhr.model_type = 'User'
+      LEFT JOIN role_has_permissions rhp ON rhp.permission_id = p.id
+      LEFT JOIN model_has_roles mhr ON mhr.role_id = rhp.role_id AND mhr.model_id = ${userId} AND mhr.model_type = 'App\\Models\\User'
+      LEFT JOIN model_has_permissions mhp ON mhp.permission_id = p.id AND mhp.model_id = ${userId} AND mhp.model_type = 'App\\Models\\User'
+      WHERE mhr.model_id IS NOT NULL OR mhp.model_id IS NOT NULL
     `;
 
     return permissions;
+  }
+
+  /**
+   * Asignar un permiso directo a un usuario
+   */
+  async assignPermission(userId, permissionId) {
+    // Verificar si ya tiene el permiso directo
+    const existing = await prisma.$queryRaw`
+      SELECT * FROM model_has_permissions 
+      WHERE model_id = ${userId} 
+      AND permission_id = ${permissionId} 
+      AND model_type = 'App\\Models\\User'
+    `;
+
+    if (existing.length > 0) {
+      return { message: 'El usuario ya tiene este permiso asignado directamente' };
+    }
+
+    // Asignar permiso
+    await prisma.$executeRaw`
+      INSERT INTO model_has_permissions (permission_id, model_type, model_id)
+      VALUES (${permissionId}, 'App\\Models\\User', ${userId})
+    `;
+
+    return { message: 'Permiso asignado exitosamente' };
+  }
+
+  /**
+   * Remover un permiso directo de un usuario
+   */
+  async removePermission(userId, permissionId) {
+    await prisma.$executeRaw`
+      DELETE FROM model_has_permissions 
+      WHERE model_id = ${userId} 
+      AND permission_id = ${permissionId} 
+      AND model_type = 'App\\Models\\User'
+    `;
+
+    return { message: 'Permiso removido exitosamente' };
   }
 
   /**
@@ -122,7 +162,7 @@ class UserRoleService {
       INNER JOIN role_has_permissions rhp ON rhp.permission_id = p.id
       INNER JOIN model_has_roles mhr ON mhr.role_id = rhp.role_id
       WHERE mhr.model_id = ${userId}
-      AND mhr.model_type = 'User'
+      AND mhr.model_type = 'App\\Models\\User'
       AND p.name = ${permissionName}
     `;
 

@@ -82,18 +82,36 @@ const MainLayout = () => {
     logout();
   };
 
+  // Check if user has permission
+  const hasPermission = (permission) => {
+    if (!permission) return true; // Public route
+    if (!user?.allPermissions) return false;
+    return user.allPermissions.includes(permission);
+  };
+
+  // Check if user is Owner
+  const isOwner = user?.roles?.includes('Owner');
+
   const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-    { text: 'Empresas', icon: <Business />, path: '/companies' },
-    { text: 'Correspondencia', icon: <Send />, path: '/correspondences' },
-    { text: 'Plantillas', icon: <Article />, path: '/templates' },
-    { text: 'Expedientes', icon: <Folder />, path: '/proceedings' },
-    { text: 'Retención', icon: <Description />, path: '/retentions' },
-    { text: 'Entidades', icon: <Group />, path: '/entities' },
-    { text: 'Permisos', icon: <VpnKey />, path: '/permissions' },
-    { text: 'Roles', icon: <Security />, path: '/roles' },
-    { text: 'Usuarios', icon: <People />, path: '/users' },
+    { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard', permission: null },
+    {
+      text: 'Empresas',
+      icon: <Business />,
+      path: isOwner ? '/companies' : `/companies/${user?.companyId}`,
+      permission: 'company.view'
+    },
+    { text: 'Correspondencia', icon: <Send />, path: '/correspondences', permission: 'correspondence.view' },
+    { text: 'Plantillas', icon: <Article />, path: '/templates', permission: 'template.view' },
+    { text: 'Expedientes', icon: <Folder />, path: '/proceedings', permission: 'proceeding.view' },
+    { text: 'Retención', icon: <Description />, path: '/retentions', permission: 'retention.view' },
+    { text: 'Entidades', icon: <Group />, path: '/entities', permission: 'entity.view' },
+    { text: 'Almacenes', icon: <Warehouse />, path: '/warehouses', permission: 'warehouse.view' },
+    { text: 'Permisos', icon: <VpnKey />, path: '/permissions', permission: 'permission.view' },
+    { text: 'Roles', icon: <Security />, path: '/roles', permission: 'role.view' },
+    { text: 'Usuarios', icon: <People />, path: '/users', permission: 'user.view' },
   ];
+
+  const filteredMenuItems = menuItems.filter(item => hasPermission(item.permission));
 
   const drawer = (
     <Box>
@@ -104,7 +122,7 @@ const MainLayout = () => {
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={location.pathname === item.path}

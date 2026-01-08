@@ -4,6 +4,11 @@ class WarehouseController {
   // Warehouses
   async getAllWarehouses(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, page, limit } = req.query;
       const result = await warehouseService.getAllWarehouses({ search, companyId, page, limit });
 
@@ -89,6 +94,11 @@ class WarehouseController {
   // Boxes
   async getAllBoxes(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, warehouseId, page, limit } = req.query;
       const result = await warehouseService.getAllBoxes({ search, companyId, warehouseId, page, limit });
 

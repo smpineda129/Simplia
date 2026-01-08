@@ -1,6 +1,7 @@
 import express from 'express';
 import permissionController from './permission.controller.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de permisos
  */
-router.get('/', authenticate, permissionController.getAllPermissions);
+router.get('/', authenticate, hasPermission('permission.view'), permissionController.getAllPermissions);
 
 /**
  * @swagger
@@ -37,7 +38,7 @@ router.get('/', authenticate, permissionController.getAllPermissions);
  *       200:
  *         description: Permisos agrupados por categoría
  */
-router.get('/grouped', authenticate, permissionController.getGroupedPermissions);
+router.get('/grouped', authenticate, hasPermission('permission.view'), permissionController.getGroupedPermissions);
 
 /**
  * @swagger
@@ -59,7 +60,7 @@ router.get('/grouped', authenticate, permissionController.getGroupedPermissions)
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, permissionController.getPermissionById);
+router.get('/:id', authenticate, hasPermission('permission.view'), permissionController.getPermissionById);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ router.get('/:id', authenticate, permissionController.getPermissionById);
  *       201:
  *         description: Permiso creado exitosamente
  */
-router.post('/', authenticate, permissionController.createPermission);
+router.post('/', authenticate, hasPermission('permission.create'), permissionController.createPermission);
 
 /**
  * @swagger
@@ -116,7 +117,7 @@ router.post('/', authenticate, permissionController.createPermission);
  *       200:
  *         description: Permiso actualizado exitosamente
  */
-router.put('/:id', authenticate, permissionController.updatePermission);
+router.put('/:id', authenticate, hasPermission('permission.update'), permissionController.updatePermission);
 
 /**
  * @swagger
@@ -136,7 +137,7 @@ router.put('/:id', authenticate, permissionController.updatePermission);
  *       200:
  *         description: Permiso eliminado exitosamente
  */
-router.delete('/:id', authenticate, permissionController.deletePermission);
+router.delete('/:id', authenticate, hasPermission('permission.delete'), permissionController.deletePermission);
 
 /**
  * @swagger
@@ -156,6 +157,6 @@ router.delete('/:id', authenticate, permissionController.deletePermission);
  *       200:
  *         description: Lista de roles con el permiso
  */
-router.get('/:id/roles', authenticate, permissionController.getPermissionRoles);
+router.get('/:id/roles', authenticate, hasPermission('permission.view'), permissionController.getPermissionRoles);
 
 export default router;

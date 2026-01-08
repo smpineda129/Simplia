@@ -9,6 +9,7 @@ import {
 } from './retention.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -46,7 +47,7 @@ const router = express.Router();
  *       200:
  *         description: Lista de tablas de retención
  */
-router.get('/', authenticate, retentionController.getAll);
+router.get('/', authenticate, hasPermission('retention.view'), retentionController.getAll);
 
 /**
  * @swagger
@@ -68,7 +69,7 @@ router.get('/', authenticate, retentionController.getAll);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, retentionController.getById);
+router.get('/:id', authenticate, hasPermission('retention.view'), retentionController.getById);
 
 /**
  * @swagger
@@ -108,7 +109,7 @@ router.get('/:id', authenticate, retentionController.getById);
  *       201:
  *         description: Tabla de retención creada exitosamente
  */
-router.post('/', authenticate, createRetentionValidation, validate, retentionController.create);
+router.post('/', authenticate, hasPermission('retention.create'), createRetentionValidation, validate, retentionController.create);
 
 /**
  * @swagger
@@ -134,7 +135,7 @@ router.post('/', authenticate, createRetentionValidation, validate, retentionCon
  *       200:
  *         description: Tabla de retención actualizada exitosamente
  */
-router.put('/:id', authenticate, updateRetentionValidation, validate, retentionController.update);
+router.put('/:id', authenticate, hasPermission('retention.update'), updateRetentionValidation, validate, retentionController.update);
 
 /**
  * @swagger
@@ -154,7 +155,7 @@ router.put('/:id', authenticate, updateRetentionValidation, validate, retentionC
  *       200:
  *         description: Tabla de retención eliminada exitosamente
  */
-router.delete('/:id', authenticate, retentionController.delete);
+router.delete('/:id', authenticate, hasPermission('retention.delete'), retentionController.delete);
 
 /**
  * @swagger
@@ -174,7 +175,7 @@ router.delete('/:id', authenticate, retentionController.delete);
  *       200:
  *         description: Lista de líneas de retención
  */
-router.get('/:retentionId/lines', authenticate, retentionLineController.getByRetentionId);
+router.get('/:retentionId/lines', authenticate, hasPermission('retention_line.view'), retentionLineController.getByRetentionId);
 
 /**
  * @swagger
@@ -194,7 +195,7 @@ router.get('/:retentionId/lines', authenticate, retentionLineController.getByRet
  *       200:
  *         description: Línea de retención encontrada
  */
-router.get('/lines/:id', authenticate, retentionLineController.getById);
+router.get('/lines/:id', authenticate, hasPermission('retention_line.view'), retentionLineController.getById);
 
 /**
  * @swagger
@@ -251,7 +252,7 @@ router.get('/lines/:id', authenticate, retentionLineController.getById);
  *       201:
  *         description: Línea de retención creada exitosamente
  */
-router.post('/:retentionId/lines', authenticate, createRetentionLineValidation, validate, retentionLineController.create);
+router.post('/:retentionId/lines', authenticate, hasPermission('retention.add-retention_line'), createRetentionLineValidation, validate, retentionLineController.create);
 
 /**
  * @swagger
@@ -277,7 +278,7 @@ router.post('/:retentionId/lines', authenticate, createRetentionLineValidation, 
  *       200:
  *         description: Línea de retención actualizada exitosamente
  */
-router.put('/lines/:id', authenticate, updateRetentionLineValidation, validate, retentionLineController.update);
+router.put('/lines/:id', authenticate, hasPermission('retention_line.update'), updateRetentionLineValidation, validate, retentionLineController.update);
 
 /**
  * @swagger
@@ -297,6 +298,6 @@ router.put('/lines/:id', authenticate, updateRetentionLineValidation, validate, 
  *       200:
  *         description: Línea de retención eliminada exitosamente
  */
-router.delete('/lines/:id', authenticate, retentionLineController.delete);
+router.delete('/lines/:id', authenticate, hasPermission('retention_line.delete'), retentionLineController.delete);
 
 export default router;

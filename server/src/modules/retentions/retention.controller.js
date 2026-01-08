@@ -3,6 +3,11 @@ import retentionService from './retention.service.js';
 class RetentionController {
   async getAll(req, res) {
     try {
+      // Enforce company scope
+      if (req.user.companyId) {
+        req.query.companyId = req.user.companyId;
+      }
+
       const { search, companyId, areaId, page, limit } = req.query;
       const result = await retentionService.getAll({ search, companyId, areaId, page, limit });
 
