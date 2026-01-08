@@ -123,4 +123,19 @@ router.get('/me', authenticate, authController.getCurrentUser);
  */
 router.post('/logout', authenticate, authController.logout);
 
+/**
+ * @swagger
+ * /api/auth/leave-impersonation:
+ *   post:
+ *     summary: Terminar sesión de personificación
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Personificación terminada exitosamente
+ */
+import { impersonateController } from '../users/impersonate.controller.js';
+router.post('/leave-impersonation', authenticate, impersonateController.leaveImpersonation);
+
 export default router;

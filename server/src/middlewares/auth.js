@@ -17,8 +17,13 @@ export const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, config.jwt.secret);
 
+    // Verificar si hay personificación
+    const userId = decoded.impersonatorId
+      ? parseInt(decoded.userId) // Usuario personificado
+      : parseInt(decoded.userId); // Usuario normal
+
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -41,12 +46,50 @@ export const authenticate = async (req, res, next) => {
         modelId: user.id,
         modelType: 'App\\Models\\User',
       },
-      include: { role: true },
+      include: {
+        role: {
+          select: {
+            name: true,
+            roleLevel: true
+          }
+        }
+      },
     });
 
-    user.roles = userRoles.map((ur) => ur.role.name);
+    user.roles = userRoles.map((ur) => ({
+      name: ur.role.name,
+      roleLevel: ur.role.roleLevel
+    }));
+
+    // Si no tiene roles en model_has_role, pero tiene un rol en la tabla User, intentar obtener su nivel
+    if (user.roles.length === 0 && user.role) {
+      const dbRole = await prisma.role.findFirst({
+        where: { name: user.role }
+      });
+      if (dbRole) {
+        user.roles.push({
+          name: dbRole.name,
+          roleLevel: dbRole.roleLevel
+        });
+      }
+    }
 
     req.user = user;
+
+    // Si hay personificación, también adjuntar el impersonador
+    if (decoded.impersonatorId) {
+      const impersonator = await prisma.user.findUnique({
+        where: { id: parseInt(decoded.impersonatorId) },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      });
+      req.impersonator = impersonator;
+    }
+
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

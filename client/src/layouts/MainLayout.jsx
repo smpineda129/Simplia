@@ -42,6 +42,7 @@ import {
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import ImpersonationBanner from '../components/ImpersonationBanner';
 
 const drawerWidth = 240;
 
@@ -278,6 +279,7 @@ const MainLayout = () => {
         }}
       >
         <Toolbar />
+        <ImpersonationBanner />
         <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
           <Outlet />
         </Container>
