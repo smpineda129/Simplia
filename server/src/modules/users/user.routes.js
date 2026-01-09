@@ -330,4 +330,26 @@ router.post('/:userId/permissions', hasPermission('user.attach-permission'), use
  */
 router.delete('/:userId/permissions/:permissionId', hasPermission('user.detach-permission'), userRoleController.removePermission);
 
+// ==================== RUTAS DE PERSONIFICACIÓN ====================
+
+import { impersonateController } from './impersonate.controller.js';
+
+/**
+ * @swagger
+ * /api/users/{id}/can-impersonate:
+ *   get:
+ *     summary: Verificar si se puede personificar a un usuario
+ *     tags: [Users]
+ */
+router.get('/:id/can-impersonate', hasPermission('user.impersonate'), impersonateController.canImpersonate);
+
+/**
+ * @swagger
+ * /api/users/{id}/impersonate:
+ *   post:
+ *     summary: Iniciar personificación de un usuario
+ *     tags: [Users]
+ */
+router.post('/:id/impersonate', hasPermission('user.impersonate'), impersonateController.startImpersonation);
+
 export default router;
