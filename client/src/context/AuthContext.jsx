@@ -40,7 +40,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       setUser(user);
-      console.log(user);
       navigate('/dashboard');
       return response;
     } catch (error) {
