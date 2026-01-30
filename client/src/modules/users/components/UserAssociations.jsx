@@ -78,8 +78,14 @@ const UserAssociations = ({ userId }) => {
     }, [userId]);
 
     const canManage = (permissionName) => {
-        if (currentUser?.roles?.includes('Owner')) return true;
-        return currentUser?.allPermissions?.includes(permissionName);
+        if (!currentUser) return false;
+        const roles = currentUser.roles || [];
+        const isOwner = roles.some(role => {
+            if (typeof role === 'string') return role === 'Owner';
+            return role.name === 'Owner';
+        });
+        if (isOwner) return true;
+        return currentUser.allPermissions?.includes(permissionName);
     };
 
     const loadUserData = async () => {
