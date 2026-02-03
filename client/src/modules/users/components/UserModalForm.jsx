@@ -123,6 +123,7 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
+                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                         >
