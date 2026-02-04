@@ -24,8 +24,7 @@ import { useAuth } from './hooks/useAuth';
 
 // Guards auxiliares para Companies
 const CompanyListGuard = () => {
-  const { user } = useAuth();
-  const isOwner = user?.roles?.includes('Owner');
+  const { user, isOwner } = useAuth();
 
   if (isOwner) {
     return <CompanyList />;
@@ -39,9 +38,8 @@ const CompanyListGuard = () => {
 };
 
 const CompanyDetailGuard = () => {
-  const { user } = useAuth();
+  const { user, isOwner } = useAuth();
   const params = useParams(); // Necesitamos useParams aquí
-  const isOwner = user?.roles?.includes('Owner');
   const targetId = parseInt(params.id);
 
   if (isOwner) {
