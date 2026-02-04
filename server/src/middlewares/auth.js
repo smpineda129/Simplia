@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
 import { prisma } from '../db/prisma.js';
+import { getContext } from '../utils/context.js';
 
 export const authenticate = async (req, res, next) => {
   try {
@@ -75,6 +76,14 @@ export const authenticate = async (req, res, next) => {
     }
 
     req.user = user;
+
+    // Populate Context
+    const store = getContext();
+    if (store) {
+      store.set('user', user);
+      store.set('ip', req.ip);
+      store.set('userAgent', req.headers['user-agent']);
+    }
 
     // Si hay personificación, también adjuntar el impersonador
     if (decoded.impersonatorId) {
