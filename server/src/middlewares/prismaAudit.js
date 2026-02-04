@@ -1,5 +1,6 @@
 import { getContext } from '../utils/context.js';
 import crypto from 'crypto';
+import { auditCache } from '../utils/auditCache.js';
 
 export const createPrismaAudit = (prisma) => {
   return async (params, next) => {
@@ -79,6 +80,14 @@ async function logAudit(prisma, params, result) {
     targetId = BigInt(result.id);
   } else if (args?.where?.id) {
     targetId = BigInt(args.where.id);
+  }
+
+  // Deduplication for View Events
+  // If it's a View event, check cache
+  if (eventName === 'View') {
+    if (!auditCache.shouldLog(user.id.toString(), eventName, legacyModelName, targetId.toString())) {
+      return; // Skip duplicate log
+    }
   }
 
   // Handle BigInt serialization for JSON fields
