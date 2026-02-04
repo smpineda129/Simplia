@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useAuth } from '../../../hooks/useAuth';
 import { useState } from 'react';
+import TableSkeleton from '../../../components/TableSkeleton';
 
 const UserTable = ({ users, onEdit, onDelete, loading }) => {
   const navigate = useNavigate();
@@ -50,11 +51,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
   };
 
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" p={4}>
-        <Typography>Cargando...</Typography>
-      </Box>
-    );
+    return <TableSkeleton rows={5} columns={5} />;
   }
 
   if (!users || users.length === 0) {
@@ -96,6 +93,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
                 {canImpersonateUser(user) && (
                   <Tooltip title="Personificar usuario">
                     <IconButton
+                      aria-label="Personificar usuario"
                       color="secondary"
                       onClick={() => handleImpersonate(user.id)}
                       size="small"
@@ -107,6 +105,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
                 )}
                 <Tooltip title="Ver perfil">
                   <IconButton
+                    aria-label="Ver perfil"
                     color="info"
                     onClick={() => navigate(`/users/${user.id}`)}
                     size="small"
@@ -116,6 +115,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
                 </Tooltip>
                 <Tooltip title="Editar">
                   <IconButton
+                    aria-label="Editar usuario"
                     color="primary"
                     onClick={() => onEdit(user)}
                     size="small"
@@ -125,6 +125,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
                 </Tooltip>
                 <Tooltip title="Eliminar">
                   <IconButton
+                    aria-label="Eliminar usuario"
                     color="error"
                     onClick={() => onDelete(user.id)}
                     size="small"
