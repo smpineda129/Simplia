@@ -20,9 +20,9 @@ import {
   Button,
   Grid,
 } from '@mui/material';
-import { Visibility, Download } from '@mui/icons-material';
+import { Visibility, Download, PictureAsPdf } from '@mui/icons-material';
 import auditService from '../audit.service';
-import LoadingSpinner from '../../../components/LoadingSpinner'; // Corrected path: modules/audit/components -> modules/audit -> modules -> src -> components
+import LoadingSpinner from '../../../components/LoadingSpinner';
 
 const AuditTable = ({ userId }) => {
   const [events, setEvents] = useState([]);
@@ -51,6 +51,35 @@ const AuditTable = ({ userId }) => {
       console.error('Error loading audit events:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async (type) => {
+    try {
+      const params = { user_id: userId };
+      let blob;
+      let filename;
+
+      if (type === 'excel') {
+        blob = await auditService.exportExcel(params);
+        filename = 'auditoria.xlsx';
+      } else {
+        blob = await auditService.exportPdf(params);
+        filename = 'auditoria.pdf';
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert('Error al exportar el reporte');
     }
   };
 
@@ -84,8 +113,13 @@ const AuditTable = ({ userId }) => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Historial de Actividades</Typography>
         <Box>
+          <Tooltip title="Exportar PDF">
+            <IconButton onClick={() => handleExport('pdf')} sx={{ mr: 1 }}>
+              <PictureAsPdf color="error" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Exportar Excel">
-            <IconButton onClick={() => window.open(`/api/audit/export/excel?user_id=${userId}`)}>
+            <IconButton onClick={() => handleExport('excel')}>
               <Download color="success" />
             </IconButton>
           </Tooltip>

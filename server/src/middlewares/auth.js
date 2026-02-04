@@ -78,10 +78,13 @@ export const authenticate = async (req, res, next) => {
     req.user = user;
 
     // Populate Context
+    // Mejorar detección de IP
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.connection.remoteAddress;
+
     const store = getContext();
     if (store) {
       store.set('user', user);
-      store.set('ip', req.ip);
+      store.set('ip', ip);
       store.set('userAgent', req.headers['user-agent']);
     }
 
