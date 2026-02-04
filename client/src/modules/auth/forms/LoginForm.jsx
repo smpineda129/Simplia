@@ -7,6 +7,7 @@ import {
   Alert,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { loginSchema } from '../schemas/loginSchema';
@@ -63,6 +64,7 @@ const LoginForm = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                     >
@@ -81,7 +83,11 @@ const LoginForm = () => {
               disabled={isSubmitting}
               sx={{ mt: 2 }}
             >
-              {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {isSubmitting ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Iniciar Sesión'
+              )}
             </Button>
           </Box>
         </Form>
