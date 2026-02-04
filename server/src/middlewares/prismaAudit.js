@@ -14,7 +14,12 @@ export const createPrismaAudit = (prisma) => {
     // 1. Determine if we should audit
     const writeActions = ['create', 'createMany', 'update', 'updateMany', 'delete', 'deleteMany', 'upsert'];
     const viewActions = ['findUnique', 'findFirst'];
-    const viewModels = ['Proceeding', 'Document', 'Correspondence', 'Company', 'User'];
+
+    // EXCLUDED 'User' from viewModels to prevent logging every authentication check
+    // If you specifically need to log when an ADMIN views a user profile, we'd need a way to distinguish
+    // that from the internal 'authenticate' middleware call.
+    // For now, removing 'User' allows 'View' logs for business entities only.
+    const viewModels = ['Proceeding', 'Document', 'Correspondence', 'Company'];
 
     const isWrite = writeActions.includes(action);
     const isView = viewActions.includes(action) && viewModels.includes(model);

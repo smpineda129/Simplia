@@ -3,29 +3,43 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 
 // Helper to build filters
-const buildWhereClause = (req) => {
+const buildWhereClause = async (req) => {
   const { startDate, endDate, type, user_id, entity } = req.query;
   const where = {};
 
-  // Company Filter
-  // Check if user is Owner (Level 1)
+  // Access Control Logic
+  const userId = req.user.id;
+  const userCompanyId = req.user.companyId;
   const isOwner = req.user.roles && req.user.roles.some(r => r.roleLevel === 1);
 
-  if (!isOwner) {
-    // Regular users see only their company events
-    if (req.user.companyId) {
-      where.companyId = req.user.companyId;
-    } else {
-      // If user has no company and is not owner, show nothing?
-      where.id = -1; // Impossible ID
-    }
-  } else {
-    // Owners see all. Can filter by specific company if requested.
+  // Check if user has explicit permission to view ALL (or Company) events
+  // Note: We'd need to check permission here if we want to bypass Owner check.
+  // For now, we stick to: Owner sees all/filtered, Regular sees ONLY THEIR COMPANY.
+  // If user_id is requested, a Regular user can only see it if it belongs to their company.
+
+  if (isOwner) {
+    // Owner can filter by any company
     if (req.query.company_id) {
       where.companyId = BigInt(req.query.company_id);
     }
+  } else {
+    // Regular user: Forced to their company
+    if (userCompanyId) {
+      where.companyId = BigInt(userCompanyId);
+    } else {
+      // If user has NO company and IS NOT owner, they should see NOTHING (or only their own events?)
+      // Safe default: only their own events
+       where.user_id = BigInt(userId);
+    }
   }
 
+  // Filter by User ID (if provided)
+  if (user_id) {
+    // Regular users can only filter by user_id if that user is in their company (enforced by where.companyId above)
+    where.user_id = BigInt(user_id);
+  }
+
+  // Date Filters
   if (startDate && endDate) {
     where.created_at = {
       gte: new Date(startDate),
@@ -35,10 +49,6 @@ const buildWhereClause = (req) => {
 
   if (type) {
     where.name = { contains: type };
-  }
-
-  if (user_id) {
-    where.user_id = BigInt(user_id);
   }
 
   if (entity) {
@@ -52,7 +62,7 @@ export const getEvents = async (req, res, next) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
-    const where = buildWhereClause(req);
+    const where = await buildWhereClause(req);
 
     const [events, total] = await Promise.all([
       prisma.action_events.findMany({
@@ -86,11 +96,11 @@ export const getEvents = async (req, res, next) => {
 
 export const exportExcel = async (req, res, next) => {
   try {
-    const where = buildWhereClause(req);
+    const where = await buildWhereClause(req);
     const events = await prisma.action_events.findMany({
       where,
       orderBy: { created_at: 'desc' },
-      take: 5000 // Limit for export to avoid memory crash
+      take: 5000
     });
 
     const workbook = new ExcelJS.Workbook();
@@ -132,11 +142,11 @@ export const exportExcel = async (req, res, next) => {
 
 export const exportPdf = async (req, res, next) => {
   try {
-    const where = buildWhereClause(req);
+    const where = await buildWhereClause(req);
     const events = await prisma.action_events.findMany({
       where,
       orderBy: { created_at: 'desc' },
-      take: 1000 // Lower limit for PDF
+      take: 1000
     });
 
     const doc = new PDFDocument();
@@ -151,7 +161,7 @@ export const exportPdf = async (req, res, next) => {
 
     events.forEach(event => {
       doc.fontSize(12).text(`[${event.created_at?.toISOString()}] ${event.name}`);
-      doc.fontSize(10).text(`User: ${event.user_id} | IP: ${event.ipAddress || 'N/A'} | Target: ${event.target_type} #${event.target_id}`);
+      doc.fontSize(10).text(`User: ${event.user_id.toString()} | IP: ${event.ipAddress || 'N/A'} | Target: ${event.target_type} #${event.target_id.toString()}`);
       if (event.userAgent) {
         doc.fontSize(8).text(`UA: ${event.userAgent}`);
       }
