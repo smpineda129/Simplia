@@ -16,7 +16,7 @@ import {
 import { useAuth } from '../../../hooks/useAuth';
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, isOwner } = useAuth();
   const navigate = useNavigate();
 
   // Check if user has permission
@@ -25,9 +25,6 @@ const DashboardPage = () => {
     if (!user?.allPermissions) return false;
     return user.allPermissions.includes(permission);
   };
-
-  // Check if user is Owner
-  const isOwner = user?.roles?.includes('Owner');
 
   const cards = [
     {
