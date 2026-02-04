@@ -18,10 +18,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Grid,
 } from '@mui/material';
-import { Visibility, Description, Download } from '@mui/icons-material';
+import { Visibility, Download } from '@mui/icons-material';
 import auditService from '../audit.service';
-import LoadingSpinner from '../../../../components/LoadingSpinner';
+import LoadingSpinner from '../../../components/LoadingSpinner'; // Corrected path: modules/audit/components -> modules/audit -> modules -> src -> components
 
 const AuditTable = ({ userId }) => {
   const [events, setEvents] = useState([]);

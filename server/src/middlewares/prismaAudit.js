@@ -109,8 +109,8 @@ async function logAudit(prisma, params, result) {
     original = result ? safeStringify(result) : null;
   }
 
-  // Fields should be empty for standard CRUD, to respect legacy usage
-  // IP and UserAgent are stored in their own columns now
+  // Fields should be strictly empty for standard CRUD as per user request
+  // (metadata is now in ipAddress/userAgent columns)
   const fields = '';
 
   await prisma.action_events.create({
