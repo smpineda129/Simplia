@@ -89,63 +89,42 @@ async function logAudit(prisma, params, result) {
   };
 
   // Prepare Changes/Original
-  // In Laravel example:
-  // - Create: "Changes" has the object, "Original" is empty/null.
-  // - Update: "Changes" usually has what changed, "Original" has old values.
-  // - Delete: "Original" has the deleted object.
-
   let changes = null;
   let original = null;
 
   if (eventName === 'Create') {
-    // For Create, result is the new object
     changes = result ? safeStringify(result) : safeStringify(args.data);
   } else if (eventName === 'Update') {
-    // For Update, args.data has the changes.
-    // Ideally we'd want 'before' state in original, but Prisma middleware happens *around* the query.
-    // Standard Prisma Middleware doesn't give 'before' value easily without an extra query.
-    // For now, we log the 'data' passed to update in changes.
     changes = args.data ? safeStringify(args.data) : null;
-    // Note: To get 'original', we would need to query before update.
-    // To keep it 'fire-and-forget' and fast, we might skip 'original' or accept that limitation.
   } else if (eventName === 'Delete') {
-    // For Delete, result is the deleted object
     original = result ? safeStringify(result) : null;
   }
 
-  // Metadata: IP, User Agent.
-  // User asked to keep "Fields" empty if possible or maintain legacy.
-  // However, earlier requirements asked for IP/UA.
-  // Legacy example shows "Fields": "vacío".
-  // I will put metadata in 'fields' but keep it minimal JSON, or empty if strictly requested.
-  // Given the dual requirement (Robust Audit vs Match Legacy), I will put the connection info in 'fields' JSON.
-  // If the user wants it EXACTLY "vacío", I'd pass an empty string, but then we lose IP/UA.
-  // I will store the context in a simple JSON.
-  const fields = safeStringify({
-    ip,
-    userAgent,
-    // filteredArgs: args?.where // Optional: keep context of the query
-  });
+  // Fields should be empty for standard CRUD, to respect legacy usage
+  // IP and UserAgent are stored in their own columns now
+  const fields = '';
 
   await prisma.action_events.create({
     data: {
       batch_id: crypto.randomUUID(),
       user_id: userId,
-      name: eventName, // "Create", "Update", etc.
-      actionable_type: legacyModelName, // "App\Models\Correspondence"
+      name: eventName,
+      actionable_type: legacyModelName,
       actionable_id: targetId,
       target_type: legacyModelName,
       target_id: targetId,
       model_type: legacyModelName,
       model_id: targetId,
-      fields: fields, // JSON with IP/UA
+      fields: fields,
       status: 'finished',
       exception: '',
       created_at: new Date(),
       updated_at: new Date(),
       original: original,
       changes: changes,
-      companyId: companyId
+      companyId: companyId,
+      ipAddress: ip,
+      userAgent: userAgent
     }
   });
 }

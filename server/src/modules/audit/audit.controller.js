@@ -104,13 +104,10 @@ export const exportExcel = async (req, res, next) => {
       { header: 'Modelo', key: 'model_type', width: 20 },
       { header: 'Modelo ID', key: 'model_id', width: 15 },
       { header: 'IP', key: 'ip', width: 15 },
+      { header: 'User Agent', key: 'ua', width: 30 },
     ];
 
     events.forEach(event => {
-      // Parse fields JSON for metadata if needed
-      let meta = {};
-      try { meta = JSON.parse(event.fields); } catch (e) {}
-
       worksheet.addRow({
         id: event.id.toString(),
         created_at: event.created_at,
@@ -118,7 +115,8 @@ export const exportExcel = async (req, res, next) => {
         user_id: event.user_id.toString(),
         model_type: event.model_type,
         model_id: event.model_id ? event.model_id.toString() : '',
-        ip: meta.ip || ''
+        ip: event.ipAddress || '',
+        ua: event.userAgent || ''
       });
     });
 
@@ -152,11 +150,11 @@ export const exportPdf = async (req, res, next) => {
     doc.moveDown();
 
     events.forEach(event => {
-      let meta = {};
-      try { meta = JSON.parse(event.fields); } catch (e) {}
-
       doc.fontSize(12).text(`[${event.created_at?.toISOString()}] ${event.name}`);
-      doc.fontSize(10).text(`User: ${event.user_id} | IP: ${meta.ip || 'N/A'} | Target: ${event.target_type} #${event.target_id}`);
+      doc.fontSize(10).text(`User: ${event.user_id} | IP: ${event.ipAddress || 'N/A'} | Target: ${event.target_type} #${event.target_id}`);
+      if (event.userAgent) {
+        doc.fontSize(8).text(`UA: ${event.userAgent}`);
+      }
       doc.moveDown(0.5);
     });
 

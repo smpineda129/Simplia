@@ -621,6 +621,8 @@ model action_events {
   original        String?
   changes         String?
   companyId       BigInt?   @map("company_id")
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
 
   @@index([companyId])
 }
