@@ -3,6 +3,7 @@ import { authController } from './auth.controller.js';
 import { authValidation } from './auth.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { loginRateLimiter } from '../../middlewares/rateLimiter.js';
 
 const router = Router();
 
@@ -66,7 +67,7 @@ router.post('/register', authValidation.register, validate, authController.regis
  *       401:
  *         description: Credenciales inválidas
  */
-router.post('/login', authValidation.login, validate, authController.login);
+router.post('/login', loginRateLimiter, authValidation.login, validate, authController.login);
 
 /**
  * @swagger

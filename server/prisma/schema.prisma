@@ -64,6 +64,7 @@ model User {
   proceedingThreadsFrom                                        ProceedingThread[]     @relation("ProceedingThreadFrom")
   company                                                      Company?               @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("users")
 }
 
@@ -161,6 +162,7 @@ model Proceeding {
   company                 Company                  @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   retentionLine           RetentionLine?           @relation(fields: [retentionLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("proceedings")
 }
 
@@ -200,6 +202,7 @@ model Correspondence {
   users_correspondences_sender_idTousers           User?                     @relation("correspondences_sender_idTousers", fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_correspondences_sender")
   sentEmails                                       SentEmail[]
 
+  @@index([companyId])
   @@map("correspondences")
 }
 
@@ -244,6 +247,7 @@ model Document {
   textracts               DocumentTextract[]
   company                 Company                   @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("documents")
 }
 

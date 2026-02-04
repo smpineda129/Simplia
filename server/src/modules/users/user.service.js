@@ -35,7 +35,10 @@ export const userService = {
         const roles = await userRoleService.getUserRoles(user.id);
         return {
           ...user,
-          roles: roles || [],
+          roles: roles.map(r => ({
+            name: r.name,
+            roleLevel: r.role_level || r.roleLevel
+          })) || [],
         };
       })
     );
@@ -89,7 +92,10 @@ export const userService = {
 
     return {
       ...user,
-      roles: roles.map(r => r.name),
+      roles: roles.map(r => ({
+        name: r.name,
+        roleLevel: r.role_level || r.roleLevel
+      })),
       allPermissions: permissions.map(p => p.name)
     };
   },

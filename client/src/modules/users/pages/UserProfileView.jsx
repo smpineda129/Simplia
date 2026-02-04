@@ -84,14 +84,17 @@ const UserProfileView = () => {
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
               {(user.roles && user.roles.length > 0) ? (
-                user.roles.map((roleName) => (
-                  <Chip
-                    key={roleName}
-                    label={roleName}
-                    color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
-                    variant="outlined"
-                  />
-                ))
+                user.roles.map((role) => {
+                  const roleName = typeof role === 'object' ? role.name : role;
+                  return (
+                    <Chip
+                      key={roleName}
+                      label={roleName}
+                      color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
+                      variant="outlined"
+                    />
+                  );
+                })
               ) : (
                 <Chip label={user.role || 'Usuario'} color="default" />
               )}

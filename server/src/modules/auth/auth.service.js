@@ -46,14 +46,17 @@ export const authService = {
 
     // Flatten permissions and roles
     const permissions = new Set();
-    const roles = new Set();
+    const roles = [];
 
     // Add direct permissions
     directPermissions.forEach(p => permissions.add(p.permission.name));
 
     // Add role permissions and role names
     userRoles.forEach(ur => {
-      roles.add(ur.role.name);
+      roles.push({
+        name: ur.role.name,
+        roleLevel: ur.role.roleLevel
+      });
       ur.role.roleHasPermissions.forEach(rhp => {
         permissions.add(rhp.permission.name);
       });
@@ -64,7 +67,7 @@ export const authService = {
     return {
       ...userWithoutPassword,
       allPermissions: Array.from(permissions),
-      roles: Array.from(roles)
+      roles
     };
   },
 
