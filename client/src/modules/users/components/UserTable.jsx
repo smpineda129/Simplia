@@ -20,7 +20,7 @@ import { useState } from 'react';
 
 const UserTable = ({ users, onEdit, onDelete, loading }) => {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, canImpersonateUser } = usePermissions();
   const { user: currentUser, startImpersonation, isImpersonating: globalIsImpersonating } = useAuth();
   const [impersonating, setImpersonating] = useState(null);
 
@@ -35,48 +35,6 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
     }
   };
 
-  const canImpersonate = (targetUser) => {
-    if (!currentUser || !targetUser) return false;
-    if (globalIsImpersonating) return false; // No permitir personificar si ya se está personificando
-    if (currentUser.id === targetUser.id) return false;
-
-    // Debe tener el permiso
-    if (!hasPermission('user.impersonate')) {
-      return false;
-    }
-
-    // Helper para obtener el nivel más bajo (más privilegiado) de un usuario
-    const getLowestLevel = (u) => {
-      let levels = [];
-
-      // 1. Revisar roles en array (objetos con roleLevel o role_level)
-      if (u.roles && Array.isArray(u.roles)) {
-        u.roles.forEach(r => {
-          const level = typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null;
-          if (level !== null && level !== undefined) levels.push(level);
-        });
-      }
-
-      // 2. Revisar rol directo en string
-      if (u.role === 'Owner') levels.push(1);
-      else if (u.role === 'ADMIN') levels.push(2);
-      else if (u.role) levels.push(999);
-
-      if (levels.length === 0) return 999;
-      return Math.min(...levels);
-    };
-
-    const currentUserLevel = getLowestLevel(currentUser);
-    const targetUserLevel = getLowestLevel(targetUser);
-
-    // Un Owner (1) puede personificar a cualquiera que no sea Owner (o si tiene nivel inferior)
-    if (currentUserLevel === 1 && (targetUserLevel > 1 || targetUser.role !== 'Owner')) {
-      return true;
-    }
-
-    // El usuario actual debe tener un nivel estrictamente menor (más privilegiado)
-    return currentUserLevel < targetUserLevel;
-  };
 
   const handleImpersonate = async (userId) => {
     try {
@@ -135,7 +93,7 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
                 {new Date(user.createdAt).toLocaleDateString('es-ES')}
               </TableCell>
               <TableCell align="right">
-                {canImpersonate(user) && (
+                {canImpersonateUser(user) && (
                   <Tooltip title="Personificar usuario">
                     <IconButton
                       color="secondary"

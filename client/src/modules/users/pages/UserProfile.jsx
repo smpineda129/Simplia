@@ -113,15 +113,18 @@ const UserProfile = () => {
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1, mb: 1 }}>
               {(user.roles && user.roles.length > 0) ? (
-                user.roles.map((roleName) => (
-                  <Chip
-                    key={roleName}
-                    label={roleName}
-                    size="small"
-                    color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
-                    variant="outlined"
-                  />
-                ))
+                user.roles.map((role) => {
+                  const roleName = typeof role === 'object' ? role.name : role;
+                  return (
+                    <Chip
+                      key={roleName}
+                      label={roleName}
+                      size="small"
+                      color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
+                      variant="outlined"
+                    />
+                  );
+                })
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   Rol: {user.role || 'Usuario'}
@@ -280,7 +283,10 @@ const UserProfile = () => {
                 <Box>
                   <Typography variant="caption" color="text.secondary">Roles</Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                    {user.roles?.map(r => <Chip key={r} label={r} size="small" />) || <Chip label={user.role || 'Usuario'} size="small" />}
+                    {user.roles?.map(role => {
+                      const roleName = typeof role === 'object' ? role.name : role;
+                      return <Chip key={roleName} label={roleName} size="small" />;
+                    }) || <Chip label={user.role || 'Usuario'} size="small" />}
                   </Box>
                 </Box>
               </Grid>

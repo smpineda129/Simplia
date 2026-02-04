@@ -15,13 +15,21 @@ export const impersonateService = {
 
         if (roles && roles.length > 0) {
             // El servicio getUserRoles ya devuelve objetos de roles completos a través de su raw query
-            return Math.min(...roles.map(role => role.role_level || role.roleLevel || 999));
+            const levels = roles.map(role => {
+                const level = role.role_level || role.roleLevel || 999;
+                // Restricción: Nivel 1 solo para rol 'Owner'
+                if (level === 1 && role.name !== 'Owner') {
+                    return 999;
+                }
+                return level;
+            });
+            return Math.min(...levels);
         }
 
         // 2. Si no hay roles en la tabla de relaciones, intentar con la columna 'role' del usuario
         const user = await prisma.user.findUnique({
             where: { id: parseInt(userId) },
-            select: { role: true }
+            select: { id: true, role: true }
         });
 
         if (user && user.role) {
@@ -29,7 +37,12 @@ export const impersonateService = {
                 where: { name: user.role }
             });
             if (dbRole) {
-                return dbRole.roleLevel || 999;
+                const level = dbRole.roleLevel || 999;
+                // Restricción: Nivel 1 solo para rol 'Owner'
+                if (level === 1 && dbRole.name !== 'Owner') {
+                    return 999;
+                }
+                return level;
             }
         }
 
@@ -77,15 +90,51 @@ export const impersonateService = {
             };
         }
 
-        // 4. Verificar niveles de rol
+        // 4. Verificar niveles de rol y restricciones de empresa
         const impersonatorLevel = await this.getUserLowestRoleLevel(impersonatorId);
         const targetLevel = await this.getUserLowestRoleLevel(targetUserId);
 
-        // El impersonador debe tener un nivel MENOR (más privilegiado) que el objetivo
+        // REGLA 1: Owner (Nivel 1) puede personificar a cualquiera siempre que tenga nivel 1,
+        // excepto a otro Owner (Nivel 1).
+        // Interpretación: Si soy Owner (Lvl 1), puedo personificar a cualquiera (Lvl 1, 2, 3...)
+        // pero si el objetivo es Lvl 1 y es Owner, no puedo.
+        if (impersonatorLevel === 1) {
+            // Verificar si el objetivo también es un Owner con Nivel 1
+            const targetRoles = await userRoleService.getUserRoles(targetUserId);
+            const isTargetOwnerLvl1 = targetRoles.some(r => 
+                (r.role_level === 1 || r.roleLevel === 1) && r.name === 'Owner'
+            );
+
+            if (isTargetOwnerLvl1) {
+                return {
+                    canImpersonate: false,
+                    reason: 'Un Owner no puede personificar a otro Owner de nivel 1',
+                };
+            }
+            return { canImpersonate: true };
+        }
+
+        // REGLA 2: Otros roles con permiso deben tener nivel menor (numéricamente) al objetivo y ser de la misma compañía
+        // Obtener datos de ambos para comparar compañía
+        const impersonator = await prisma.user.findUnique({
+            where: { id: parseInt(impersonatorId) },
+            select: { companyId: true }
+        });
+
+        const impCompanyId = impersonator?.companyId?.toString();
+        const targetCompanyId = targetUser?.companyId?.toString();
+
+        if (!impersonator || !targetCompanyId || impCompanyId !== targetCompanyId) {
+            return {
+                canImpersonate: false,
+                reason: 'Solo puedes personificar a usuarios de tu misma empresa',
+            };
+        }
+
         if (impersonatorLevel >= targetLevel) {
             return {
                 canImpersonate: false,
-                reason: 'No tienes suficiente nivel de privilegio para personificar a este usuario',
+                reason: 'No tienes suficiente nivel de privilegio para personificar a este usuario (tu nivel debe ser superior)',
             };
         }
 
