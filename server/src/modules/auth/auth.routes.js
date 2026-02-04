@@ -3,7 +3,7 @@ import { authController } from './auth.controller.js';
 import { authValidation } from './auth.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
-import { loginRateLimiter } from '../../middlewares/rateLimiter.js';
+import { loginRateLimiter, registerRateLimiter, refreshRateLimiter } from '../../middlewares/rateLimiter.js';
 
 const router = Router();
 
@@ -38,7 +38,7 @@ const router = Router();
  *       400:
  *         description: Error de validación o email ya registrado
  */
-router.post('/register', authValidation.register, validate, authController.register);
+router.post('/register', registerRateLimiter, authValidation.register, validate, authController.register);
 
 /**
  * @swagger
@@ -92,7 +92,7 @@ router.post('/login', loginRateLimiter, authValidation.login, validate, authCont
  *       401:
  *         description: Refresh token inválido
  */
-router.post('/refresh', authValidation.refreshToken, validate, authController.refreshToken);
+router.post('/refresh', refreshRateLimiter, authValidation.refreshToken, validate, authController.refreshToken);
 
 /**
  * @swagger
