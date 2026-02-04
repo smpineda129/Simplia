@@ -53,3 +53,15 @@ export const loginRateLimiter = createRateLimiter({
   max: 5, // 5 attempts
   message: 'Demasiados intentos de inicio de sesión. Por favor intente nuevamente en 15 minutos.'
 });
+
+export const registerRateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 attempts per hour
+  message: 'Demasiadas cuentas creadas desde esta IP. Por favor intente nuevamente en una hora.'
+});
+
+export const refreshRateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // 20 attempts per hour
+  message: 'Demasiadas solicitudes de renovación de token. Por favor intente nuevamente más tarde.'
+});

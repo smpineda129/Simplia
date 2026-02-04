@@ -1,4 +1,4 @@
-import { createRateLimiter } from '../rateLimiter.js';
+import { createRateLimiter, registerRateLimiter, refreshRateLimiter } from '../rateLimiter.js';
 import { jest } from '@jest/globals';
 
 describe('Rate Limiter Middleware', () => {
@@ -65,5 +65,34 @@ describe('Rate Limiter Middleware', () => {
     expect(next).toHaveBeenCalledTimes(2);
 
     jest.useRealTimers();
+  });
+
+  test('registerRateLimiter should limit to 5 requests per hour', () => {
+     // We cannot easily test the exact windowMs without mocking Date.now inside the module closure or exporting options.
+     // But we can test the count limit (max=5).
+
+     for (let i = 0; i < 5; i++) {
+        registerRateLimiter(req, res, next);
+     }
+     expect(next).toHaveBeenCalledTimes(5);
+
+     // 6th request should fail
+     next.mockClear();
+     registerRateLimiter(req, res, next);
+     expect(next).not.toHaveBeenCalled();
+     expect(res.status).toHaveBeenCalledWith(429);
+  });
+
+  test('refreshRateLimiter should limit to 20 requests per hour', () => {
+     for (let i = 0; i < 20; i++) {
+        refreshRateLimiter(req, res, next);
+     }
+     expect(next).toHaveBeenCalledTimes(20);
+
+     // 21st request should fail
+     next.mockClear();
+     refreshRateLimiter(req, res, next);
+     expect(next).not.toHaveBeenCalled();
+     expect(res.status).toHaveBeenCalledWith(429);
   });
 });
