@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useDebounce from '../../../hooks/useDebounce';
 import {
   Box,
   Typography,
@@ -37,6 +38,7 @@ const CorrespondenceList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedCorrespondence, setSelectedCorrespondence] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
     loadCompanies();
@@ -52,8 +54,11 @@ const CorrespondenceList = () => {
 
   useEffect(() => {
     loadCorrespondences();
+  }, [page, debouncedSearch, selectedCompany, selectedStatus]);
+
+  useEffect(() => {
     loadStats();
-  }, [page, search, selectedCompany, selectedStatus]);
+  }, [selectedCompany]);
 
   const loadCompanies = async () => {
     try {
@@ -86,7 +91,7 @@ const CorrespondenceList = () => {
     try {
       setLoading(true);
       const response = await correspondenceService.getAll({
-        search,
+        search: debouncedSearch,
         companyId: selectedCompany,
         status: selectedStatus,
         page,
