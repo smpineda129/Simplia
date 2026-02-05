@@ -67,7 +67,7 @@ router.post('/register', registerRateLimiter, authValidation.register, validate,
  *       401:
  *         description: Credenciales inválidas
  */
-router.post('/login', loginRateLimiter, authValidation.login, validate, authController.login);
+router.post('/login', authValidation.login, validate, authController.login);
 
 /**
  * @swagger

@@ -11,7 +11,7 @@ export const corsOptions = {
   origin: function (origin, callback) {
     // Permitir requests sin origin (como mobile apps o curl)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -20,6 +20,6 @@ export const corsOptions = {
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  exposedHeaders: ['Authorization'],
+  exposedHeaders: ['Authorization', 'Content-Disposition', 'Content-Type'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };

@@ -13,6 +13,7 @@ import entityRoutes from '../modules/entities/entity.routes.js';
 import warehouseRoutes from '../modules/warehouses/warehouse.routes.js';
 import roleRoutes from '../modules/roles/role.routes.js';
 import permissionRoutes from '../modules/permissions/permission.routes.js';
+import auditRoutes from '../modules/audit/audit.routes.js';
 import { authenticate } from '../middlewares/auth.js';
 import { hasPermission } from '../middlewares/permission.middleware.js';
 
@@ -32,6 +33,7 @@ router.use('/entities', entityRoutes);
 router.use('/warehouses', warehouseRoutes);
 router.use('/roles', roleRoutes);
 router.use('/permissions', permissionRoutes);
+router.use('/audit', auditRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

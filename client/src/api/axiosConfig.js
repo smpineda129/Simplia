@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -12,7 +12,14 @@ const axiosInstance = axios.create({
 // Request interceptor para agregar token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    let token = localStorage.getItem('accessToken');
+
+    // Guard contra strings erróneas como "undefined" o "null"
+    if (token === 'undefined' || token === 'null') {
+      localStorage.removeItem('accessToken');
+      token = null;
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,11 +41,13 @@ axiosInstance.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken,
         });
 
-        const { accessToken } = response.data;
+        const accessToken = data.data.accessToken;
+        if (!accessToken) throw new Error('Cuerpo de respuesta inválido');
+
         localStorage.setItem('accessToken', accessToken);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;

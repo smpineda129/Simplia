@@ -628,6 +628,11 @@ model action_events {
   updated_at      DateTime? @db.Timestamp(0)
   original        String?
   changes         String?
+  companyId       BigInt?   @map("company_id")
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
+
+  @@index([companyId])
 }
 
 model box_warehouse {
