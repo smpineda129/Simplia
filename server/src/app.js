@@ -13,7 +13,6 @@ const app = express();
 
 app.use((req, res, next) => {
   context.run(new Map(), () => {
-    console.log(`[Context] Initialized for ${req.method} ${req.url}`);
     next();
   });
 });

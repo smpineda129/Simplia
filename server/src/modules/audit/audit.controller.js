@@ -58,8 +58,6 @@ const buildWhereClause = async (req) => {
     where.actionable_type = entity;
   }
 
-  const whereJson = JSON.stringify(where, (k, v) => typeof v === 'bigint' ? v.toString() : v);
-  console.log(`[Audit Controller] Filter: ${whereJson}`);
   return where;
 };
 
@@ -78,16 +76,64 @@ export const getEvents = async (req, res, next) => {
       }),
       prisma.action_events.count({ where }),
     ]);
-    console.log(`[Audit Controller] Found ${total} events for query`);
 
-    // Manual serialization for BigInt
-    const safeEvents = JSON.parse(JSON.stringify(events, (key, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ));
+    // Enrich events with names from their target models if fields is empty
+    const enrichedEvents = await Promise.all(events.map(async (event) => {
+      const plainEvent = JSON.parse(JSON.stringify(event, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+
+      // 1. Fetch actor name (who performed the action)
+      try {
+        const actor = await prisma.user.findUnique({
+          where: { id: event.user_id },
+          select: { name: true }
+        });
+        if (actor) plainEvent.userName = actor.name;
+      } catch (e) { /* silent */ }
+
+      // If we already have a name in 'fields', use it (it's a snapshot)
+      if (plainEvent.fields) return plainEvent;
+
+      // Otherwise, try to fetch the current name from the database via relation-like logic
+      try {
+        const rawModelName = event.model_type?.replace('App\\Models\\', '');
+        if (!rawModelName || !event.model_id) return plainEvent;
+
+        // Map model names to Prisma names (handle special cases if any)
+        // For Simplia, it seems roles are often PascalCase, but Prisma methods are camelCase
+        let prismaModelName = rawModelName.charAt(0).toLowerCase() + rawModelName.slice(1);
+
+        // Handle common naming mismatches
+        if (rawModelName === 'CorrespondenceType') prismaModelName = 'correspondenceType';
+
+        if (prisma[prismaModelName]) {
+          const targetId = BigInt(event.model_id);
+
+          // Per user feedback: Proceeding uses 'name' (confirmed in schema)
+          // Correspondence and Template use 'title'
+          const usesTitle = ['Template', 'Correspondence'].includes(rawModelName);
+          const selection = usesTitle ? { title: true } : { name: true };
+
+          const target = await prisma[prismaModelName].findUnique({
+            where: { id: targetId },
+            select: selection
+          });
+
+          if (target) {
+            plainEvent.fields = target.name || target.title || '';
+          }
+        }
+      } catch (e) {
+        // console.error(`Failed to enrich ${event.model_type}:`, e.message);
+      }
+
+      return plainEvent;
+    }));
 
     res.json({
       success: true,
-      data: safeEvents,
+      data: enrichedEvents,
       meta: {
         total,
         page: Number(page),

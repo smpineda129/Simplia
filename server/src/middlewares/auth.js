@@ -6,7 +6,6 @@ import { getContext } from '../utils/context.js';
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log(`[Auth Middleware] Request for ${req.url} - Has Header: ${!!authHeader}`);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({

@@ -19,10 +19,42 @@ import {
   DialogActions,
   Button,
   Grid,
+  Fade,
+  Avatar,
+  Divider,
 } from '@mui/material';
-import { Visibility, Download, PictureAsPdf } from '@mui/icons-material';
+import {
+  Visibility,
+  Download,
+  PictureAsPdf,
+  History,
+  Terminal,
+  Person,
+  Language,
+  Fingerprint,
+} from '@mui/icons-material';
 import auditService from '../audit.service';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+
+const ACTION_TRANSLATIONS = {
+  'Create': 'Crear',
+  'Update': 'Actualizar',
+  'Delete': 'Eliminar',
+  'View': 'Ver',
+  'Unknown': 'Desconocido'
+};
+
+const MODEL_TRANSLATIONS = {
+  'User': 'Usuario',
+  'Proceeding': 'Expediente',
+  'Document': 'Documento',
+  'Correspondence': 'Correspondencia',
+  'Company': 'Empresa',
+  'Area': 'Área',
+  'Retention': 'Retención',
+  'Role': 'Rol',
+  'Permission': 'Permiso'
+};
 
 const AuditTable = ({ userId }) => {
   const [events, setEvents] = useState([]);
@@ -68,7 +100,6 @@ const AuditTable = ({ userId }) => {
         filename = 'auditoria.pdf';
       }
 
-      // Create download link
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement('a');
       link.href = url;
@@ -92,88 +123,187 @@ const AuditTable = ({ userId }) => {
     setPage(0);
   };
 
-  const getActionColor = (name) => {
-    if (name.includes('Create')) return 'success';
-    if (name.includes('Update')) return 'warning';
-    if (name.includes('Delete')) return 'error';
-    if (name.includes('View')) return 'info';
-    return 'default';
+  const getActionStyles = (name) => {
+    if (name.includes('Create')) return {
+      bg: 'linear-gradient(45deg, #43a047 30%, #66bb6a 90%)',
+      color: 'white'
+    };
+    if (name.includes('Update')) return {
+      bg: 'linear-gradient(45deg, #fb8c00 30%, #ffb74d 90%)',
+      color: 'white'
+    };
+    if (name.includes('Delete')) return {
+      bg: 'linear-gradient(45deg, #e53935 30%, #ef5350 90%)',
+      color: 'white'
+    };
+    if (name.includes('View')) return {
+      bg: 'linear-gradient(45deg, #1e88e5 30%, #42a5f5 90%)',
+      color: 'white'
+    };
+    return { bg: '#9e9e9e', color: 'white' };
   };
 
   const formatModelName = (modelType) => {
     if (!modelType) return 'N/A';
-    return modelType.replace('App\\Models\\', '');
+    const rawName = modelType.replace('App\\Models\\', '');
+    return MODEL_TRANSLATIONS[rawName] || rawName;
+  };
+
+  const formatActionName = (name) => {
+    return ACTION_TRANSLATIONS[name] || name;
   };
 
   if (loading && events.length === 0) {
-    return <LoadingSpinner message="Cargando historial..." />;
+    return <LoadingSpinner message="Cargando historial de actividades..." />;
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">Historial de Actividades</Typography>
-        <Box>
-          <Tooltip title="Exportar PDF">
-            <IconButton onClick={() => handleExport('pdf')} sx={{ mr: 1 }}>
-              <PictureAsPdf color="error" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Exportar Excel">
-            <IconButton onClick={() => handleExport('excel')}>
-              <Download color="success" />
-            </IconButton>
-          </Tooltip>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Avatar sx={{ bgcolor: 'secondary.light', width: 40, height: 40 }}>
+            <History />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
+              Audit Log
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Rastreo detallado de interacciones y cambios
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<PictureAsPdf />}
+            onClick={() => handleExport('pdf')}
+            sx={{ borderRadius: 2, borderColor: 'error.light', color: 'error.main' }}
+          >
+            PDF
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Download />}
+            onClick={() => handleExport('excel')}
+            sx={{ borderRadius: 2, borderColor: 'success.light', color: 'success.main' }}
+          >
+            Excel
+          </Button>
         </Box>
       </Box>
 
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small">
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          overflow: 'hidden',
+          background: '#ffffff',
+        }}
+      >
+        <Table size="medium">
           <TableHead>
-            <TableRow sx={{ bgcolor: 'grey.50' }}>
-              <TableCell>Fecha</TableCell>
-              <TableCell>Acción</TableCell>
-              <TableCell>Entidad</TableCell>
-              <TableCell>ID Entidad</TableCell>
-              <TableCell>IP</TableCell>
-              <TableCell align="right">Detalle</TableCell>
+            <TableRow sx={{ bgcolor: 'rgba(245, 245, 245, 0.5)' }}>
+              <TableCell sx={{ fontWeight: 600 }}>Fecha y Hora</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Acción</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Entidad</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Referencia</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Conexión</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {events.length > 0 ? (
-              events.map((event) => (
-                <TableRow key={event.id} hover>
-                  <TableCell>
-                    {new Date(event.created_at).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={event.name}
-                      color={getActionColor(event.name)}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell>{formatModelName(event.model_type)}</TableCell>
-                  <TableCell>#{event.model_id}</TableCell>
-                  <TableCell>
-                    <Typography variant="caption">{event.ipAddress}</Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Ver detalles">
-                      <IconButton size="small" onClick={() => setSelectedEvent(event)}>
+              events.map((event, index) => {
+                const styles = getActionStyles(event.name);
+                return (
+                  <TableRow
+                    key={event.id}
+                    hover
+                    sx={{
+                      '&:last-child td, &:last-child th': { border: 0 },
+                      bgcolor: index % 2 === 0 ? 'transparent' : 'rgba(252, 252, 252, 0.5)',
+                      transition: 'background-color 0.2s',
+                    }}
+                  >
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {new Date(event.created_at).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(event.created_at).toLocaleTimeString()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={formatActionName(event.name)}
+                        size="small"
+                        sx={{
+                          background: styles.bg,
+                          color: styles.color,
+                          fontWeight: 600,
+                          fontSize: '0.7rem',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          border: 'none',
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Terminal fontSize="inherit" sx={{ color: 'text.secondary' }} />
+                        <Typography variant="body2" sx={{ color: 'primary.dark', fontWeight: 600 }}>
+                          {formatModelName(event.model_type)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {event.fields || `ID: #${event.model_id}`}
+                      </Typography>
+                      {event.fields && (
+                        <Typography variant="caption" color="text.secondary">
+                          Referencia: #{event.model_id}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title={event.userAgent}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Language fontSize="inherit" color="disabled" />
+                          <Typography variant="caption" color="text.secondary">
+                            {event.ipAddress || 'Unknown'}
+                          </Typography>
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={() => setSelectedEvent(event)}
+                        sx={{
+                          color: 'primary.main',
+                          bgcolor: 'primary.50',
+                          '&:hover': { bgcolor: 'primary.100' }
+                        }}
+                      >
                         <Visibility fontSize="small" />
                       </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  <Typography variant="body2" sx={{ py: 3, color: 'text.secondary' }}>
-                    No hay registros de actividad
-                  </Typography>
+                  <Box sx={{ py: 8, opacity: 0.6 }}>
+                    <History sx={{ fontSize: 48, color: 'disabled.main', mb: 1, display: 'block', mx: 'auto' }} />
+                    <Typography variant="body2">No se encontraron registros de actividad</Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}
@@ -189,57 +319,188 @@ const AuditTable = ({ userId }) => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{ mt: 1 }}
       />
 
-      {/* Detail Dialog */}
+      {/* Modern Detail Dialog */}
       <Dialog
         open={!!selectedEvent}
         onClose={() => setSelectedEvent(null)}
         maxWidth="md"
         fullWidth
+        TransitionComponent={Fade}
+        PaperProps={{
+          sx: { borderRadius: 4, backgroundImage: 'none' }
+        }}
       >
-        <DialogTitle>
-          Detalle del Evento #{selectedEvent?.id}
-        </DialogTitle>
-        <DialogContent dividers>
+        <DialogTitle sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{ bgcolor: 'primary.main' }}>
+              <Terminal />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                Detalles del Evento
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Referencia Sistema: #{selectedEvent?.id}
+              </Typography>
+            </Box>
+          </Box>
           {selectedEvent && (
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Typography variant="subtitle2">Fecha</Typography>
-                <Typography variant="body2">{new Date(selectedEvent.created_at).toLocaleString()}</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="subtitle2">IP / Agente</Typography>
-                <Typography variant="body2">{selectedEvent.ipAddress}</Typography>
-                <Typography variant="caption" color="text.secondary">{selectedEvent.userAgent}</Typography>
+            <Chip
+              label={formatActionName(selectedEvent.name)}
+              sx={{
+                background: getActionStyles(selectedEvent.name).bg,
+                color: 'white',
+                fontWeight: 700
+              }}
+            />
+          )}
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ p: 4, bgcolor: '#fcfcfc' }}>
+          {selectedEvent && (
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="overline" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Fingerprint fontSize="inherit" /> Identificación
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: 'white' }}>
+                    <Typography variant="body1" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
+                      {selectedEvent.fields || 'Sin nombre'}
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Entidad</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatModelName(selectedEvent.model_type)}</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">ID Registro</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>#{selectedEvent.model_id}</Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Box>
+                <Box>
+                  <Typography variant="overline" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Language fontSize="inherit" /> Contexto
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: 'white' }}>
+                    <Typography variant="caption" color="text.secondary">Dirección IP</Typography>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>{selectedEvent.ipAddress || 'No disponible'}</Typography>
+                    <Typography variant="caption" color="text.secondary">Agente de Usuario</Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', color: 'text.secondary', fontFamily: 'monospace' }}>
+                      {selectedEvent.userAgent}
+                    </Typography>
+                  </Paper>
+                </Box>
               </Grid>
 
-              {selectedEvent.changes && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" sx={{ mt: 1 }}>Cambios (JSON)</Typography>
-                  <Paper variant="outlined" sx={{ p: 1, bgcolor: 'grey.50', maxHeight: 200, overflow: 'auto' }}>
-                    <pre style={{ margin: 0, fontSize: '0.8rem' }}>
-                      {JSON.stringify(JSON.parse(selectedEvent.changes), null, 2)}
-                    </pre>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ height: '100%' }}>
+                  <Typography variant="overline" color="text.secondary">Metadatos Cronológicos</Typography>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 3,
+                      height: 'calc(100% - 24px)',
+                      borderRadius: 2,
+                      bgcolor: 'primary.50',
+                      border: '1px dashed',
+                      borderColor: 'primary.light',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h3" color="primary.main" sx={{ fontWeight: 800 }}>
+                        {new Date(selectedEvent.created_at).getDate()}
+                      </Typography>
+                      <Typography variant="h6" color="primary.dark" sx={{ textTransform: 'uppercase', letterSpacing: 2 }}>
+                        {new Date(selectedEvent.created_at).toLocaleString('default', { month: 'long' })}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        {new Date(selectedEvent.created_at).getFullYear()}
+                      </Typography>
+                      <Divider sx={{ my: 2, borderColor: 'primary.light', opacity: 0.3 }} />
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        {new Date(selectedEvent.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </Typography>
+                    </Box>
                   </Paper>
-                </Grid>
-              )}
+                </Box>
+              </Grid>
 
-              {selectedEvent.original && (
+              {(selectedEvent.changes || selectedEvent.original) && (
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" sx={{ mt: 1 }}>Original (JSON)</Typography>
-                  <Paper variant="outlined" sx={{ p: 1, bgcolor: 'grey.50', maxHeight: 200, overflow: 'auto' }}>
-                    <pre style={{ margin: 0, fontSize: '0.8rem' }}>
-                      {JSON.stringify(JSON.parse(selectedEvent.original), null, 2)}
-                    </pre>
-                  </Paper>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="overline" color="text.secondary">Payload de Datos</Typography>
+                    <Grid container spacing={2}>
+                      {selectedEvent.changes && (
+                        <Grid item xs={12} md={selectedEvent.original ? 6 : 12}>
+                          <Typography variant="caption" sx={{ ml: 1, fontWeight: 600, color: 'success.main' }}>
+                            {selectedEvent.name === 'View' ? 'Data Context' : 'Nuevos Cambios'}
+                          </Typography>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              bgcolor: '#1e293b',
+                              color: '#fff',
+                              maxHeight: 300,
+                              overflow: 'auto'
+                            }}
+                          >
+                            <pre style={{ margin: 0, fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                              {JSON.stringify(JSON.parse(selectedEvent.changes), null, 2)}
+                            </pre>
+                          </Paper>
+                        </Grid>
+                      )}
+                      {selectedEvent.original && (
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="caption" sx={{ ml: 1, fontWeight: 600, color: 'error.main' }}>
+                            Estado Anterior
+                          </Typography>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              bgcolor: '#334155',
+                              color: '#cbd5e1',
+                              maxHeight: 300,
+                              overflow: 'auto',
+                              opacity: 0.9
+                            }}
+                          >
+                            <pre style={{ margin: 0, fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                              {JSON.stringify(JSON.parse(selectedEvent.original), null, 2)}
+                            </pre>
+                          </Paper>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Box>
                 </Grid>
               )}
             </Grid>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
+        <Divider />
+        <DialogActions sx={{ p: 2.5, bgcolor: '#fcfcfc' }}>
+          <Button
+            onClick={() => setSelectedEvent(null)}
+            variant="contained"
+            disableElevation
+            sx={{ borderRadius: 2, px: 4 }}
+          >
+            Cerrar Vista
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

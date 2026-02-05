@@ -63,7 +63,6 @@ async function logAudit(prisma, params, result) {
   const { model, action, args } = params;
   const store = getContext();
   const user = store?.get('user');
-  console.log(`[Audit Middleware] Processing audit for: ${model}.${action} - User found: ${!!user}`);
 
   if (!user || !user.id) {
     return;
@@ -103,18 +102,31 @@ async function logAudit(prisma, params, result) {
   // Prepare Changes/Original
   let changes = null;
   let original = null;
+  let displayName = '';
+
+  // Extract a human-readable identifier if possible
+  const getLabel = (obj) => {
+    if (!obj) return '';
+    return obj.name || obj.email || obj.identifier || obj.label || obj.title || obj.code || '';
+  };
 
   if (eventName === 'Create') {
     changes = result ? safeStringify(result) : safeStringify(args.data);
+    displayName = getLabel(result) || getLabel(args.data);
   } else if (eventName === 'Update') {
     changes = args.data ? safeStringify(args.data) : null;
+    displayName = getLabel(result) || getLabel(args.data);
   } else if (eventName === 'Delete') {
     original = result ? safeStringify(result) : null;
+    displayName = getLabel(result);
+  } else if (eventName === 'View') {
+    displayName = getLabel(result);
+    // For views, we can store small context in changes
+    changes = result ? safeStringify({ id: result.id, name: displayName }) : null;
   }
 
-  // Fields should be strictly empty for standard CRUD as per user request
-  // (metadata is now in ipAddress/userAgent columns)
-  const fields = '';
+  // Store the human-readable name in the 'fields' column
+  const fields = displayName || '';
 
   await prisma.action_events.create({
     data: {
