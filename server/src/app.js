@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
-import { context } from './utils/context.js';
+import { context, getContext } from './utils/context.js';
 import { corsOptions } from './config/cors.js';
 import { swaggerSpec } from './config/swagger.js';
 import routes from './routes/index.js';
@@ -11,9 +11,11 @@ import { notFound } from './middlewares/notFound.js';
 
 const app = express();
 
-// Initialize Context (Must be first)
 app.use((req, res, next) => {
-  context.run(new Map(), next);
+  context.run(new Map(), () => {
+    console.log(`[Context] Initialized for ${req.method} ${req.url}`);
+    next();
+  });
 });
 
 // Middlewares

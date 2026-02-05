@@ -6,6 +6,7 @@ import { getContext } from '../utils/context.js';
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log(`[Auth Middleware] Request for ${req.url} - Has Header: ${!!authHeader}`);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -75,10 +76,37 @@ export const authenticate = async (req, res, next) => {
       }
     }
 
+    // 2. Fetch Permissions
+    // Direct permissions
+    const directPermissions = await prisma.modelHasPermission.findMany({
+      where: {
+        modelId: user.id,
+        modelType: 'App\\Models\\User',
+      },
+      include: { permission: true },
+    });
+
+    // Role-based permissions
+    const roleIds = userRoles.map((ur) => ur.roleId);
+    let rolePermissions = [];
+    if (roleIds.length > 0) {
+      rolePermissions = await prisma.roleHasPermission.findMany({
+        where: { roleId: { in: roleIds } },
+        include: { permission: true },
+      });
+    }
+
+    // Combine and unique permissions
+    const permissionsSet = new Set([
+      ...directPermissions.map(dp => dp.permission.name),
+      ...rolePermissions.map(rp => rp.permission.name)
+    ]);
+
+    user.allPermissions = Array.from(permissionsSet);
+
     req.user = user;
 
     // Populate Context
-    // Mejorar detección de IP
     const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.connection.remoteAddress;
 
     const store = getContext();

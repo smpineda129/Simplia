@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '../../db/prisma.js';
 
 class PermissionService {
   async getAllPermissions(filters = {}) {
@@ -144,7 +143,7 @@ class PermissionService {
     permissions.forEach((permission) => {
       const parts = permission.name.split('.');
       const category = parts[0] || 'general';
-      
+
       if (!grouped[category]) {
         grouped[category] = [];
       }

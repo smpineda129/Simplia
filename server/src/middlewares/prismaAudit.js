@@ -11,15 +11,14 @@ export const createPrismaAudit = (prisma) => {
       return next(params);
     }
 
+    const store = getContext();
+
     // 1. Determine if we should audit
     const writeActions = ['create', 'createMany', 'update', 'updateMany', 'delete', 'deleteMany', 'upsert'];
     const viewActions = ['findUnique', 'findFirst'];
 
-    // EXCLUDED 'User' from viewModels to prevent logging every authentication check
-    // If you specifically need to log when an ADMIN views a user profile, we'd need a way to distinguish
-    // that from the internal 'authenticate' middleware call.
-    // For now, removing 'User' allows 'View' logs for business entities only.
-    const viewModels = ['Proceeding', 'Document', 'Correspondence', 'Company'];
+    // Only audit "View" actions for these key business models
+    const viewModels = ['Proceeding', 'Document', 'Correspondence', 'Company', 'User', 'Area', 'Retention'];
 
     const isWrite = writeActions.includes(action);
     const isView = viewActions.includes(action) && viewModels.includes(model);
@@ -37,10 +36,8 @@ export const createPrismaAudit = (prisma) => {
     }
 
     // 3. Log (fire-and-forget)
-    // Avoid blocking the response
     logAudit(prisma, params, result).catch((err) => {
-      // Silent fail to avoid noise, or log to system logger
-      // console.error('⚠️ Audit Log Failed:', err.message);
+      console.error('⚠️ Audit Log Failed:', err);
     });
 
     return result;
@@ -65,11 +62,12 @@ function formatEventName(action) {
 async function logAudit(prisma, params, result) {
   const { model, action, args } = params;
   const store = getContext();
-
   const user = store?.get('user');
+  console.log(`[Audit Middleware] Processing audit for: ${model}.${action} - User found: ${!!user}`);
 
-  // If no user context, we skip (or you could log as 'System')
-  if (!user || !user.id) return;
+  if (!user || !user.id) {
+    return;
+  }
 
   const userId = BigInt(user.id);
   const companyId = user.companyId ? BigInt(user.companyId) : null;

@@ -10,26 +10,23 @@ const buildWhereClause = async (req) => {
   // Access Control Logic
   const userId = req.user.id;
   const userCompanyId = req.user.companyId;
+
+  // Check if owner (level 1) or has specific view-all permission
   const isOwner = req.user.roles && req.user.roles.some(r => r.roleLevel === 1);
+  const canViewAll = req.user.allPermissions && req.user.allPermissions.includes('action.view_all');
 
-  // Check if user has explicit permission to view ALL (or Company) events
-  // Note: We'd need to check permission here if we want to bypass Owner check.
-  // For now, we stick to: Owner sees all/filtered, Regular sees ONLY THEIR COMPANY.
-  // If user_id is requested, a Regular user can only see it if it belongs to their company.
-
-  if (isOwner) {
-    // Owner can filter by any company
+  if (isOwner || canViewAll) {
+    // Owner or SuperAdmin: Can filter by any company or see all
     if (req.query.company_id) {
       where.companyId = BigInt(req.query.company_id);
     }
   } else {
-    // Regular user: Forced to their company
+    // Regular user / Company Admin: Forced to their company
     if (userCompanyId) {
       where.companyId = BigInt(userCompanyId);
     } else {
-      // If user has NO company and IS NOT owner, they should see NOTHING (or only their own events?)
-      // Safe default: only their own events
-       where.user_id = BigInt(userId);
+      // No company and not owner: only their own events
+      where.user_id = BigInt(userId);
     }
   }
 
@@ -41,10 +38,16 @@ const buildWhereClause = async (req) => {
 
   // Date Filters
   if (startDate && endDate) {
-    where.created_at = {
-      gte: new Date(startDate),
-      lte: new Date(endDate),
-    };
+    const sDate = new Date(startDate);
+    const eDate = new Date(endDate);
+
+    // Only apply if both are valid dates
+    if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+      where.created_at = {
+        gte: sDate,
+        lte: eDate,
+      };
+    }
   }
 
   if (type) {
@@ -55,6 +58,8 @@ const buildWhereClause = async (req) => {
     where.actionable_type = entity;
   }
 
+  const whereJson = JSON.stringify(where, (k, v) => typeof v === 'bigint' ? v.toString() : v);
+  console.log(`[Audit Controller] Filter: ${whereJson}`);
   return where;
 };
 
@@ -73,6 +78,7 @@ export const getEvents = async (req, res, next) => {
       }),
       prisma.action_events.count({ where }),
     ]);
+    console.log(`[Audit Controller] Found ${total} events for query`);
 
     // Manual serialization for BigInt
     const safeEvents = JSON.parse(JSON.stringify(events, (key, value) =>

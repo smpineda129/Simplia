@@ -1,15 +1,13 @@
-import axios from 'axios';
-
-const API_URL = '/api/audit';
+import axiosInstance from '../../api/axiosConfig';
 
 const auditService = {
   getEvents: async (params = {}) => {
-    const response = await axios.get(API_URL, { params });
+    const response = await axiosInstance.get('/audit', { params });
     return response.data;
   },
 
   exportExcel: async (params = {}) => {
-    const response = await axios.get(`${API_URL}/export/excel`, {
+    const response = await axiosInstance.get(`/audit/export/excel`, {
       params,
       responseType: 'blob',
     });
@@ -17,7 +15,7 @@ const auditService = {
   },
 
   exportPdf: async (params = {}) => {
-    const response = await axios.get(`${API_URL}/export/pdf`, {
+    const response = await axiosInstance.get(`/audit/export/pdf`, {
       params,
       responseType: 'blob',
     });

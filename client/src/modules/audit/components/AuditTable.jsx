@@ -101,6 +101,7 @@ const AuditTable = ({ userId }) => {
   };
 
   const formatModelName = (modelType) => {
+    if (!modelType) return 'N/A';
     return modelType.replace('App\\Models\\', '');
   };
 

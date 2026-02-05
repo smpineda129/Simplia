@@ -6,6 +6,7 @@ export const prisma = new PrismaClient({
 });
 
 // Register Audit Middleware
+console.log('Registering Prisma Audit Middleware...');
 prisma.$use(createPrismaAudit(prisma));
 
 export const connectDB = async () => {
