@@ -12,9 +12,15 @@ import {
   IconButton,
   Divider,
 } from '@mui/material';
-import { ArrowBack, Folder, Description, Business, CalendarToday, Label } from '@mui/icons-material';
+import { ArrowBack, Folder, Description, Business, CalendarToday, Assignment } from '@mui/icons-material';
 import proceedingService from '../services/proceedingService';
 import { usePermissions } from '../../../hooks/usePermissions';
+
+import ProceedingDocuments from '../components/ProceedingDocuments';
+import ProceedingEntities from '../components/ProceedingEntities';
+import ProceedingBoxes from '../components/ProceedingBoxes';
+import ProceedingExternalUsers from '../components/ProceedingExternalUsers';
+import ProceedingLoans from '../components/ProceedingLoans';
 
 const ProceedingDetail = () => {
   const { id } = useParams();
@@ -61,104 +67,117 @@ const ProceedingDetail = () => {
   }
 
   const formatDate = (date) => {
-    if (!date) return 'No definida';
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    if (!date) return '—';
+    return new Date(date).toISOString().split('T')[0];
   };
 
   return (
     <Box>
-      {/* Header */}
+      {/* Header with Code and ID */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <IconButton onClick={() => navigate('/proceedings')} sx={{ mr: 2 }}>
           <ArrowBack />
         </IconButton>
-        <Folder sx={{ mr: 1, fontSize: 32, color: 'primary.main' }} />
-        <Typography variant="h4" component="h1">
-          {proceeding.name}
-        </Typography>
+        <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                Código / Nombre
+            </Typography>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
+                {proceeding.name} - {proceeding.code}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+                ID: {proceeding.id}
+            </Typography>
+        </Box>
       </Box>
 
       <Grid container spacing={3}>
-        {/* Main Info */}
-        <Grid item xs={12} md={8}>
+        {/* Left Column: Details */}
+        <Grid item xs={12} md={7}>
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-              <Description sx={{ mr: 1 }} /> Información General
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Grid container spacing={3}>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">Nombre</Typography>
+                    <Typography variant="body1">{proceeding.name}</Typography>
+                </Grid>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">Código</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{proceeding.code}</Typography>
-              </Grid>
+                <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">Empresa Uno</Typography>
+                    <Typography variant="body1">{proceeding.company?.name || '—'}</Typography>
+                </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">Estado</Typography>
-                <Chip
-                  label={proceeding.status || 'Activo'}
-                  color={proceeding.status === 'INACTIVE' ? 'default' : 'success'}
-                  size="small"
-                />
-              </Grid>
+                <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">Empresa Dos / Anotaciones</Typography>
+                    <Typography variant="body1">{proceeding.description || '—'}</Typography>
+                </Grid>
 
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" color="text.secondary">Descripción</Typography>
-                <Typography variant="body1">
-                  {proceeding.description || 'Sin descripción'}
-                </Typography>
-              </Grid>
+                <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">Fecha inicial</Typography>
+                    <Typography variant="body1">{formatDate(proceeding.startDate)}</Typography>
+                </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">Fecha Inicio</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CalendarToday fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                  <Typography variant="body1">{formatDate(proceeding.startDate)}</Typography>
-                </Box>
-              </Grid>
+                <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">Tabla de retención</Typography>
+                    <Typography variant="body1">{proceeding.retention?.name || '—'}</Typography>
+                </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">Fecha Fin</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CalendarToday fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                  <Typography variant="body1">{formatDate(proceeding.endDate)}</Typography>
-                </Box>
-              </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">Estado / Préstamo</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        <Chip
+                            label={proceeding.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                            color={proceeding.status === 'ACTIVE' ? 'success' : 'default'}
+                            size="small"
+                        />
+                        {/* Placeholder for Loan Status */}
+                        <Chip
+                            label="En custodia"
+                            color="info"
+                            size="small"
+                            variant="outlined"
+                        />
+                    </Box>
+                </Grid>
             </Grid>
           </Paper>
+
+          {/* Documents Section */}
+          <ProceedingDocuments
+            proceedingId={proceeding.id}
+            documents={proceeding.documents}
+            onUpdate={loadProceeding}
+          />
         </Grid>
 
-        {/* Sidebar Info */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-              <Business sx={{ mr: 1 }} /> Contexto
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+        {/* Right Column: Relations */}
+        <Grid item xs={12} md={5}>
+            {/* Entities */}
+            <ProceedingEntities
+                proceedingId={proceeding.id}
+                entities={proceeding.entities}
+                onUpdate={loadProceeding}
+            />
 
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary">Empresa</Typography>
-              <Typography variant="body1">
-                {proceeding.company?.name || 'No asignada'}
-              </Typography>
-              {proceeding.company?.short && (
-                <Typography variant="caption" color="text.secondary">
-                  ({proceeding.company.short})
-                </Typography>
-              )}
-            </Box>
+            {/* Boxes */}
+            <ProceedingBoxes
+                proceedingId={proceeding.id}
+                boxes={proceeding.boxes}
+                onUpdate={loadProceeding}
+            />
 
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary">Tabla de Retención</Typography>
-              <Typography variant="body1">
-                {proceeding.retention?.name || 'No asignada'}
-              </Typography>
-            </Box>
-          </Paper>
+            {/* External Users / Shared With */}
+            <ProceedingExternalUsers
+                proceedingId={proceeding.id}
+                users={proceeding.sharedWith}
+                onUpdate={loadProceeding}
+            />
+
+            {/* Loans */}
+            <ProceedingLoans
+                proceedingId={proceeding.id}
+                loans={proceeding.loans}
+                onUpdate={loadProceeding}
+            />
         </Grid>
       </Grid>
     </Box>
