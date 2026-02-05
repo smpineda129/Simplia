@@ -12,7 +12,7 @@ import { AreaList } from './modules/areas';
 import { RetentionList, RetentionDetail } from './modules/retentions';
 import { CorrespondenceTypeList } from './modules/correspondence-types';
 import { TemplateList } from './modules/templates';
-import { ProceedingList } from './modules/proceedings';
+import { ProceedingList, ProceedingDetail } from './modules/proceedings';
 import { CorrespondenceList, CorrespondenceDetail } from './modules/correspondences';
 import { EntityList } from './modules/entities';
 import { WarehouseList } from './modules/warehouses';
@@ -128,6 +128,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="proceeding.view">
                 <ProceedingList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/proceedings/:id"
+            element={
+              <ProtectedRoute requiredPermission="proceeding.view">
+                <ProceedingDetail />
               </ProtectedRoute>
             }
           />

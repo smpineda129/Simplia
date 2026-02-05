@@ -12,9 +12,11 @@ import {
   TablePagination,
   Tooltip,
 } from '@mui/material';
-import { Edit, Delete, Folder } from '@mui/icons-material';
+import { Edit, Delete, Folder, Visibility } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
-const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pagination }) => {
+const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pagination, canView, canEdit, canDelete }) => {
+  const navigate = useNavigate();
   if (!proceedings || proceedings.length === 0) {
     return (
       <Paper sx={{ p: 3, textAlign: 'center' }}>
@@ -80,24 +82,39 @@ const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pa
                 </TableCell>
                 <TableCell>{formatDate(proceeding.startDate)}</TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Editar">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => onEdit(proceeding)}
-                    >
-                      <Edit />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => onDelete(proceeding.id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
+                  {canView && (
+                    <Tooltip title="Ver Detalle">
+                      <IconButton
+                        size="small"
+                        color="info"
+                        onClick={() => navigate(`/proceedings/${proceeding.id}`)}
+                      >
+                        <Visibility />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {canEdit && (
+                    <Tooltip title="Editar">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onEdit(proceeding)}
+                      >
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {canDelete && (
+                    <Tooltip title="Eliminar">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => onDelete(proceeding.id)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
