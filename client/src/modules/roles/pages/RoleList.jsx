@@ -6,8 +6,10 @@ import { Add, Search } from '@mui/icons-material';
 import roleService from '../services/roleService';
 import RoleTable from '../components/RoleTable';
 import RoleModalForm from '../components/RoleModalForm';
+import { usePermissions } from '../../../hooks/usePermissions';
 
 const RoleList = () => {
+  const { hasPermission } = usePermissions();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -104,13 +106,15 @@ const RoleList = () => {
         <Typography variant="h4" component="h1">
           Roles
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
-        >
-          Crear Rol
-        </Button>
+        {hasPermission('role.create') && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleCreate}
+          >
+            Crear Rol
+          </Button>
+        )}
       </Box>
 
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -142,6 +146,8 @@ const RoleList = () => {
           page={page}
           onPageChange={handlePageChange}
           pagination={pagination}
+          canEdit={hasPermission('role.update')}
+          canDelete={hasPermission('role.delete')}
         />
       )}
 

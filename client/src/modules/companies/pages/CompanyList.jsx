@@ -13,8 +13,10 @@ import { Add, Search } from '@mui/icons-material';
 import CompanyTable from '../components/CompanyTable';
 import CompanyModalForm from '../components/CompanyModalForm';
 import companyService from '../services/companyService';
+import { usePermissions } from '../../../hooks/usePermissions';
 
 const CompanyList = () => {
+  const { hasPermission } = usePermissions();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -97,13 +99,15 @@ const CompanyList = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Empresas</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
-        >
-          Nueva Empresa
-        </Button>
+        {hasPermission('company.create') && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleCreate}
+          >
+            Nueva Empresa
+          </Button>
+        )}
       </Box>
 
       <Box sx={{ mb: 3 }}>
@@ -132,7 +136,10 @@ const CompanyList = () => {
           onDelete={handleDelete}
           page={page}
           onPageChange={setPage}
-          pagination={pagination} />
+          pagination={pagination}
+          canEdit={hasPermission('company.update')}
+          canDelete={hasPermission('company.delete')}
+        />
       )}
 
       <CompanyModalForm
