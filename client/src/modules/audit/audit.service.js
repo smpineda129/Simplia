@@ -9,7 +9,7 @@ const auditService = {
   exportExcel: async (params = {}) => {
     const response = await axiosInstance.get(`/audit/export/excel`, {
       params,
-      responseType: 'blob',
+      responseType: 'blob'
     });
     return response.data;
   },
@@ -17,7 +17,7 @@ const auditService = {
   exportPdf: async (params = {}) => {
     const response = await axiosInstance.get(`/audit/export/pdf`, {
       params,
-      responseType: 'blob',
+      responseType: 'blob'
     });
     return response.data;
   },

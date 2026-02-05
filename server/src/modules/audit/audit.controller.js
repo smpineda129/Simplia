@@ -1,6 +1,8 @@
 import { prisma } from '../../db/prisma.js';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
+import path from 'path';
+import fs from 'fs';
 
 // Helper to build filters
 const buildWhereClause = async (req) => {
@@ -60,6 +62,75 @@ const buildWhereClause = async (req) => {
 
   return where;
 };
+const ACTION_TRANSLATIONS = {
+  'Create': 'Crear',
+  'Update': 'Actualizar',
+  'Delete': 'Eliminar',
+  'View': 'Ver',
+  'Unknown': 'Desconocido'
+};
+
+const MODEL_TRANSLATIONS = {
+  'User': 'Usuario',
+  'Proceeding': 'Expediente',
+  'Document': 'Documento',
+  'Correspondence': 'Correspondencia',
+  'Company': 'Empresa',
+  'Area': 'Área',
+  'Retention': 'Retención',
+  'Role': 'Rol',
+  'Permission': 'Permiso'
+};
+
+const enrichEvents = async (events) => {
+  return await Promise.all(events.map(async (event) => {
+    const plainEvent = JSON.parse(JSON.stringify(event, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    ));
+
+    // 1. Fetch actor name
+    try {
+      const actor = await prisma.user.findUnique({
+        where: { id: event.user_id },
+        select: { name: true }
+      });
+      if (actor) plainEvent.userName = actor.name;
+    } catch (e) { /* silent */ }
+
+    // 2. Fetch target name if fields is empty
+    if (!plainEvent.fields) {
+      try {
+        const rawModelName = event.model_type?.replace('App\\Models\\', '');
+        if (rawModelName && event.model_id) {
+          let prismaModelName = rawModelName.charAt(0).toLowerCase() + rawModelName.slice(1);
+          if (rawModelName === 'CorrespondenceType') prismaModelName = 'correspondenceType';
+
+          if (prisma[prismaModelName]) {
+            const targetId = BigInt(event.model_id);
+            const usesTitle = ['Template', 'Correspondence'].includes(rawModelName);
+            const selection = usesTitle ? { title: true } : { name: true };
+
+            const target = await prisma[prismaModelName].findUnique({
+              where: { id: targetId },
+              select: selection
+            });
+
+            if (target) {
+              plainEvent.fields = target.name || target.title || '';
+            }
+          }
+        }
+      } catch (e) { /* silent */ }
+    }
+
+    // 3. Add translated fields
+    const rawModelName = event.model_type?.replace('App\\Models\\', '');
+    plainEvent.actionSpanish = ACTION_TRANSLATIONS[event.name] || event.name;
+    plainEvent.modelSpanish = MODEL_TRANSLATIONS[rawModelName] || rawModelName;
+
+    return plainEvent;
+  }));
+};
 
 export const getEvents = async (req, res, next) => {
   try {
@@ -77,59 +148,7 @@ export const getEvents = async (req, res, next) => {
       prisma.action_events.count({ where }),
     ]);
 
-    // Enrich events with names from their target models if fields is empty
-    const enrichedEvents = await Promise.all(events.map(async (event) => {
-      const plainEvent = JSON.parse(JSON.stringify(event, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-      ));
-
-      // 1. Fetch actor name (who performed the action)
-      try {
-        const actor = await prisma.user.findUnique({
-          where: { id: event.user_id },
-          select: { name: true }
-        });
-        if (actor) plainEvent.userName = actor.name;
-      } catch (e) { /* silent */ }
-
-      // If we already have a name in 'fields', use it (it's a snapshot)
-      if (plainEvent.fields) return plainEvent;
-
-      // Otherwise, try to fetch the current name from the database via relation-like logic
-      try {
-        const rawModelName = event.model_type?.replace('App\\Models\\', '');
-        if (!rawModelName || !event.model_id) return plainEvent;
-
-        // Map model names to Prisma names (handle special cases if any)
-        // For Simplia, it seems roles are often PascalCase, but Prisma methods are camelCase
-        let prismaModelName = rawModelName.charAt(0).toLowerCase() + rawModelName.slice(1);
-
-        // Handle common naming mismatches
-        if (rawModelName === 'CorrespondenceType') prismaModelName = 'correspondenceType';
-
-        if (prisma[prismaModelName]) {
-          const targetId = BigInt(event.model_id);
-
-          // Per user feedback: Proceeding uses 'name' (confirmed in schema)
-          // Correspondence and Template use 'title'
-          const usesTitle = ['Template', 'Correspondence'].includes(rawModelName);
-          const selection = usesTitle ? { title: true } : { name: true };
-
-          const target = await prisma[prismaModelName].findUnique({
-            where: { id: targetId },
-            select: selection
-          });
-
-          if (target) {
-            plainEvent.fields = target.name || target.title || '';
-          }
-        }
-      } catch (e) {
-        // console.error(`Failed to enrich ${event.model_type}:`, e.message);
-      }
-
-      return plainEvent;
-    }));
+    const enrichedEvents = await enrichEvents(events);
 
     res.json({
       success: true,
@@ -155,35 +174,43 @@ export const exportExcel = async (req, res, next) => {
       take: 5000
     });
 
+    const enrichedEvents = await enrichEvents(events);
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Auditoría');
 
     worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Fecha', key: 'created_at', width: 20 },
-      { header: 'Evento', key: 'name', width: 30 },
-      { header: 'Usuario ID', key: 'user_id', width: 15 },
-      { header: 'Modelo', key: 'model_type', width: 20 },
-      { header: 'Modelo ID', key: 'model_id', width: 15 },
-      { header: 'IP', key: 'ip', width: 15 },
-      { header: 'User Agent', key: 'ua', width: 30 },
+      { header: 'Fecha', key: 'date', width: 20 },
+      { header: 'Usuario', key: 'user', width: 25 },
+      { header: 'Acción', key: 'action', width: 15 },
+      { header: 'Entidad', key: 'model', width: 15 },
+      { header: 'Referencia', key: 'target', width: 40 },
+      { header: 'Dirección IP', key: 'ip', width: 15 },
     ];
 
-    events.forEach(event => {
+    enrichedEvents.forEach(event => {
       worksheet.addRow({
-        id: event.id.toString(),
-        created_at: event.created_at,
-        name: event.name,
-        user_id: event.user_id.toString(),
-        model_type: event.model_type,
-        model_id: event.model_id ? event.model_id.toString() : '',
-        ip: event.ipAddress || '',
-        ua: event.userAgent || ''
+        date: new Date(event.created_at).toLocaleString(),
+        user: event.userName || `ID: ${event.user_id}`,
+        action: event.actionSpanish,
+        model: event.modelSpanish,
+        target: event.fields || `ID: ${event.model_id}`,
+        ip: event.ipAddress || 'Interna',
       });
     });
 
+    // Formatting
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+
+    // Headers para descarga directa (Streaming)
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=audit-report.xlsx');
+    res.setHeader('Content-Disposition', `attachment; filename="Auditoria_${Date.now()}.xlsx"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
 
     await workbook.xlsx.write(res);
     res.end();
@@ -198,25 +225,41 @@ export const exportPdf = async (req, res, next) => {
     const events = await prisma.action_events.findMany({
       where,
       orderBy: { created_at: 'desc' },
-      take: 1000
+      take: 2000
     });
 
-    const doc = new PDFDocument();
+    const enrichedEvents = await enrichEvents(events);
 
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+    // Headers para descarga directa (Streaming)
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=audit-report.pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Auditoria_${Date.now()}.pdf"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
 
     doc.pipe(res);
 
-    doc.fontSize(18).text('Reporte de Auditoría', { align: 'center' });
-    doc.moveDown();
+    // Header
+    doc.fontSize(20).text('Reporte de Auditoría - Simplia', { align: 'center' });
+    doc.fontSize(10).text(`Fecha de generación: ${new Date().toLocaleString()}`, { align: 'center' });
+    doc.moveDown(2);
 
-    events.forEach(event => {
-      doc.fontSize(12).text(`[${event.created_at?.toISOString()}] ${event.name}`);
-      doc.fontSize(10).text(`User: ${event.user_id.toString()} | IP: ${event.ipAddress || 'N/A'} | Target: ${event.target_type} #${event.target_id.toString()}`);
-      if (event.userAgent) {
-        doc.fontSize(8).text(`UA: ${event.userAgent}`);
-      }
+    // Table Content
+    enrichedEvents.forEach((event, i) => {
+      if (doc.y > 700) doc.addPage();
+
+      const dateStr = new Date(event.created_at).toLocaleString();
+      const userStr = event.userName || `ID: ${event.user_id}`;
+
+      doc.fontSize(10).fillColor('#1a237e').text(`[${dateStr}] - ${userStr}`, { continued: true });
+      doc.fillColor('#000000').text(` realizó `, { continued: true });
+      doc.fillColor('#d32f2f').text(event.actionSpanish, { continued: true });
+      doc.fillColor('#000000').text(` sobre `, { continued: true });
+      doc.fillColor('#1976d2').text(`${event.modelSpanish}: ${event.fields || event.model_id}`);
+
+      doc.fontSize(8).fillColor('#666666').text(`IP: ${event.ipAddress || 'N/A'}`);
+      doc.moveDown(0.5);
+      doc.moveTo(30, doc.y).lineTo(565, doc.y).strokeColor('#eeeeee').stroke();
       doc.moveDown(0.5);
     });
 

@@ -5,11 +5,9 @@ import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = Router();
 
-// All routes require authentication
-router.use(authenticate);
-
-router.get('/', hasPermission('action.view'), getEvents);
-router.get('/export/excel', hasPermission('action.view'), exportExcel);
-router.get('/export/pdf', hasPermission('action.view'), exportPdf);
+// No global router.use(authenticate) to avoid potential confusion with other middlewares
+router.get('/export/excel', authenticate, hasPermission('action.view'), exportExcel);
+router.get('/export/pdf', authenticate, hasPermission('action.view'), exportPdf);
+router.get('/', authenticate, hasPermission('action.view'), getEvents);
 
 export default router;

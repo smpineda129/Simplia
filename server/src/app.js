@@ -23,6 +23,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+// Static files
+app.use('/public', express.static('public', {
+  setHeaders: (res, path) => {
+    if (path.includes('temp')) {
+      res.setHeader('Content-Disposition', 'attachment');
+    }
+  }
+}));
+
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

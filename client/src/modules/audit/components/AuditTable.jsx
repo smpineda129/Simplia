@@ -59,6 +59,7 @@ const MODEL_TRANSLATIONS = {
 const AuditTable = ({ userId }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
@@ -87,30 +88,36 @@ const AuditTable = ({ userId }) => {
   };
 
   const handleExport = async (type) => {
+    if (exporting) return;
+
     try {
+      setExporting(true);
       const params = { user_id: userId };
-      let blob;
-      let filename;
+      const blob = type === 'excel' ? await auditService.exportExcel(params) : await auditService.exportPdf(params);
 
-      if (type === 'excel') {
-        blob = await auditService.exportExcel(params);
-        filename = 'auditoria.xlsx';
-      } else {
-        blob = await auditService.exportPdf(params);
-        filename = 'auditoria.pdf';
+      if (blob) {
+        // Crear URL del objeto Blob
+        const url = window.URL.createObjectURL(blob);
+        const extension = type === 'excel' ? 'xlsx' : 'pdf';
+        const filename = `Auditoria_Simplia_${new Date().getTime()}.${extension}`;
+
+        // Usar un enlace temporal para asegurar la descarga nativa
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpieza segura (esperar un poco para que el navegador inicie la descarga)
+        setTimeout(() => {
+          if (document.body.contains(link)) document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }, 5000);
       }
-
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error exporting:', error);
-      alert('Error al exportar el reporte');
+      alert(`Error al generar reporte: ${error.message}`);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -179,18 +186,20 @@ const AuditTable = ({ userId }) => {
             size="small"
             startIcon={<PictureAsPdf />}
             onClick={() => handleExport('pdf')}
+            disabled={exporting}
             sx={{ borderRadius: 2, borderColor: 'error.light', color: 'error.main' }}
           >
-            PDF
+            {exporting ? 'Generando...' : 'PDF'}
           </Button>
           <Button
             variant="outlined"
             size="small"
             startIcon={<Download />}
             onClick={() => handleExport('excel')}
+            disabled={exporting}
             sx={{ borderRadius: 2, borderColor: 'success.light', color: 'success.main' }}
           >
-            Excel
+            {exporting ? 'Generando...' : 'Excel'}
           </Button>
         </Box>
       </Box>
