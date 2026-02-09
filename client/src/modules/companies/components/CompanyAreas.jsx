@@ -15,8 +15,10 @@ import { Add, Edit, Delete, AccountTree } from '@mui/icons-material';
 import { areaService } from '../../areas';
 import AreaModalForm from '../../areas/components/AreaModalForm';
 import { companyService } from '../index';
+import { usePermissions } from '../../../hooks/usePermissions';
 
 const CompanyAreas = ({ companyId }) => {
+  const { hasPermission } = usePermissions();
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
@@ -109,9 +111,11 @@ const CompanyAreas = ({ companyId }) => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Áreas de la Empresa</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
-          Nueva Área
-        </Button>
+        {hasPermission('area.create') && (
+          <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
+            Nueva Área
+          </Button>
+        )}
       </Box>
 
       {areas.length === 0 ? (
@@ -130,12 +134,16 @@ const CompanyAreas = ({ companyId }) => {
                     <Typography variant="h6">{area.name}</Typography>
                   </Box>
                   <Box>
-                    <IconButton size="small" onClick={() => handleEdit(area)}>
-                      <Edit fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(area.id)} color="error">
-                      <Delete fontSize="small" />
-                    </IconButton>
+                    {hasPermission('area.update') && (
+                      <IconButton size="small" onClick={() => handleEdit(area)}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    )}
+                    {hasPermission('area.delete') && (
+                      <IconButton size="small" onClick={() => handleDelete(area.id)} color="error">
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    )}
                   </Box>
                 </Box>
                 {area.description && (

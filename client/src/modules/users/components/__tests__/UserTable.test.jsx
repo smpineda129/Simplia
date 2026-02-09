@@ -1,5 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import UserTable from '../UserTable';
+import { usePermissions } from '../../../../hooks/usePermissions';
+import { useAuth } from '../../../../hooks/useAuth';
+
+// Mock hooks
+jest.mock('../../../../hooks/usePermissions');
+jest.mock('../../../../hooks/useAuth');
 
 describe('UserTable', () => {
   const mockUsers = [
@@ -24,21 +31,48 @@ describe('UserTable', () => {
     onDelete: jest.fn(),
   };
 
+  const mockCurrentUser = {
+    id: 'admin-id',
+    name: 'Admin User',
+    role: 'ADMIN',
+  };
+
+  beforeEach(() => {
+    // Setup default mock return values
+    usePermissions.mockReturnValue({
+      hasPermission: jest.fn().mockReturnValue(true),
+      canImpersonateUser: jest.fn().mockReturnValue(true),
+    });
+
+    useAuth.mockReturnValue({
+      user: mockCurrentUser,
+      startImpersonation: jest.fn(),
+      isImpersonating: false,
+    });
+  });
+
+  const renderWithRouter = (ui) => {
+    return render(<MemoryRouter>{ui}</MemoryRouter>);
+  };
+
   it('debe renderizar la tabla con usuarios', () => {
-    render(<UserTable users={mockUsers} {...mockHandlers} loading={false} />);
+    renderWithRouter(<UserTable users={mockUsers} {...mockHandlers} loading={false} />);
     
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     expect(screen.getByText('jane@example.com')).toBeInTheDocument();
   });
 
-  it('debe mostrar mensaje de carga', () => {
-    render(<UserTable users={[]} {...mockHandlers} loading={true} />);
+  it('debe mostrar skeleton de carga', () => {
+    const { container } = renderWithRouter(<UserTable users={[]} {...mockHandlers} loading={true} />);
     
-    expect(screen.getByText('Cargando...')).toBeInTheDocument();
+    // Verificamos que existan elementos Skeleton (MUI usa esta clase)
+    const skeletons = container.querySelectorAll('.MuiSkeleton-root');
+    expect(skeletons.length).toBeGreaterThan(0);
+    expect(screen.queryByText('Cargando...')).not.toBeInTheDocument();
   });
 
   it('debe mostrar mensaje cuando no hay usuarios', () => {
-    render(<UserTable users={[]} {...mockHandlers} loading={false} />);
+    renderWithRouter(<UserTable users={[]} {...mockHandlers} loading={false} />);
     
     expect(screen.getByText('No hay usuarios registrados')).toBeInTheDocument();
   });

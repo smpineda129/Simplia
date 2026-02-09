@@ -3,6 +3,7 @@ import { authController } from './auth.controller.js';
 import { authValidation } from './auth.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { loginRateLimiter, registerRateLimiter, refreshRateLimiter } from '../../middlewares/rateLimiter.js';
 
 const router = Router();
 
@@ -37,7 +38,7 @@ const router = Router();
  *       400:
  *         description: Error de validación o email ya registrado
  */
-router.post('/register', authValidation.register, validate, authController.register);
+router.post('/register', registerRateLimiter, authValidation.register, validate, authController.register);
 
 /**
  * @swagger
@@ -91,7 +92,7 @@ router.post('/login', authValidation.login, validate, authController.login);
  *       401:
  *         description: Refresh token inválido
  */
-router.post('/refresh', authValidation.refreshToken, validate, authController.refreshToken);
+router.post('/refresh', refreshRateLimiter, authValidation.refreshToken, validate, authController.refreshToken);
 
 /**
  * @swagger
@@ -122,5 +123,20 @@ router.get('/me', authenticate, authController.getCurrentUser);
  *         description: Sesión cerrada exitosamente
  */
 router.post('/logout', authenticate, authController.logout);
+
+/**
+ * @swagger
+ * /api/auth/leave-impersonation:
+ *   post:
+ *     summary: Terminar sesión de personificación
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Personificación terminada exitosamente
+ */
+import { impersonateController } from '../users/impersonate.controller.js';
+router.post('/leave-impersonation', authenticate, impersonateController.leaveImpersonation);
 
 export default router;

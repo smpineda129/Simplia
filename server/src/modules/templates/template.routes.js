@@ -3,6 +3,7 @@ import templateController from './template.controller.js';
 import { createTemplateValidation, updateTemplateValidation } from './template.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { hasPermission } from '../../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ const router = express.Router();
  *                   items:
  *                     type: object
  */
-router.get('/helpers', authenticate, templateController.getHelpers);
+router.get('/helpers', authenticate, hasPermission('template.view'), templateController.getHelpers);
 
 /**
  * @swagger
@@ -65,7 +66,7 @@ router.get('/helpers', authenticate, templateController.getHelpers);
  *       200:
  *         description: Lista de plantillas
  */
-router.get('/', authenticate, templateController.getAll);
+router.get('/', authenticate, hasPermission('template.view'), templateController.getAll);
 
 /**
  * @swagger
@@ -87,7 +88,7 @@ router.get('/', authenticate, templateController.getAll);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', authenticate, templateController.getById);
+router.get('/:id', authenticate, hasPermission('template.view'), templateController.getById);
 
 /**
  * @swagger
@@ -121,7 +122,7 @@ router.get('/:id', authenticate, templateController.getById);
  *       201:
  *         description: Plantilla creada exitosamente
  */
-router.post('/', authenticate, createTemplateValidation, validate, templateController.create);
+router.post('/', authenticate, hasPermission('template.create'), createTemplateValidation, validate, templateController.create);
 
 /**
  * @swagger
@@ -147,7 +148,7 @@ router.post('/', authenticate, createTemplateValidation, validate, templateContr
  *       200:
  *         description: Plantilla actualizada exitosamente
  */
-router.put('/:id', authenticate, updateTemplateValidation, validate, templateController.update);
+router.put('/:id', authenticate, hasPermission('template.update'), updateTemplateValidation, validate, templateController.update);
 
 /**
  * @swagger
@@ -167,7 +168,7 @@ router.put('/:id', authenticate, updateTemplateValidation, validate, templateCon
  *       200:
  *         description: Plantilla eliminada exitosamente
  */
-router.delete('/:id', authenticate, templateController.delete);
+router.delete('/:id', authenticate, hasPermission('template.delete'), templateController.delete);
 
 /**
  * @swagger
@@ -209,6 +210,6 @@ router.delete('/:id', authenticate, templateController.delete);
  *                     processedContent:
  *                       type: string
  */
-router.post('/:id/process', authenticate, templateController.processTemplate);
+router.post('/:id/process', authenticate, hasPermission('template.view'), templateController.processTemplate);
 
 export default router;

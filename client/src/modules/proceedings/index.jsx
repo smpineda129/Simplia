@@ -1,4 +1,10 @@
 export { default as ProceedingList } from './pages/ProceedingList';
+export { default as ProceedingDetail } from './pages/ProceedingDetail';
 export { default as ProceedingTable } from './components/ProceedingTable';
 export { default as ProceedingModalForm } from './components/ProceedingModalForm';
+export { default as ProceedingDocuments } from './components/ProceedingDocuments';
+export { default as ProceedingEntities } from './components/ProceedingEntities';
+export { default as ProceedingBoxes } from './components/ProceedingBoxes';
+export { default as ProceedingExternalUsers } from './components/ProceedingExternalUsers';
+export { default as ProceedingLoans } from './components/ProceedingLoans';
 export { default as proceedingService } from './services/proceedingService';

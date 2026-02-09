@@ -3,7 +3,13 @@ import roleService from './role.service.js';
 class RoleController {
   async getAllRoles(req, res) {
     try {
-      const { companyId } = req.user;
+      let { companyId } = req.user;
+
+      // Allow override ONLY if user is global (no companyId)
+      if (!companyId && req.query.companyId) {
+        companyId = req.query.companyId;
+      }
+
       const result = await roleService.getAllRoles(companyId, req.query);
       res.json(result);
     } catch (error) {

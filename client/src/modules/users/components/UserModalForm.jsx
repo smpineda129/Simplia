@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Formik, Form, Field } from 'formik';
 import {
   Dialog,
@@ -15,22 +15,56 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { userSchema } from '../schemas/userSchema';
+import { useAuth } from '../../../hooks/useAuth';
+import companyService from '../../companies/services/companyService';
 
 const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const { user, isOwner } = useAuth();
+  const [companies, setCompanies] = useState([]);
+
+  useEffect(() => {
+    if (open && isOwner) {
+      loadCompanies();
+    }
+  }, [open, isOwner]);
+
+  const loadCompanies = async () => {
+    try {
+      const response = await companyService.getAll({ limit: 100 }); // Adjust limit as needed
+      setCompanies(response.data);
+    } catch (err) {
+      console.error('Error loading companies', err);
+    }
+  };
 
   const defaultValues = {
     name: '',
     email: '',
     password: '',
     role: 'USER',
+    companyId: '',
   };
+
+  const formInitialValues = initialValues
+    ? {
+      ...initialValues,
+      companyId: initialValues.companyId || '',
+      password: '',
+    }
+    : defaultValues;
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       setError('');
-      await onSubmit(values);
+      // Convert empty string companyId back to null for API
+      const payload = { ...values };
+      if (payload.companyId === '') {
+        payload.companyId = null;
+      }
+
+      await onSubmit(payload);
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || 'Error al guardar usuario');
@@ -45,7 +79,7 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
         {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
       </DialogTitle>
       <Formik
-        initialValues={initialValues || defaultValues}
+        initialValues={formInitialValues}
         validationSchema={userSchema}
         context={{ isEditing }}
         onSubmit={handleSubmit}
@@ -88,6 +122,7 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
+                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                         >
@@ -111,6 +146,27 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
                   <MenuItem value="MANAGER">Gerente</MenuItem>
                   <MenuItem value="ADMIN">Administrador</MenuItem>
                 </Field>
+
+                {isOwner && (
+                  <Field
+                    as={TextField}
+                    name="companyId"
+                    label="Empresa"
+                    select
+                    fullWidth
+                    error={touched.companyId && Boolean(errors.companyId)}
+                    helperText={touched.companyId && errors.companyId}
+                  >
+                    <MenuItem value="">
+                      <em>Ninguna</em>
+                    </MenuItem>
+                    {companies.map((company) => (
+                      <MenuItem key={company.id} value={company.id}>
+                        {company.name}
+                      </MenuItem>
+                    ))}
+                  </Field>
+                )}
               </Box>
             </DialogContent>
             <DialogActions>

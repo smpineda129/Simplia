@@ -13,8 +13,10 @@ import UserModalForm from '../components/UserModalForm';
 import userService from '../services/userService';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import TableSkeleton from '../../../components/TableSkeleton';
+import { usePermissions } from '../../../hooks/usePermissions';
 
 const UserList = () => {
+  const { hasPermission } = usePermissions();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
@@ -109,13 +111,15 @@ const UserList = () => {
         <Typography variant="h4" component="h1">
           Usuarios
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenModal()}
-        >
-          Nuevo Usuario
-        </Button>
+        {hasPermission('user.create') && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenModal()}
+          >
+            Nuevo Usuario
+          </Button>
+        )}
       </Box>
 
       {loading ? (
@@ -127,6 +131,8 @@ const UserList = () => {
             onEdit={handleOpenModal}
             onDelete={handleDelete}
             loading={loading}
+            canEdit={hasPermission('user.update')}
+            canDelete={hasPermission('user.delete')}
           />
         </Paper>
       )}

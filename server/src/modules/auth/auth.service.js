@@ -4,6 +4,73 @@ import { tokenService } from '../../services/tokenService.js';
 import { ApiError } from '../../utils/ApiError.js';
 
 export const authService = {
+  getUserWithPermissions: async (userId) => {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+            short: true,
+          },
+        },
+      },
+    });
+
+    if (!user) return null;
+
+    // Manual fetch for permissions
+    const modelId = userId;
+    const modelType = 'App\\Models\\User';
+
+    // Fetch Direct Permissions
+    const directPermissions = await prisma.modelHasPermission.findMany({
+      where: { modelId, modelType },
+      include: { permission: true },
+    });
+
+    // Fetch Roles and their permissions
+    const userRoles = await prisma.modelHasRole.findMany({
+      where: { modelId, modelType },
+      include: {
+        role: {
+          include: {
+            roleHasPermissions: {
+              include: { permission: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Flatten permissions and roles
+    const permissions = new Set();
+    const roles = [];
+
+    // Add direct permissions
+    directPermissions.forEach(p => permissions.add(p.permission.name));
+
+    // Add role permissions and role names
+    userRoles.forEach(ur => {
+      roles.push({
+        name: ur.role.name,
+        roleLevel: ur.role.roleLevel
+      });
+      ur.role.roleHasPermissions.forEach(rhp => {
+        permissions.add(rhp.permission.name);
+      });
+    });
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    return {
+      ...userWithoutPassword,
+      allPermissions: Array.from(permissions),
+      roles
+    };
+  },
+
   register: async (userData) => {
     const { email, password, name } = userData;
 
@@ -24,24 +91,15 @@ export const authService = {
         name,
         role: 'USER',
       },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
-      },
     });
 
     const tokens = tokenService.generateTokenPair(user.id);
 
-    // Remover password del objeto de respuesta
-    const { password: _, ...userWithoutPassword } = user;
+    // Fetch full user data including default permissions (if any)
+    const fullUser = await authService.getUserWithPermissions(user.id);
 
     return {
-      user: userWithoutPassword,
+      user: fullUser,
       ...tokens,
     };
   },
@@ -50,18 +108,9 @@ export const authService = {
     const { email, password } = credentials;
 
     const user = await prisma.user.findFirst({
-      where: { 
+      where: {
         email,
         deletedAt: null
-      },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
       },
     });
 
@@ -77,11 +126,11 @@ export const authService = {
 
     const tokens = tokenService.generateTokenPair(user.id);
 
-    // Remover password del objeto de respuesta
-    const { password: _, ...userWithoutPassword } = user;
+    // Fetch user with permissions
+    const fullUser = await authService.getUserWithPermissions(user.id);
 
     return {
-      user: userWithoutPassword,
+      user: fullUser,
       ...tokens,
     };
   },
@@ -107,26 +156,12 @@ export const authService = {
   },
 
   getCurrentUser: async (userId) => {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
-          },
-        },
-      },
-    });
+    const user = await authService.getUserWithPermissions(userId);
 
     if (!user) {
       throw new ApiError(404, 'Usuario no encontrado');
     }
 
-    // Remover password del objeto de respuesta
-    const { password: _, ...userWithoutPassword } = user;
-
-    return userWithoutPassword;
+    return user;
   },
 };

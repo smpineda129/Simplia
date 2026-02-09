@@ -3,7 +3,14 @@ import proceedingService from './proceeding.service.js';
 class ProceedingController {
   async getAll(req, res) {
     try {
-      const { search, companyId, retentionLineId, page, limit } = req.query;
+      const { search, retentionLineId, page, limit } = req.query;
+      let { companyId } = req.query;
+
+      // Enforce company scope
+      if (req.user.companyId) {
+        companyId = req.user.companyId;
+      }
+
       const result = await proceedingService.getAll({ search, companyId, retentionLineId, page, limit });
 
       res.json({

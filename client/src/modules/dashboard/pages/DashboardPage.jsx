@@ -16,8 +16,15 @@ import {
 import { useAuth } from '../../../hooks/useAuth';
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, isOwner } = useAuth();
   const navigate = useNavigate();
+
+  // Check if user has permission
+  const hasPermission = (permission) => {
+    if (!permission) return true; // Public route
+    if (!user?.allPermissions) return false;
+    return user.allPermissions.includes(permission);
+  };
 
   const cards = [
     {
@@ -26,13 +33,15 @@ const DashboardPage = () => {
       icon: <People sx={{ fontSize: 40 }} />,
       color: '#3f51b5',
       path: '/users',
+      permission: 'user.view',
     },
     {
       title: 'Empresas',
-      value: 'Ver todas',
+      value: isOwner ? 'Ver todas' : 'Mi Empresa',
       icon: <Business sx={{ fontSize: 40 }} />,
       color: '#f50057',
-      path: '/companies',
+      path: isOwner ? '/companies' : `/companies/${user?.companyId}`,
+      permission: 'company.view',
     },
     {
       title: 'Expedientes',
@@ -40,6 +49,7 @@ const DashboardPage = () => {
       icon: <Folder sx={{ fontSize: 40 }} />,
       color: '#4caf50',
       path: '/proceedings',
+      permission: 'proceeding.view',
     },
     {
       title: 'Correspondencia',
@@ -47,8 +57,11 @@ const DashboardPage = () => {
       icon: <Send sx={{ fontSize: 40 }} />,
       color: '#ff9800',
       path: '/correspondences',
+      permission: 'correspondence.view',
     },
   ];
+
+  const filteredCards = cards.filter(card => hasPermission(card.permission));
 
   return (
     <Box>
@@ -60,7 +73,7 @@ const DashboardPage = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        {cards.map((card, index) => (
+        {filteredCards.map((card, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Card sx={{ height: '100%' }}>
               <CardActionArea

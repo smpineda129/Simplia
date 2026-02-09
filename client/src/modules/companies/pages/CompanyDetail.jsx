@@ -13,6 +13,7 @@ import {
   Card,
   CardContent,
   Chip,
+  IconButton,
 } from '@mui/material';
 import { ArrowBack, Business, AccountTree, Mail, Warehouse, Inventory, ReplayCircleFilled } from '@mui/icons-material';
 import { companyService } from '../index';
@@ -20,9 +21,12 @@ import CompanyAreas from '../components/CompanyAreas';
 import CompanyCorrespondenceTypes from '../components/CompanyCorrespondenceTypes';
 import CompanyWarehouses from '../components/CompanyWarehouses';
 import CompanyBoxes from '../components/CompanyBoxes';
+import { useAuth } from '../../../hooks/useAuth';
+
 const CompanyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isOwner } = useAuth();
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,13 +75,11 @@ const CompanyDetail = () => {
     <Box>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate('/companies')}
-          sx={{ mr: 2 }}
-        >
-          Volver
-        </Button>
+        {isOwner && (
+          <IconButton onClick={() => navigate('/companies')} sx={{ mr: 2 }}>
+            <ArrowBack />
+          </IconButton>
+        )}
         <Business sx={{ mr: 1, fontSize: 32, color: 'primary.main' }} />
         <Typography variant="h4">{company.name}</Typography>
       </Box>

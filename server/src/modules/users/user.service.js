@@ -35,7 +35,10 @@ export const userService = {
         const roles = await userRoleService.getUserRoles(user.id);
         return {
           ...user,
-          roles: roles || [],
+          roles: roles.map(r => ({
+            name: r.name,
+            roleLevel: r.role_level || r.roleLevel
+          })) || [],
         };
       })
     );
@@ -62,6 +65,18 @@ export const userService = {
             short: true,
           },
         },
+        areaUsers: {
+          where: { deletedAt: null },
+          select: {
+            area: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -71,14 +86,17 @@ export const userService = {
       throw new ApiError(404, 'Usuario no encontrado');
     }
 
-    // Agregar roles y permisos de Spatie
+    // Fetch granular roles and permissions
     const roles = await userRoleService.getUserRoles(parseInt(id));
     const permissions = await userRoleService.getUserPermissions(parseInt(id));
 
     return {
       ...user,
-      roles: roles || [],
-      permissions: permissions || [],
+      roles: roles.map(r => ({
+        name: r.name,
+        roleLevel: r.role_level || r.roleLevel
+      })),
+      allPermissions: permissions.map(p => p.name)
     };
   },
 
@@ -134,7 +152,7 @@ export const userService = {
     }
 
     const updateData = { ...data };
-    
+
     if (data.password) {
       updateData.password = await bcrypt.hash(data.password, 10);
     }

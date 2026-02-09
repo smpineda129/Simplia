@@ -22,7 +22,7 @@
 
 ## 🎯 Introducción al Proyecto
 
-**GDI (Gestión Documental Integral)** es un sistema completo de gestión documental empresarial que permite:
+**GDI (Gestión Documental Inteligente)** es un sistema completo de gestión documental empresarial que permite:
 
 - Gestión de correspondencia con radicados automáticos
 - Administración de expedientes y archivos físicos

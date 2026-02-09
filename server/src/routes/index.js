@@ -14,6 +14,9 @@ import warehouseRoutes from '../modules/warehouses/warehouse.routes.js';
 import roleRoutes from '../modules/roles/role.routes.js';
 import permissionRoutes from '../modules/permissions/permission.routes.js';
 import notificationRoutes from '../modules/notifications/notification.routes.js';
+import auditRoutes from '../modules/audit/audit.routes.js';
+import { authenticate } from '../middlewares/auth.js';
+import { hasPermission } from '../middlewares/permission.middleware.js';
 
 const router = Router();
 
@@ -32,6 +35,7 @@ router.use('/warehouses', warehouseRoutes);
 router.use('/roles', roleRoutes);
 router.use('/permissions', permissionRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/audit', auditRoutes);
 
 // Health check
 router.get('/health', (req, res) => {
@@ -39,6 +43,15 @@ router.get('/health', (req, res) => {
     success: true,
     message: 'API funcionando correctamente',
     timestamp: new Date().toISOString(),
+  });
+});
+
+// Ruta de prueba para permisos
+router.get('/test-permission', authenticate, hasPermission('user.view'), (req, res) => {
+  res.json({
+    success: true,
+    message: 'Acceso autorizado: Tienes permiso para ver usuarios.',
+    user: req.user.email
   });
 });
 

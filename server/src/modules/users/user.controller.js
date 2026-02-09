@@ -3,6 +3,11 @@ import { asyncHandler } from '../../utils/asyncHandler.js';
 
 export const userController = {
   getAll: asyncHandler(async (req, res) => {
+    // Enforce company scope
+    if (req.user.companyId) {
+      req.query.companyId = req.user.companyId;
+    }
+
     const users = await userService.getAll(req.query);
 
     res.status(200).json({

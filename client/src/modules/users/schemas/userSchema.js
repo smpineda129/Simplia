@@ -17,4 +17,5 @@ export const userSchema = Yup.object({
   role: Yup.string()
     .oneOf(['USER', 'ADMIN', 'MANAGER'], 'Rol inválido')
     .required('El rol es requerido'),
+  companyId: Yup.number().nullable().optional(),
 });

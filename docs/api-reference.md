@@ -1,6 +1,6 @@
 # Referencia de la API - Sistema GDI
 
-Documentación de referencia rápida de los endpoints disponibles en la API del Sistema de Gestión Documental Integral (GDI).
+Documentación de referencia rápida de los endpoints disponibles en la API del Sistema de Gestión Documental Inteligente (GDI).
 
 ## 📚 Documentación Completa
 

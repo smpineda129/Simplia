@@ -3,9 +3,16 @@ import correspondenceService from './correspondence.service.js';
 class CorrespondenceController {
   async getAll(req, res) {
     try {
-      const { search, companyId, status, correspondenceTypeId, page, limit } = req.query;
-      const result = await correspondenceService.getAll({ 
-        search, companyId, status, correspondenceTypeId, page, limit 
+      const { search, status, correspondenceTypeId, page, limit } = req.query;
+      let { companyId } = req.query;
+
+      // Enforce company scope
+      if (req.user.companyId) {
+        companyId = req.user.companyId;
+      }
+
+      const result = await correspondenceService.getAll({
+        search, companyId, status, correspondenceTypeId, page, limit
       });
 
       res.json({

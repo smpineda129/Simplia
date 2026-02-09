@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../modules/auth/services/authService';
+import impersonateService from '../modules/users/services/impersonateService';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export const AuthContext = createContext();
@@ -8,6 +9,8 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [originalUser, setOriginalUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +40,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       setUser(user);
-      console.log(user);
       navigate('/dashboard');
       return response;
     } catch (error) {
@@ -49,8 +51,60 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setUser(null);
+    setIsImpersonating(false);
+    setOriginalUser(null);
     navigate('/auth/login');
   };
+
+  const startImpersonation = async (userId) => {
+    try {
+      // Guardar el usuario original antes de personificar
+      setOriginalUser(user);
+
+      const response = await impersonateService.impersonateUser(userId);
+      const { accessToken, user: impersonatedUser } = response.data;
+
+      // Actualizar el token
+      localStorage.setItem('accessToken', accessToken);
+
+      // Actualizar el estado
+      setUser(impersonatedUser);
+      setIsImpersonating(true);
+
+      navigate('/dashboard');
+
+      return response;
+    } catch (error) {
+      console.error('Error starting impersonation:', error);
+      throw error;
+    }
+  };
+
+  const leaveImpersonation = async () => {
+    try {
+      const response = await impersonateService.leaveImpersonation();
+      const { accessToken, refreshToken, user: restoredUser } = response.data;
+
+      // Actualizar tokens
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+
+      // Restaurar el usuario original
+      setUser(restoredUser);
+      setIsImpersonating(false);
+      setOriginalUser(null);
+
+      return response;
+    } catch (error) {
+      console.error('Error leaving impersonation:', error);
+      throw error;
+    }
+  };
+
+  // Calculate isOwner safely checking for role object structure
+  const isOwner = user?.roles?.some(r => r.name === 'Owner' || r.roleLevel === 1) || false;
 
   const value = {
     user,
@@ -58,6 +112,11 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!user,
+    isImpersonating,
+    originalUser,
+    startImpersonation,
+    leaveImpersonation,
+    isOwner,
   };
 
   if (loading) {
