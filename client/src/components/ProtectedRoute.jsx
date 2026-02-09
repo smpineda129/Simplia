@@ -22,6 +22,11 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
     return <Navigate to="/auth/login" replace />;
   }
 
+  // SUPER_ADMIN tiene acceso completo a todo
+  if (user?.role === 'SUPER_ADMIN') {
+    return children;
+  }
+
   if (requiredPermission && !user?.allPermissions?.includes(requiredPermission)) {
     return <Navigate to="/403" replace />;
   }

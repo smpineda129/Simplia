@@ -3,7 +3,7 @@ import notificationService from './notification.service.js';
 class NotificationController {
   async getAll(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const { page, limit, unreadOnly } = req.query;
       
       const result = await notificationService.getByUserId(userId, {
@@ -28,7 +28,7 @@ class NotificationController {
 
   async getUnreadCount(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const result = await notificationService.getUnreadCount(userId);
 
       res.json({
@@ -45,7 +45,7 @@ class NotificationController {
 
   async markAsRead(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const { id } = req.params;
       
       const notification = await notificationService.markAsRead(id, userId);
@@ -65,7 +65,7 @@ class NotificationController {
 
   async markAllAsRead(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const result = await notificationService.markAllAsRead(userId);
 
       res.json({
@@ -82,7 +82,7 @@ class NotificationController {
 
   async delete(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const { id } = req.params;
       
       const result = await notificationService.delete(id, userId);
@@ -101,7 +101,7 @@ class NotificationController {
 
   async deleteAll(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const result = await notificationService.deleteAll(userId);
 
       res.json({

@@ -88,6 +88,8 @@ const MainLayout = () => {
   const hasPermission = (permission) => {
     if (!permission) return true; // Public route
     if (!user?.allPermissions) return false;
+    // SUPER_ADMIN tiene acceso completo a todo
+    if (user.role === 'SUPER_ADMIN') return true;
     return user.allPermissions.includes(permission);
   };
 

@@ -105,6 +105,9 @@ export const AuthProvider = ({ children }) => {
 
   // Calculate isOwner safely checking for role object structure
   const isOwner = user?.roles?.some(r => r.name === 'Owner' || r.roleLevel === 1) || false;
+  
+  // SUPER_ADMIN tiene acceso completo a todo
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const value = {
     user,
@@ -117,6 +120,7 @@ export const AuthProvider = ({ children }) => {
     startImpersonation,
     leaveImpersonation,
     isOwner,
+    isSuperAdmin,
   };
 
   if (loading) {

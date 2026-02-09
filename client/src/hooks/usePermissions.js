@@ -15,6 +15,10 @@ export const usePermissions = () => {
         if (!user || !user.allPermissions) {
             return false;
         }
+        // SUPER_ADMIN tiene acceso completo a todo
+        if (user.role === 'SUPER_ADMIN') {
+            return true;
+        }
         return user.allPermissions.includes(permissionName);
     };
 
@@ -27,6 +31,10 @@ export const usePermissions = () => {
         if (!user || !user.allPermissions) {
             return false;
         }
+        // SUPER_ADMIN tiene acceso completo a todo
+        if (user.role === 'SUPER_ADMIN') {
+            return true;
+        }
         return permissionNames.some(permission => user.allPermissions.includes(permission));
     };
 
@@ -38,6 +46,10 @@ export const usePermissions = () => {
     const hasAllPermissions = (permissionNames) => {
         if (!user || !user.allPermissions) {
             return false;
+        }
+        // SUPER_ADMIN tiene acceso completo a todo
+        if (user.role === 'SUPER_ADMIN') {
+            return true;
         }
         return permissionNames.every(permission => user.allPermissions.includes(permission));
     };

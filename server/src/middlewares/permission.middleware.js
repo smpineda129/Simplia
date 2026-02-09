@@ -16,6 +16,11 @@ export const hasPermission = (permissionName) => {
                 });
             }
 
+            // SUPER_ADMIN tiene acceso completo a todo
+            if (req.user.role === 'SUPER_ADMIN') {
+                return next();
+            }
+
             const userId = req.user.id;
 
             // 1. Obtener la definición del permiso
@@ -111,6 +116,11 @@ export const isSelfOrHasPermission = (permissionName, paramName = 'id') => {
                     success: false,
                     message: 'No autenticado',
                 });
+            }
+
+            // SUPER_ADMIN tiene acceso completo a todo
+            if (req.user.role === 'SUPER_ADMIN') {
+                return next();
             }
 
             // Verificar si es el mismo usuario
