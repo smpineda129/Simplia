@@ -3,7 +3,7 @@ services:
   - type: web
     name: gdi-backend
     env: node
-    buildCommand: npm install && npx prisma generate && npx prisma db push --accept-data-loss
+    buildCommand: npm install && npx prisma generate && node fix-duplicate-emails.js && npx prisma db push --accept-data-loss && node create-admin.js
     startCommand: npm start
     envVars:
       - key: NODE_ENV
