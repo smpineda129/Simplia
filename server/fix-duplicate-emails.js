@@ -6,11 +6,10 @@ async function fixDuplicateEmails() {
   try {
     console.log('🔍 Buscando emails duplicados...');
 
-    // Find duplicate emails
+    // Find duplicate emails (including soft-deleted users)
     const duplicates = await prisma.$queryRaw`
-      SELECT email, COUNT(*) as count, ARRAY_AGG(id ORDER BY created_at ASC) as user_ids
+      SELECT email, COUNT(*) as count, ARRAY_AGG(id ORDER BY created_at ASC NULLS LAST) as user_ids
       FROM users
-      WHERE deleted_at IS NULL
       GROUP BY email
       HAVING COUNT(*) > 1
     `;
@@ -28,19 +27,21 @@ async function fixDuplicateEmails() {
       const deleteUserIds = userIds.slice(1); // Delete the rest
 
       console.log(`\n📧 Email: ${dup.email}`);
+      console.log(`   Total de usuarios: ${userIds.length}`);
       console.log(`   Manteniendo usuario ID: ${keepUserId}`);
-      console.log(`   Eliminando usuarios IDs: ${deleteUserIds.join(', ')}`);
+      console.log(`   Modificando usuarios IDs: ${deleteUserIds.join(', ')}`);
 
-      // Soft delete duplicate users
+      // Change email of duplicate users to avoid constraint
       for (const userId of deleteUserIds) {
+        const timestamp = Date.now();
         await prisma.user.update({
           where: { id: userId },
           data: { 
             deletedAt: new Date(),
-            email: `${dup.email}.deleted.${userId}` // Change email to avoid constraint
+            email: `${dup.email}.dup${userId}.${timestamp}@deleted.local`
           }
         });
-        console.log(`   ✓ Usuario ${userId} marcado como eliminado`);
+        console.log(`   ✓ Usuario ${userId} email modificado y marcado como eliminado`);
       }
     }
 
