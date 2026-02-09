@@ -18,10 +18,12 @@ import { Add, Search } from '@mui/icons-material';
 import ProceedingTable from '../components/ProceedingTable';
 import ProceedingModalForm from '../components/ProceedingModalForm';
 import proceedingService from '../services/proceedingService';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { companyService } from '../../companies';
 import { retentionService } from '../../retentions';
 
 const ProceedingList = () => {
+  const { hasPermission } = usePermissions();
   const [proceedings, setProceedings] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [retentions, setRetentions] = useState([]);
@@ -137,13 +139,15 @@ const ProceedingList = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Expedientes</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
-        >
-          Nuevo Expediente
-        </Button>
+        {hasPermission('proceeding.create') && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleCreate}
+          >
+            Nuevo Expediente
+          </Button>
+        )}
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -199,6 +203,9 @@ const ProceedingList = () => {
           page={page}
           onPageChange={setPage}
           pagination={pagination}
+          canView={hasPermission('proceeding.view')}
+          canEdit={hasPermission('proceeding.update')}
+          canDelete={hasPermission('proceeding.delete')}
         />
       )}
 

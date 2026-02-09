@@ -19,7 +19,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useState } from 'react';
 import TableSkeleton from '../../../components/TableSkeleton';
 
-const UserTable = ({ users, onEdit, onDelete, loading }) => {
+const UserTable = ({ users, onEdit, onDelete, loading, canEdit, canDelete }) => {
   const navigate = useNavigate();
   const { hasPermission, canImpersonateUser } = usePermissions();
   const { user: currentUser, startImpersonation, isImpersonating: globalIsImpersonating } = useAuth();
@@ -113,26 +113,30 @@ const UserTable = ({ users, onEdit, onDelete, loading }) => {
                     <Visibility />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Editar">
-                  <IconButton
-                    aria-label="Editar usuario"
-                    color="primary"
-                    onClick={() => onEdit(user)}
-                    size="small"
-                  >
-                    <Edit />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Eliminar">
-                  <IconButton
-                    aria-label="Eliminar usuario"
-                    color="error"
-                    onClick={() => onDelete(user.id)}
-                    size="small"
-                  >
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
+                {canEdit && (
+                  <Tooltip title="Editar">
+                    <IconButton
+                      aria-label="Editar usuario"
+                      color="primary"
+                      onClick={() => onEdit(user)}
+                      size="small"
+                    >
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {canDelete && (
+                  <Tooltip title="Eliminar">
+                    <IconButton
+                      aria-label="Eliminar usuario"
+                      color="error"
+                      onClick={() => onDelete(user.id)}
+                      size="small"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </TableCell>
             </TableRow>
           ))}

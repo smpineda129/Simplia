@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { Edit, Delete, Visibility } from '@mui/icons-material';
 
-const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageChange, pagination }) => {
+const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageChange, pagination, canEdit, canDelete }) => {
   const handleChangePage = (event, newPage) => {
     onPageChange(newPage + 1);
   };
@@ -68,30 +68,34 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title={!role.companyId ? "Los roles del sistema no se pueden editar" : "Editar"}>
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => onEdit(role)}
-                          disabled={!role.companyId}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Tooltip title={!role.companyId ? "Los roles del sistema no se pueden eliminar" : "Eliminar"}>
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => onDelete(role.id)}
-                          disabled={!role.companyId}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    {canEdit && (
+                      <Tooltip title={!role.companyId ? "Los roles del sistema no se pueden editar" : "Editar"}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => onEdit(role)}
+                            disabled={!role.companyId}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
+                    {canDelete && (
+                      <Tooltip title={!role.companyId ? "Los roles del sistema no se pueden eliminar" : "Eliminar"}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(role.id)}
+                            disabled={!role.companyId}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

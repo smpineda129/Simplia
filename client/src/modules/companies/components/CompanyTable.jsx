@@ -15,7 +15,7 @@ import {
 import { Edit, Delete, Business, People, Visibility } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, pagination }) => {
+const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, pagination, canEdit, canDelete }) => {
   const navigate = useNavigate();
   if (!companies || companies.length === 0) {
     return (
@@ -98,24 +98,28 @@ const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, paginat
                       <Visibility />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Editar">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => onEdit(company)}
-                    >
-                      <Edit />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => onDelete(company.id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
+                  {canEdit && (
+                    <Tooltip title="Editar">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onEdit(company)}
+                      >
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {canDelete && (
+                    <Tooltip title="Eliminar">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => onDelete(company.id)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
