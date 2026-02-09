@@ -1,4 +1,5 @@
 import { prisma } from '../../db/prisma.js';
+import notificationService from '../notifications/notification.service.js';
 
 class CorrespondenceService {
   // Generar radicado automático
@@ -145,11 +146,26 @@ class CorrespondenceService {
         type: data.recipientType || 'internal',
         in_settled: incomingRadicado,
         status: data.assignedUserId ? 'assigned' : 'registered',
+        recipient_id: data.assignedUserId ? BigInt(data.assignedUserId) : null,
+        sender_id: BigInt(createdBy),
       },
       include: {
         company: true,
       },
     });
+
+    // Crear notificación si hay un usuario asignado
+    if (data.assignedUserId) {
+      try {
+        await notificationService.notifyCorrespondenceAssigned(
+          correspondence,
+          data.assignedUserId,
+          'Sistema'
+        );
+      } catch (notifError) {
+        console.error('Error al crear notificación:', notifError);
+      }
+    }
 
     return correspondence;
   }
@@ -163,21 +179,34 @@ class CorrespondenceService {
       throw new Error('Correspondencia no encontrada');
     }
 
+    const wasAssigned = correspondence.recipient_id;
+    const isBeingAssigned = data.assignedUserId && !wasAssigned;
+
     const updated = await prisma.correspondence.update({
       where: { id: parseInt(id) },
       data: {
         title: data.title,
-        recipientName: data.recipientName,
-        recipientEmail: data.recipientEmail,
-        advisorCode: data.advisorCode,
-        assignedUserId: data.assignedUserId ? parseInt(data.assignedUserId) : null,
         comments: data.comments,
+        recipient_id: data.assignedUserId ? BigInt(data.assignedUserId) : null,
         ...(data.assignedUserId && correspondence.status === 'registered' && { status: 'assigned' }),
       },
       include: {
         company: true,
       },
     });
+
+    // Notificar si se está asignando a un nuevo usuario
+    if (isBeingAssigned) {
+      try {
+        await notificationService.notifyCorrespondenceAssigned(
+          updated,
+          data.assignedUserId,
+          'Sistema'
+        );
+      } catch (notifError) {
+        console.error('Error al crear notificación:', notifError);
+      }
+    }
 
     return updated;
   }
@@ -216,11 +245,12 @@ class CorrespondenceService {
     const thread = await prisma.correspondenceThread.create({
       data: {
         correspondenceId: parseInt(correspondenceId),
-        userId: threadUserId,
+        from_id: BigInt(threadUserId),
+        to_id: data.to_id ? BigInt(data.to_id) : null,
         message: data.message,
       },
       include: {
-        user: {
+        users_correspondence_threads_from_idTousers: {
           select: {
             id: true,
             name: true,
@@ -229,6 +259,24 @@ class CorrespondenceService {
         },
       },
     });
+
+    // Notificar al destinatario del thread si existe
+    if (data.to_id && data.to_id !== threadUserId) {
+      try {
+        const sender = await prisma.user.findUnique({
+          where: { id: BigInt(threadUserId) },
+          select: { name: true },
+        });
+        await notificationService.notifyCorrespondenceThread(
+          correspondence,
+          thread,
+          sender?.name || 'Usuario',
+          [data.to_id]
+        );
+      } catch (notifError) {
+        console.error('Error al crear notificación de thread:', notifError);
+      }
+    }
 
     return thread;
   }
@@ -257,6 +305,23 @@ class CorrespondenceService {
 
     // Crear hilo con la respuesta
     await this.createThread(id, { message: data.response }, userId);
+
+    // Notificar al remitente original que la correspondencia fue respondida
+    if (correspondence.sender_id && correspondence.sender_id !== BigInt(userId)) {
+      try {
+        const responder = await prisma.user.findUnique({
+          where: { id: BigInt(userId) },
+          select: { name: true },
+        });
+        await notificationService.notifyCorrespondenceResponded(
+          updated,
+          responder?.name || 'Usuario',
+          [Number(correspondence.sender_id)]
+        );
+      } catch (notifError) {
+        console.error('Error al crear notificación de respuesta:', notifError);
+      }
+    }
 
     return updated;
   }

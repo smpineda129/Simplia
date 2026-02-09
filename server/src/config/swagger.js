@@ -26,6 +26,7 @@ API completa para la gestión documental empresarial con las siguientes caracter
 - **Entidades**: Gestión de entidades externas
 - **Bodegas**: Control de ubicaciones físicas y cajas
 - **Roles y Permisos**: Sistema RBAC completo
+- **Notificaciones**: Sistema de notificaciones internas escalable
 
 ## Características
 
@@ -738,6 +739,140 @@ La mayoría de los endpoints requieren autenticación. Para autenticarte:
             },
           },
         },
+        Notification: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              example: '550e8400-e29b-41d4-a716-446655440000',
+            },
+            type: {
+              type: 'string',
+              example: 'App\\Notifications\\CorrespondenceAssigned',
+              description: 'Tipo de notificación (namespace estilo Laravel)',
+            },
+            notifiableType: {
+              type: 'string',
+              example: 'App\\Models\\User',
+              description: 'Tipo de modelo notificable',
+            },
+            notifiableId: {
+              type: 'string',
+              example: '1',
+              description: 'ID del usuario que recibe la notificación',
+            },
+            data: {
+              type: 'object',
+              properties: {
+                title: {
+                  type: 'string',
+                  example: 'Correspondencia asignada',
+                },
+                message: {
+                  type: 'string',
+                  example: 'Se te ha asignado la correspondencia: Solicitud de información',
+                },
+                icon: {
+                  type: 'string',
+                  example: 'assignment_ind',
+                },
+                url: {
+                  type: 'string',
+                  example: '/correspondences/123',
+                },
+                module: {
+                  type: 'string',
+                  example: 'correspondences',
+                },
+                entityId: {
+                  type: 'string',
+                  example: '123',
+                },
+                entityType: {
+                  type: 'string',
+                  example: 'Correspondence',
+                },
+              },
+            },
+            readAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: 'Fecha de lectura (null si no leída)',
+            },
+            isRead: {
+              type: 'boolean',
+              example: false,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+        },
+        NotificationListResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Notification',
+              },
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                total: {
+                  type: 'integer',
+                  example: 25,
+                },
+                page: {
+                  type: 'integer',
+                  example: 1,
+                },
+                limit: {
+                  type: 'integer',
+                  example: 20,
+                },
+                totalPages: {
+                  type: 'integer',
+                  example: 2,
+                },
+              },
+            },
+            unreadCount: {
+              type: 'integer',
+              example: 5,
+            },
+          },
+        },
+        UnreadCountResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'object',
+              properties: {
+                unreadCount: {
+                  type: 'integer',
+                  example: 5,
+                },
+              },
+            },
+          },
+        },
       },
       responses: {
         UnauthorizedError: {
@@ -860,6 +995,10 @@ La mayoría de los endpoints requieren autenticación. Para autenticarte:
       {
         name: 'CorrespondenceTypes',
         description: 'Tipos de correspondencia',
+      },
+      {
+        name: 'Notifications',
+        description: 'Sistema de notificaciones internas - Gestión de alertas y mensajes para usuarios',
       },
     ],
     security: [

@@ -17,6 +17,7 @@ import { EntityList } from './modules/entities';
 import { WarehouseList } from './modules/warehouses';
 import { RoleList } from './modules/roles';
 import { PermissionList } from './modules/permissions';
+import NotificationsPage from './modules/notifications/pages/NotificationsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/roles" element={<RoleList />} />
           <Route path="/permissions" element={<PermissionList />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 

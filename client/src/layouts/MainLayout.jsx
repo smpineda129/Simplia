@@ -42,6 +42,7 @@ import {
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { NotificationPanel } from '../modules/notifications';
 
 const drawerWidth = 240;
 
@@ -144,8 +145,9 @@ const MainLayout = () => {
             Sistema de Gestión
           </Typography>
 
-          {/* User Menu */}
+          {/* Notifications & User Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <NotificationPanel />
             <Button
               color="inherit"
               onClick={handleMenuOpen}
