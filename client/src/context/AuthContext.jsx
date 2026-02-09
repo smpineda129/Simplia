@@ -40,7 +40,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       setUser(user);
-      console.log(user);
       navigate('/dashboard');
       return response;
     } catch (error) {
@@ -104,6 +103,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Calculate isOwner safely checking for role object structure
+  const isOwner = user?.roles?.some(r => r.name === 'Owner' || r.roleLevel === 1) || false;
+
   const value = {
     user,
     loading,
@@ -114,6 +116,7 @@ export const AuthProvider = ({ children }) => {
     originalUser,
     startImpersonation,
     leaveImpersonation,
+    isOwner,
   };
 
   if (loading) {

@@ -1,26 +1,28 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
 import { prisma } from '../db/prisma.js';
+import { getContext } from '../utils/context.js';
 
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    if (authHeader) {
+      // Log sutil para seguimiento
+      // const tokenPreview = authHeader.substring(0, 15);
+    }
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Token no proporcionado',
+        message: 'Token no proporcionado o formato inválido',
       });
     }
 
     const token = authHeader.substring(7);
-
     const decoded = jwt.verify(token, config.jwt.secret);
 
-    // Verificar si hay personificación
-    const userId = decoded.impersonatorId
-      ? parseInt(decoded.userId) // Usuario personificado
-      : parseInt(decoded.userId); // Usuario normal
+    // Verificar si hay personificación (Usar BigInt para compatibilidad con la DB)
+    const userId = BigInt(decoded.userId);
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -32,11 +34,10 @@ export const authenticate = async (req, res, next) => {
         companyId: true,
       },
     });
-
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Usuario no encontrado',
+        message: 'Usuario no encontrado en base de datos',
       });
     }
 
@@ -74,7 +75,45 @@ export const authenticate = async (req, res, next) => {
       }
     }
 
+    // 2. Fetch Permissions
+    // Direct permissions
+    const directPermissions = await prisma.modelHasPermission.findMany({
+      where: {
+        modelId: user.id,
+        modelType: 'App\\Models\\User',
+      },
+      include: { permission: true },
+    });
+
+    // Role-based permissions
+    const roleIds = userRoles.map((ur) => ur.roleId);
+    let rolePermissions = [];
+    if (roleIds.length > 0) {
+      rolePermissions = await prisma.roleHasPermission.findMany({
+        where: { roleId: { in: roleIds } },
+        include: { permission: true },
+      });
+    }
+
+    // Combine and unique permissions
+    const permissionsSet = new Set([
+      ...directPermissions.map(dp => dp.permission.name),
+      ...rolePermissions.map(rp => rp.permission.name)
+    ]);
+
+    user.allPermissions = Array.from(permissionsSet);
+
     req.user = user;
+
+    // Populate Context
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.connection.remoteAddress;
+
+    const store = getContext();
+    if (store) {
+      store.set('user', user);
+      store.set('ip', ip);
+      store.set('userAgent', req.headers['user-agent']);
+    }
 
     // Si hay personificación, también adjuntar el impersonador
     if (decoded.impersonatorId) {

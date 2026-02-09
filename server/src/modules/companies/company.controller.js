@@ -3,8 +3,17 @@ import companyService from './company.service.js';
 class CompanyController {
   async getAll(req, res) {
     try {
+      const isOwner = req.user.roles.some((r) => r.roleLevel === 1);
+
+      // Security: If not owner and no companyId assigned, deny access to list
+      if (!isOwner && !req.user.companyId) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para ver el listado de empresas',
+        });
+      }
+
       // Enforce company scope for non-owners
-      const isOwner = req.user.roles.includes('Owner');
       if (!isOwner && req.user.companyId) {
         req.query.id = req.user.companyId;
       }
@@ -27,6 +36,16 @@ class CompanyController {
 
   async getById(req, res) {
     try {
+      const isOwner = req.user.roles.some((r) => r.roleLevel === 1);
+
+      // Check permission BEFORE querying database to prevent enumeration and DoS
+      if (!isOwner && String(req.params.id) !== String(req.user.companyId)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para acceder a esta empresa',
+        });
+      }
+
       const company = await companyService.getById(req.params.id);
 
       res.json({
@@ -93,6 +112,16 @@ class CompanyController {
 
   async getStats(req, res) {
     try {
+      const isOwner = req.user.roles.some((r) => r.roleLevel === 1);
+
+      // Check permission BEFORE querying database
+      if (!isOwner && String(req.params.id) !== String(req.user.companyId)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para acceder a esta empresa',
+        });
+      }
+
       const stats = await companyService.getStats(req.params.id);
 
       res.json({

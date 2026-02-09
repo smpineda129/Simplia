@@ -26,7 +26,7 @@ import { useAuth } from '../../../hooks/useAuth';
 const CompanyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isOwner } = useAuth();
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -70,8 +70,6 @@ const CompanyDetail = () => {
       </Box>
     );
   }
-
-  const isOwner = user?.roles?.includes('Owner');
 
   return (
     <Box>

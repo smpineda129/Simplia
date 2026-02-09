@@ -64,6 +64,7 @@ model User {
   proceedingThreadsFrom                                        ProceedingThread[]     @relation("ProceedingThreadFrom")
   company                                                      Company?               @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("users")
 }
 
@@ -81,6 +82,7 @@ model Area {
   correspondences_correspondences_origin_area_idToareas      Correspondence[] @relation("correspondences_origin_area_idToareas")
   retentions                                                 Retention[]
 
+  @@index([companyId])
   @@map("areas")
 }
 
@@ -112,6 +114,7 @@ model Retention {
   area           Area            @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   company        Company         @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("retentions")
 }
 
@@ -161,6 +164,7 @@ model Proceeding {
   company                 Company                  @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   retentionLine           RetentionLine?           @relation(fields: [retentionLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("proceedings")
 }
 
@@ -200,6 +204,7 @@ model Correspondence {
   users_correspondences_sender_idTousers           User?                     @relation("correspondences_sender_idTousers", fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_correspondences_sender")
   sentEmails                                       SentEmail[]
 
+  @@index([companyId])
   @@map("correspondences")
 }
 
@@ -244,6 +249,7 @@ model Document {
   textracts               DocumentTextract[]
   company                 Company                   @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("documents")
 }
 
@@ -272,6 +278,7 @@ model Warehouse {
   box_warehouse box_warehouse[]
   company       Company         @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("warehouses")
 }
 
@@ -286,6 +293,7 @@ model Box {
   box_warehouse  box_warehouse[]
   company        Company?        @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("boxes")
 }
 
@@ -301,6 +309,7 @@ model CorrespondenceType {
   deletedAt   DateTime? @map("deleted_at") @db.Timestamp(0)
   public      Boolean   @default(true)
 
+  @@index([companyId])
   @@map("correspondence_types")
 }
 
@@ -315,6 +324,7 @@ model Template {
   deletedAt   DateTime? @map("deleted_at") @db.Timestamp(0)
   company     Company   @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("templates")
 }
 
@@ -389,6 +399,7 @@ model ExternalUser {
   externalUserProceedings ExternalUserProceeding[]
   company                 Company?                 @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("external_users")
 }
 
@@ -483,6 +494,7 @@ model Role {
   modelHasRoles      ModelHasRole[]
   roleHasPermissions RoleHasPermission[]
 
+  @@index([companyId])
   @@map("roles")
 }
 
@@ -616,6 +628,11 @@ model action_events {
   updated_at      DateTime? @db.Timestamp(0)
   original        String?
   changes         String?
+  companyId       BigInt?   @map("company_id")
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
+
+  @@index([companyId])
 }
 
 model box_warehouse {

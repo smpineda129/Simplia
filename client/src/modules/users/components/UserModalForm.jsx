@@ -21,9 +21,8 @@ import companyService from '../../companies/services/companyService';
 const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { user } = useAuth();
+  const { user, isOwner } = useAuth();
   const [companies, setCompanies] = useState([]);
-  const isOwner = user?.roles?.includes('Owner');
 
   useEffect(() => {
     if (open && isOwner) {
@@ -123,6 +122,7 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
+                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                         >

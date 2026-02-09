@@ -47,7 +47,7 @@ import ImpersonationBanner from '../components/ImpersonationBanner';
 const drawerWidth = 240;
 
 const MainLayout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isOwner } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -89,9 +89,6 @@ const MainLayout = () => {
     if (!user?.allPermissions) return false;
     return user.allPermissions.includes(permission);
   };
-
-  // Check if user is Owner
-  const isOwner = user?.roles?.includes('Owner');
 
   const menuItems = [
     { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard', permission: null },
