@@ -6,7 +6,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -20,6 +19,7 @@ import {
 import { Add, Search, TrendingUp, Assignment, CheckCircle, HourglassEmpty } from '@mui/icons-material';
 import CorrespondenceTable from '../components/CorrespondenceTable';
 import CorrespondenceModalForm from '../components/CorrespondenceModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 import correspondenceService from '../services/correspondenceService';
 import { companyService } from '../../companies';
 import { correspondenceTypeService } from '../../correspondence-types';
@@ -302,7 +302,7 @@ const CorrespondenceList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <CorrespondenceTable

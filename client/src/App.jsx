@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeCustomizationProvider } from './context/ThemeContext';
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
 import LoginPage from './modules/auth/pages/LoginPage';
@@ -20,6 +21,11 @@ import { RoleList } from './modules/roles';
 import { PermissionList } from './modules/permissions';
 import NotificationsPage from './modules/notifications/pages/NotificationsPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './pages/public/LandingPage';
+import PQRSPage from './pages/public/PQRSPage';
+import UserSupportPage from './modules/support-tickets/pages/UserSupportPage';
+import AdminTicketsPage from './modules/support-tickets/pages/AdminTicketsPage';
+import TicketDetailPage from './modules/support-tickets/pages/TicketDetailPage';
 
 import { useAuth } from './hooks/useAuth';
 
@@ -57,8 +63,15 @@ const CompanyDetailGuard = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
+    <ThemeCustomizationProvider>
+      <AuthProvider>
+        <Routes>
+        {/* Ruta pública - Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* Ruta pública - PQRS */}
+        <Route path="/pqrs" element={<PQRSPage />} />
+
         {/* Rutas de autenticación */}
         <Route element={<AuthLayout />}>
           <Route path="/auth/login" element={<LoginPage />} />
@@ -206,13 +219,19 @@ function App() {
             }
           />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* Support Tickets Routes */}
+          <Route path="/support" element={<UserSupportPage />} />
+          <Route path="/support/tickets/:id" element={<TicketDetailPage />} />
+          <Route path="/support/admin" element={<AdminTicketsPage />} />
+          <Route path="/support/admin/tickets/:id" element={<TicketDetailPage />} />
         </Route>
 
         {/* Ruta por defecto */}
-        <Route path="*" element={<Navigate to="/auth/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </AuthProvider>
+      </AuthProvider>
+    </ThemeCustomizationProvider>
   );
 }
 

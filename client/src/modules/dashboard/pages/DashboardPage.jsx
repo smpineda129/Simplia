@@ -1,11 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  CardContent,
   Typography,
   Grid,
   Box,
-  CardActionArea,
 } from '@mui/material';
 import {
   People,
@@ -14,104 +12,135 @@ import {
   Send,
 } from '@mui/icons-material';
 import { useAuth } from '../../../hooks/useAuth';
+import { usePermissions } from '../../../hooks/usePermissions';
+import StatCard from '../components/StatCard';
+import QuickAccessWidget from '../components/QuickAccessWidget';
+import LoadingLogo from '../../../components/LoadingLogo';
+import { dashboardService } from '../services/dashboardService';
 
 const DashboardPage = () => {
   const { user, isOwner } = useAuth();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
 
   // Check if user has permission
   const hasPermission = (permission) => {
-    if (!permission) return true; // Public route
+    if (!permission) return true;
     if (!user?.allPermissions) return false;
-    // SUPER_ADMIN tiene acceso completo a todo
     if (user.role === 'SUPER_ADMIN') return true;
     return user.allPermissions.includes(permission);
   };
 
-  const cards = [
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        const statsData = await dashboardService.getStats();
+        setStats(statsData);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
+  const quickActions = [
     {
       title: 'Usuarios',
-      value: 'Gestionar',
-      icon: <People sx={{ fontSize: 40 }} />,
+      icon: <People />,
       color: '#3f51b5',
       path: '/users',
       permission: 'user.view',
     },
     {
       title: 'Empresas',
-      value: isOwner ? 'Ver todas' : 'Mi Empresa',
-      icon: <Business sx={{ fontSize: 40 }} />,
+      icon: <Business />,
       color: '#f50057',
       path: isOwner ? '/companies' : `/companies/${user?.companyId}`,
       permission: 'company.view',
     },
     {
       title: 'Expedientes',
-      value: 'Gestionar',
-      icon: <Folder sx={{ fontSize: 40 }} />,
+      icon: <Folder />,
       color: '#4caf50',
       path: '/proceedings',
       permission: 'proceeding.view',
     },
     {
       title: 'Correspondencia',
-      value: 'Ver todas',
-      icon: <Send sx={{ fontSize: 40 }} />,
+      icon: <Send />,
       color: '#ff9800',
       path: '/correspondences',
       permission: 'correspondence.view',
     },
-  ];
+  ].filter(action => hasPermission(action.permission));
 
-  const filteredCards = cards.filter(card => hasPermission(card.permission));
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <LoadingLogo size={120} />
+      </Box>
+    );
+  }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Dashboard
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Bienvenido, {user?.name || user?.email}
-      </Typography>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight={700} gutterBottom>
+          Dashboard
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Bienvenido, {user?.name || user?.email}
+        </Typography>
+      </Box>
 
-      <Grid container spacing={3}>
-        {filteredCards.map((card, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card sx={{ height: '100%' }}>
-              <CardActionArea
-                onClick={() => navigate(card.path)}
-                sx={{ height: '100%' }}
-              >
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        color: card.color,
-                        mb: 2,
-                      }}
-                    >
-                      {card.icon}
-                    </Box>
-                    <Typography variant="h6" gutterBottom color="text.secondary">
-                      {card.title}
-                    </Typography>
-                    <Typography variant="h4" sx={{ color: card.color }}>
-                      {card.value}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Grid>
-        ))}
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Usuarios"
+            value={stats?.users.total.toLocaleString()}
+            icon={<People sx={{ fontSize: 32 }} />}
+            color="#3f51b5"
+            subtitle={stats?.users.subtitle}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Empresas"
+            value={stats?.companies.total}
+            icon={<Business sx={{ fontSize: 32 }} />}
+            color="#f50057"
+            subtitle={stats?.companies.subtitle}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Expedientes"
+            value={stats?.proceedings.total}
+            icon={<Folder sx={{ fontSize: 32 }} />}
+            color="#4caf50"
+            subtitle={stats?.proceedings.subtitle}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Correspondencia"
+            value={stats?.correspondence.total}
+            icon={<Send sx={{ fontSize: 32 }} />}
+            color="#ff9800"
+            subtitle={stats?.correspondence.subtitle}
+          />
+        </Grid>
       </Grid>
+
+      {/* Quick Access */}
+      <QuickAccessWidget actions={quickActions} />
     </Box>
   );
 };

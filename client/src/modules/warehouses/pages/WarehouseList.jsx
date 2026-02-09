@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -24,6 +23,7 @@ import { Add, Search, Warehouse as WarehouseIcon } from '@mui/icons-material';
 import warehouseService from '../services/warehouseService';
 import { companyService } from '../../companies';
 import WarehouseModalForm from '../components/WarehouseModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 
 const WarehouseList = () => {
   const [warehouses, setWarehouses] = useState([]);
@@ -157,7 +157,7 @@ const WarehouseList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : warehouses.length === 0 ? (
         <Paper sx={{ p: 3, textAlign: 'center' }}>

@@ -19,6 +19,10 @@ export const userValidation = {
       .optional()
       .isIn(['USER', 'ADMIN', 'MANAGER'])
       .withMessage('Rol inválido'),
+    body('roleId')
+      .optional()
+      .isInt()
+      .withMessage('ID de rol inválido'),
   ],
 
   update: [
@@ -41,6 +45,10 @@ export const userValidation = {
       .optional()
       .isIn(['USER', 'ADMIN', 'SUPER_ADMIN'])
       .withMessage('Rol inválido'),
+    body('roleId')
+      .optional()
+      .isInt()
+      .withMessage('ID de rol inválido'),
   ],
 
   getById: [

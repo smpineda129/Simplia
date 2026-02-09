@@ -16,6 +16,7 @@ import userService from '../services/userService';
 import UserAssociations from '../components/UserAssociations';
 import AuditTable from '../../audit/components/AuditTable';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import { getAvatarConfig } from '../../../utils/avatarUtils';
 
 const UserProfileView = () => {
   const { id } = useParams();
@@ -87,16 +88,22 @@ const UserProfileView = () => {
             <Grid container spacing={3}>
               {/* Avatar Section */}
               <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 120,
-                    height: 120,
-                    bgcolor: 'primary.main',
-                    fontSize: '3rem',
-                  }}
-                >
-                  {user.name?.charAt(0) || 'U'}
-                </Avatar>
+                {(() => {
+                  const avatarConfig = getAvatarConfig(user.avatar || 'person');
+                  const AvatarIcon = avatarConfig.icon;
+                  return (
+                    <Avatar
+                      sx={{
+                        width: 120,
+                        height: 120,
+                        bgcolor: avatarConfig.color,
+                        fontSize: '3rem',
+                      }}
+                    >
+                      <AvatarIcon sx={{ fontSize: 64 }} />
+                    </Avatar>
+                  );
+                })()}
               </Grid>
 
               {/* User Info */}

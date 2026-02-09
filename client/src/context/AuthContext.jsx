@@ -103,6 +103,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedData) => {
+    setUser((prevUser) => ({
+      ...prevUser,
+      ...updatedData,
+    }));
+  };
+
   // Calculate isOwner safely checking for role object structure
   const isOwner = user?.roles?.some(r => r.name === 'Owner' || r.roleLevel === 1) || false;
   
@@ -114,6 +121,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    updateUser,
     isAuthenticated: !!user,
     isImpersonating,
     originalUser,

@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -17,6 +16,7 @@ import {
 import { Add, Search } from '@mui/icons-material';
 import ProceedingTable from '../components/ProceedingTable';
 import ProceedingModalForm from '../components/ProceedingModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 import proceedingService from '../services/proceedingService';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { companyService } from '../../companies';
@@ -193,7 +193,7 @@ const ProceedingList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <ProceedingTable

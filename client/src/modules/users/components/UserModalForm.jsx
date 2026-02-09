@@ -17,25 +17,39 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { userSchema } from '../schemas/userSchema';
 import { useAuth } from '../../../hooks/useAuth';
 import companyService from '../../companies/services/companyService';
+import roleService from '../../roles/services/roleService';
 
 const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { user, isOwner } = useAuth();
   const [companies, setCompanies] = useState([]);
+  const [roles, setRoles] = useState([]);
 
   useEffect(() => {
-    if (open && isOwner) {
-      loadCompanies();
+    if (open) {
+      loadRoles();
+      if (isOwner) {
+        loadCompanies();
+      }
     }
   }, [open, isOwner]);
 
   const loadCompanies = async () => {
     try {
-      const response = await companyService.getAll({ limit: 100 }); // Adjust limit as needed
+      const response = await companyService.getAll({ limit: 100 });
       setCompanies(response.data);
     } catch (err) {
       console.error('Error loading companies', err);
+    }
+  };
+
+  const loadRoles = async () => {
+    try {
+      const response = await roleService.getAll({ limit: 100 });
+      setRoles(response.data || []);
+    } catch (err) {
+      console.error('Error loading roles', err);
     }
   };
 
@@ -43,7 +57,7 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
     name: '',
     email: '',
     password: '',
-    role: 'USER',
+    role: '',
     companyId: '',
   };
 
@@ -62,6 +76,12 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
       const payload = { ...values };
       if (payload.companyId === '') {
         payload.companyId = null;
+      }
+      
+      // Convert role to roleId for backend
+      if (payload.role) {
+        payload.roleId = parseInt(payload.role);
+        delete payload.role; // Remove role field, backend uses roleId
       }
 
       await onSubmit(payload);
@@ -142,9 +162,20 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
                   error={touched.role && Boolean(errors.role)}
                   helperText={touched.role && errors.role}
                 >
-                  <MenuItem value="USER">Usuario</MenuItem>
-                  <MenuItem value="MANAGER">Gerente</MenuItem>
-                  <MenuItem value="ADMIN">Administrador</MenuItem>
+                  <MenuItem value="">
+                    <em>Seleccionar rol</em>
+                  </MenuItem>
+                  {roles.length > 0 ? (
+                    roles.map((role) => (
+                      <MenuItem key={role.id} value={role.id}>
+                        {role.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="" disabled>
+                      <em>Cargando roles...</em>
+                    </MenuItem>
+                  )}
                 </Field>
 
                 {isOwner && (

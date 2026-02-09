@@ -39,11 +39,14 @@ import {
   Settings,
   Logout,
   KeyboardArrowDown,
+  ContactSupport,
+  Assignment,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { NotificationPanel } from '../modules/notifications';
 import ImpersonationBanner from '../components/ImpersonationBanner';
+import { getAvatarConfig } from '../utils/avatarUtils';
 
 const drawerWidth = 240;
 
@@ -110,33 +113,84 @@ const MainLayout = () => {
     { text: 'Permisos', icon: <VpnKey />, path: '/permissions', permission: 'permission.view' },
     { text: 'Roles', icon: <Security />, path: '/roles', permission: 'role.view' },
     { text: 'Usuarios', icon: <People />, path: '/users', permission: 'user.view' },
+    { text: 'Soporte', icon: <ContactSupport />, path: '/support', permission: null },
+    { text: 'Admin Tickets', icon: <Assignment />, path: '/support/admin', permission: null },
   ];
 
   const filteredMenuItems = menuItems.filter(item => hasPermission(item.permission));
 
   const drawer = (
-    <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          SIMPLIA
-        </Typography>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
+      <Toolbar sx={{ justifyContent: 'center', py: 2.5, px: 2 }}>
+        <Box
+          component="img"
+          src="/Horizontal_Logo.jpeg"
+          alt="GDI Logo"
+          onClick={() => navigate('/')}
+          sx={{
+            height: 40,
+            objectFit: 'contain',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+            '&:hover': {
+              transform: 'scale(1.05)',
+            },
+          }}
+        />
       </Toolbar>
       <Divider />
-      <List>
-        {filteredMenuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => {
-                navigate(item.path);
-                setMobileOpen(false);
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+      <List sx={{ px: 1.5, py: 2, flexGrow: 1 }}>
+        {filteredMenuItems.map((item) => {
+          const isActive = location.pathname === item.path || 
+                          (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+          return (
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={isActive}
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileOpen(false);
+                }}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.25,
+                  px: 2,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                    transform: 'translateX(4px)',
+                  },
+                  '&.Mui-selected': {
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.contrastText',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon 
+                  sx={{ 
+                    minWidth: 40,
+                    color: isActive ? 'inherit' : 'text.secondary',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '0.9rem',
+                    fontWeight: isActive ? 600 : 500,
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
     </Box>
   );
@@ -153,14 +207,15 @@ const MainLayout = () => {
         <Toolbar>
           <IconButton
             color="inherit"
+            aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
             sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Sistema de Gestión
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            
           </Typography>
 
           {/* Notifications & User Menu */}
@@ -170,11 +225,17 @@ const MainLayout = () => {
               color="inherit"
               onClick={handleMenuOpen}
               startIcon={
-                <Avatar
-                  sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}
-                >
-                  {user?.name?.charAt(0) || 'U'}
-                </Avatar>
+                (() => {
+                  const avatarConfig = getAvatarConfig(user?.avatar);
+                  const AvatarIcon = avatarConfig.icon;
+                  return (
+                    <Avatar
+                      sx={{ width: 32, height: 32, bgcolor: avatarConfig.color }}
+                    >
+                      <AvatarIcon sx={{ fontSize: 20 }} />
+                    </Avatar>
+                  );
+                })()
               }
               endIcon={<KeyboardArrowDown />}
               sx={{ textTransform: 'none' }}
@@ -202,30 +263,81 @@ const MainLayout = () => {
                 horizontal: 'right',
               }}
               PaperProps={{
+                elevation: 3,
                 sx: {
-                  mt: 1,
-                  minWidth: 200,
+                  mt: 1.5,
+                  minWidth: 220,
+                  borderRadius: 2,
+                  overflow: 'visible',
+                  '&:before': {
+                    content: '""',
+                    display: 'block',
+                    position: 'absolute',
+                    top: 0,
+                    right: 14,
+                    width: 10,
+                    height: 10,
+                    bgcolor: 'background.paper',
+                    transform: 'translateY(-50%) rotate(45deg)',
+                    zIndex: 0,
+                  },
                 },
               }}
             >
-              <MenuItem onClick={handleProfile}>
+              <Box 
+                sx={{ 
+                  px: 2, 
+                  py: 1.5, 
+                  borderBottom: 1, 
+                  borderColor: 'divider',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  },
+                  transition: 'background-color 0.2s',
+                }}
+                onClick={handleProfile}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  {(() => {
+                    const avatarConfig = getAvatarConfig(user?.avatar);
+                    const AvatarIcon = avatarConfig.icon;
+                    return (
+                      <Avatar
+                        sx={{ width: 40, height: 40, bgcolor: avatarConfig.color }}
+                      >
+                        <AvatarIcon sx={{ fontSize: 24 }} />
+                      </Avatar>
+                    );
+                  })()}
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      {user?.name || 'Usuario'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {user?.email || ''}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              <MenuItem 
+                onClick={handleLogout}
+                sx={{ 
+                  py: 1.5, 
+                  px: 2,
+                  color: 'error.main',
+                  '&:hover': {
+                    bgcolor: 'error.lighter',
+                  }
+                }}
+              >
                 <ListItemIcon>
-                  <AccountCircle fontSize="small" />
+                  <Logout fontSize="small" color="error" />
                 </ListItemIcon>
-                <ListItemText>Perfil</ListItemText>
-              </MenuItem>
-              <MenuItem onClick={handleSettings}>
-                <ListItemIcon>
-                  <Settings fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Configuración</ListItemText>
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>
-                <ListItemIcon>
-                  <Logout fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Cerrar Sesión</ListItemText>
+                <ListItemText 
+                  primary="Cerrar Sesión"
+                  primaryTypographyProps={{ variant: 'body2' }}
+                />
               </MenuItem>
             </Menu>
           </Box>

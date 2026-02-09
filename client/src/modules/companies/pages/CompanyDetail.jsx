@@ -6,7 +6,6 @@ import {
   Paper,
   Tabs,
   Tab,
-  CircularProgress,
   Alert,
   Button,
   Grid,
@@ -21,6 +20,7 @@ import CompanyAreas from '../components/CompanyAreas';
 import CompanyCorrespondenceTypes from '../components/CompanyCorrespondenceTypes';
 import CompanyWarehouses from '../components/CompanyWarehouses';
 import CompanyBoxes from '../components/CompanyBoxes';
+import LoadingLogo from '../../../components/LoadingLogo';
 import { useAuth } from '../../../hooks/useAuth';
 
 const CompanyDetail = () => {
@@ -55,7 +55,7 @@ const CompanyDetail = () => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+        <LoadingLogo size={120} />
       </Box>
     );
   }

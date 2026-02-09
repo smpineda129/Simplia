@@ -12,7 +12,6 @@ import {
   ListItemSecondaryAction,
   Divider,
   Button,
-  CircularProgress,
   Tooltip,
   Chip,
 } from '@mui/material';
@@ -30,6 +29,7 @@ import {
   Circle,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import LoadingLogo from '../../../components/LoadingLogo';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import useNotifications from '../hooks/useNotifications';
@@ -154,7 +154,7 @@ const NotificationPanel = () => {
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress size={32} />
+            <LoadingLogo size={80} />
           </Box>
         ) : notifications.length === 0 ? (
           <Box sx={{ p: 4, textAlign: 'center' }}>

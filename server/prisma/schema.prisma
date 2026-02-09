@@ -36,6 +36,7 @@ model Company {
   templates       Template[]
   users           User[]
   warehouses      Warehouse[]
+  supportTickets  SupportTicket[]
 
   @@map("companies")
 }
@@ -54,6 +55,7 @@ model User {
   phone                                                        String?                @db.VarChar(40)
   locale                                                       String?                @default("es") @db.VarChar(10)
   signature                                                    String?
+  avatar                                                       String?                @db.VarChar(50)
   role                                                         String?                @db.VarChar(191)
   areaUsers                                                    AreaUser[]
   correspondence_threads_correspondence_threads_from_idTousers CorrespondenceThread[] @relation("correspondence_threads_from_idTousers")
@@ -63,6 +65,10 @@ model User {
   proceedingThreadsAssigned                                    ProceedingThread[]     @relation("ProceedingThreadAssigned")
   proceedingThreadsFrom                                        ProceedingThread[]     @relation("ProceedingThreadFrom")
   company                                                      Company?               @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ticketsCreated                                               SupportTicket[]        @relation("TicketCreator")
+  ticketsAssigned                                              SupportTicket[]        @relation("TicketAssignee")
+  ticketComments                                               TicketComment[]
+  ticketHistory                                                TicketHistory[]
 
   @@index([companyId])
   @@map("users")
@@ -280,6 +286,120 @@ model Warehouse {
 
   @@index([companyId])
   @@map("warehouses")
+}
+
+// ==================== SUPPORT TICKETS SYSTEM ====================
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_RESPONSE
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketType {
+  PQRS
+  TECHNICAL_SUPPORT
+  BILLING
+  FEATURE_REQUEST
+  BUG_REPORT
+  OTHER
+}
+
+model SupportTicket {
+  id              BigInt              @id @default(autoincrement())
+  ticketNumber    String              @unique @map("ticket_number") @db.VarChar(20)
+  subject         String              @db.VarChar(255)
+  description     String              @db.Text
+  type            TicketType
+  module          String?             @db.VarChar(100)
+  status          TicketStatus        @default(OPEN)
+  priority        TicketPriority      @default(MEDIUM)
+  
+  // User info (null for anonymous PQRS)
+  userId          BigInt?             @map("user_id")
+  companyId       BigInt?             @map("company_id")
+  
+  // Anonymous PQRS info
+  isAnonymous     Boolean             @default(false) @map("is_anonymous")
+  contactName     String?             @map("contact_name") @db.VarChar(191)
+  contactEmail    String?             @map("contact_email") @db.VarChar(191)
+  contactPhone    String?             @map("contact_phone") @db.VarChar(40)
+  
+  // Assignment
+  assignedToId    BigInt?             @map("assigned_to_id")
+  
+  // Tracking
+  imageUrl        String?             @map("image_url") @db.VarChar(500)
+  resolvedAt      DateTime?           @map("resolved_at") @db.Timestamp(0)
+  closedAt        DateTime?           @map("closed_at") @db.Timestamp(0)
+  
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt       DateTime?           @map("deleted_at") @db.Timestamp(0)
+  
+  // Relations
+  user            User?               @relation("TicketCreator", fields: [userId], references: [id], onDelete: SetNull)
+  company         Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  assignedTo      User?               @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  comments        TicketComment[]
+  history         TicketHistory[]
+  
+  @@index([userId])
+  @@index([companyId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model TicketComment {
+  id              BigInt              @id @default(autoincrement())
+  ticketId        BigInt              @map("ticket_id")
+  userId          BigInt?             @map("user_id")
+  comment         String              @db.Text
+  isInternal      Boolean             @default(false) @map("is_internal")
+  attachmentUrl   String?             @map("attachment_url") @db.VarChar(500)
+  
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt       DateTime?           @map("deleted_at") @db.Timestamp(0)
+  
+  ticket          SupportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([ticketId])
+  @@index([userId])
+  @@map("ticket_comments")
+}
+
+model TicketHistory {
+  id              BigInt              @id @default(autoincrement())
+  ticketId        BigInt              @map("ticket_id")
+  userId          BigInt?             @map("user_id")
+  action          String              @db.VarChar(100)
+  field           String?             @db.VarChar(50)
+  oldValue        String?             @map("old_value") @db.Text
+  newValue        String?             @map("new_value") @db.Text
+  
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
+  
+  ticket          SupportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([ticketId])
+  @@index([userId])
+  @@map("ticket_history")
 }
 
 model Box {

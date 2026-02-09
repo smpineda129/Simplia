@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, Button, TextField, InputAdornment, CircularProgress, Alert, Snackbar, Typography, Paper,
+  Box, Button, TextField, InputAdornment, Alert, Snackbar, Typography, Paper,
 } from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
 import roleService from '../services/roleService';
 import RoleTable from '../components/RoleTable';
 import RoleModalForm from '../components/RoleModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 import { usePermissions } from '../../../hooks/usePermissions';
 
 const RoleList = () => {
@@ -134,8 +135,8 @@ const RoleList = () => {
       </Paper>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-          <CircularProgress />
+        <Box display="flex" justifyContent="center" p={4}>
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <RoleTable

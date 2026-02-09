@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -24,6 +23,7 @@ import { Add, Search, Group } from '@mui/icons-material';
 import entityService from '../services/entityService';
 import { companyService } from '../../companies';
 import EntityModalForm from '../components/EntityModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 
 const EntityList = () => {
   const [entities, setEntities] = useState([]);
@@ -190,7 +190,7 @@ const EntityList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : entities.length === 0 ? (
         <Paper sx={{ p: 3, textAlign: 'center' }}>

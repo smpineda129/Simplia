@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -17,6 +16,7 @@ import {
 import { Add, Search } from '@mui/icons-material';
 import TemplateTable from '../components/TemplateTable';
 import TemplateModalForm from '../components/TemplateModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 import templateService from '../services/templateService';
 import { companyService } from '../../companies';
 
@@ -181,7 +181,7 @@ const TemplateList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <TemplateTable

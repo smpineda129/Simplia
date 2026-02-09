@@ -1,6 +1,7 @@
-import { Box, CircularProgress, Typography, Fade } from '@mui/material';
+import { Box, Typography, Fade } from '@mui/material';
+import LoadingLogo from './LoadingLogo';
 
-const LoadingSpinner = ({ message = 'Cargando...', fullScreen = false, size = 40 }) => {
+const LoadingSpinner = ({ message = 'Cargando...', fullScreen = false, size = 120 }) => {
   if (fullScreen) {
     return (
       <Fade in timeout={300}>
@@ -15,16 +16,15 @@ const LoadingSpinner = ({ message = 'Cargando...', fullScreen = false, size = 40
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: 'background.default',
             zIndex: 9999,
-            backdropFilter: 'blur(4px)',
           }}
         >
-          <CircularProgress size={60} thickness={4} />
+          <LoadingLogo size={size} />
           <Typography
             variant="body1"
             sx={{
-              mt: 2,
+              mt: 4,
               color: 'text.secondary',
               fontWeight: 500,
             }}
@@ -49,12 +49,12 @@ const LoadingSpinner = ({ message = 'Cargando...', fullScreen = false, size = 40
           py: 4,
         }}
       >
-        <CircularProgress size={size} thickness={4} />
+        <LoadingLogo size={size * 0.8} />
         {message && (
           <Typography
             variant="body2"
             sx={{
-              mt: 2,
+              mt: 3,
               color: 'text.secondary',
             }}
           >

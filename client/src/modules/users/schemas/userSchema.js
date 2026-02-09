@@ -14,8 +14,7 @@ export const userSchema = Yup.object({
       then: (schema) => schema.required('La contraseña es requerida'),
       otherwise: (schema) => schema.notRequired(),
     }),
-  role: Yup.string()
-    .oneOf(['USER', 'ADMIN', 'MANAGER'], 'Rol inválido')
+  role: Yup.mixed()
     .required('El rol es requerido'),
   companyId: Yup.number().nullable().optional(),
 });

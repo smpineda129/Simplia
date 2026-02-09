@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, TextField, InputAdornment, CircularProgress, Alert, Snackbar, Typography, Paper,
+  Box, TextField, InputAdornment, Alert, Snackbar, Typography, Paper,
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import permissionService from '../services/permissionService';
 import PermissionTable from '../components/PermissionTable';
+import LoadingLogo from '../../../components/LoadingLogo';
 
 const PermissionList = () => {
   const [permissions, setPermissions] = useState([]);
@@ -75,7 +76,7 @@ const PermissionList = () => {
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <PermissionTable

@@ -20,6 +20,11 @@ export const NOTIFICATION_TYPES = {
   DOCUMENT_UPLOADED: 'App\\Notifications\\DocumentUploaded',
   DOCUMENT_SHARED: 'App\\Notifications\\DocumentShared',
   
+  // Tickets de soporte
+  TICKET_ASSIGNED: 'App\\Notifications\\TicketAssigned',
+  TICKET_UPDATED: 'App\\Notifications\\TicketUpdated',
+  TICKET_COMMENT: 'App\\Notifications\\TicketComment',
+  
   // Sistema general
   SYSTEM_NOTIFICATION: 'App\\Notifications\\SystemNotification',
 };
@@ -55,6 +60,21 @@ const NOTIFICATION_TEMPLATES = {
     title: 'Nuevo mensaje',
     getMessage: (data) => `Nuevo mensaje en la correspondencia: ${data.title}`,
     icon: 'chat',
+  },
+  [NOTIFICATION_TYPES.TICKET_ASSIGNED]: {
+    title: 'Ticket asignado',
+    getMessage: (data) => `Se te ha asignado el ticket #${data.ticketNumber}: ${data.subject}`,
+    icon: 'assignment',
+  },
+  [NOTIFICATION_TYPES.TICKET_UPDATED]: {
+    title: 'Ticket actualizado',
+    getMessage: (data) => `El ticket #${data.ticketNumber} ha sido actualizado`,
+    icon: 'update',
+  },
+  [NOTIFICATION_TYPES.TICKET_COMMENT]: {
+    title: 'Nuevo comentario',
+    getMessage: (data) => `Nuevo comentario en el ticket #${data.ticketNumber}`,
+    icon: 'comment',
   },
   [NOTIFICATION_TYPES.SYSTEM_NOTIFICATION]: {
     title: 'Notificación del sistema',

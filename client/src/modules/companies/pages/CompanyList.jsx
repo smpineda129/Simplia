@@ -5,13 +5,13 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
 } from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
 import CompanyTable from '../components/CompanyTable';
 import CompanyModalForm from '../components/CompanyModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 import companyService from '../services/companyService';
 import { usePermissions } from '../../../hooks/usePermissions';
 
@@ -127,7 +127,7 @@ const CompanyList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <CompanyTable

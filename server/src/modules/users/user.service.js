@@ -13,6 +13,7 @@ export const userService = {
         name: true,
         role: true,
         phone: true,
+        avatar: true,
         companyId: true,
         company: {
           select: {
@@ -57,6 +58,7 @@ export const userService = {
         phone: true,
         locale: true,
         signature: true,
+        avatar: true,
         companyId: true,
         company: {
           select: {
@@ -101,7 +103,7 @@ export const userService = {
   },
 
   create: async (userData) => {
-    const { email, password, name, role } = userData;
+    const { email, password, name, role, roleId, companyId } = userData;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -119,15 +121,22 @@ export const userService = {
         password: hashedPassword,
         name,
         role: role || 'USER',
+        companyId: companyId ? BigInt(companyId) : null,
       },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
+        companyId: true,
         createdAt: true,
       },
     });
+
+    // If roleId is provided, assign the role using Spatie system
+    if (roleId) {
+      await userRoleService.assignRole(parseInt(user.id), parseInt(roleId));
+    }
 
     return user;
   },

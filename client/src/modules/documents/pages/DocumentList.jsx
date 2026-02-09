@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -24,6 +23,7 @@ import documentService from '../services/documentService';
 import { companyService } from '../../companies';
 import { proceedingService } from '../../proceedings';
 import DocumentModalForm from '../components/DocumentModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState([]);
@@ -174,7 +174,7 @@ const DocumentList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : documents.length === 0 ? (
         <Paper sx={{ p: 3, textAlign: 'center' }}>

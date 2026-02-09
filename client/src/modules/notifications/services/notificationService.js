@@ -30,6 +30,11 @@ const notificationService = {
     const response = await axiosInstance.delete('/notifications');
     return response.data;
   },
+
+  create: async (data) => {
+    const response = await axiosInstance.post('/notifications', data);
+    return response.data;
+  },
 };
 
 export default notificationService;

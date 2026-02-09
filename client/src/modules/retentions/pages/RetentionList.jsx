@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Alert,
   Snackbar,
   MenuItem,
@@ -17,6 +16,7 @@ import {
 import { Add, Search } from '@mui/icons-material';
 import RetentionTable from '../components/RetentionTable';
 import RetentionModalForm from '../components/RetentionModalForm';
+import LoadingLogo from '../../../components/LoadingLogo';
 import retentionService from '../services/retentionService';
 import { companyService } from '../../companies';
 import { areaService } from '../../areas';
@@ -212,7 +212,7 @@ const RetentionList = () => {
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
-          <CircularProgress />
+          <LoadingLogo size={120} />
         </Box>
       ) : (
         <RetentionTable

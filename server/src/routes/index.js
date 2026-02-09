@@ -15,6 +15,7 @@ import roleRoutes from '../modules/roles/role.routes.js';
 import permissionRoutes from '../modules/permissions/permission.routes.js';
 import notificationRoutes from '../modules/notifications/notification.routes.js';
 import auditRoutes from '../modules/audit/audit.routes.js';
+import ticketRoutes from '../modules/support-tickets/ticket.routes.js';
 import { authenticate } from '../middlewares/auth.js';
 import { hasPermission } from '../middlewares/permission.middleware.js';
 
@@ -36,6 +37,7 @@ router.use('/roles', roleRoutes);
 router.use('/permissions', permissionRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/audit', auditRoutes);
+router.use('/tickets', ticketRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

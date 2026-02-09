@@ -13,12 +13,15 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { AccountCircle, Edit, Save, History } from '@mui/icons-material';
+import { AccountCircle, Edit, Save, History, PhotoCamera, Palette } from '@mui/icons-material';
 import { useAuth } from '../../../hooks/useAuth';
 import userService from '../services/userService';
 import UserAssociations from '../components/UserAssociations';
 import AuditTable from '../../audit/components/AuditTable';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import AvatarSelector from '../../../components/AvatarSelector';
+import ThemeCustomizer from '../../../components/ThemeCustomizer';
+import { getAvatarConfig } from '../../../utils/avatarUtils';
 
 const UserProfile = () => {
   const { user, updateUser } = useAuth();
@@ -26,12 +29,15 @@ const UserProfile = () => {
   const [editing, setEditing] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [tabIndex, setTabIndex] = useState(0);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     locale: '',
     signature: '',
+    avatar: '',
   });
 
   useEffect(() => {
@@ -42,6 +48,7 @@ const UserProfile = () => {
         phone: user.phone || '',
         locale: user.locale || 'es',
         signature: user.signature || '',
+        avatar: user.avatar || 'person',
       });
     }
   }, [user]);
@@ -57,14 +64,32 @@ const UserProfile = () => {
     setTabIndex(newValue);
   };
 
+  const handleAvatarSelect = async (avatarId) => {
+    try {
+      setLoading(true);
+      await userService.update(user.userId || user.id, { avatar: avatarId });
+
+      if (updateUser) {
+        updateUser({ avatar: avatarId });
+      }
+
+      setFormData({ ...formData, avatar: avatarId });
+      showSnackbar('Avatar actualizado exitosamente', 'success');
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      showSnackbar(error.response?.data?.message || 'Error al actualizar el avatar', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
-      await userService.update(user.userId || user.id, formData); // Ensure ID is correct
+      await userService.update(user.userId || user.id, formData);
 
-      // Actualizar el contexto de autenticación
       if (updateUser) {
-        updateUser({ ...user, ...formData });
+        updateUser(formData);
       }
 
       showSnackbar('Perfil actualizado exitosamente', 'success');
@@ -91,13 +116,25 @@ const UserProfile = () => {
 
   const currentUserId = user.userId || user.id;
 
+  const avatarConfig = getAvatarConfig(user.avatar || formData.avatar || 'person');
+  const AvatarIcon = avatarConfig.icon;
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <AccountCircle sx={{ mr: 1, color: 'primary.main' }} />
-        <Typography variant="h4" component="h1">
-          Mi Perfil
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <AccountCircle sx={{ mr: 1, color: 'primary.main' }} />
+          <Typography variant="h4" component="h1">
+            Mi Perfil
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<Palette />}
+          onClick={() => setThemeDialogOpen(true)}
+        >
+          Personalizar Tema
+        </Button>
       </Box>
 
       <Paper sx={{ width: '100%', mb: 2 }}>
@@ -119,16 +156,35 @@ const UserProfile = () => {
             <Grid container spacing={3}>
               {/* Avatar Section */}
               <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 120,
-                    height: 120,
-                    bgcolor: 'primary.main',
-                    fontSize: '3rem',
-                  }}
-                >
-                  {user.name?.charAt(0) || 'U'}
-                </Avatar>
+                <Box sx={{ position: 'relative' }}>
+                  <Avatar
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      bgcolor: avatarConfig.color,
+                      fontSize: '3rem',
+                    }}
+                  >
+                    <AvatarIcon sx={{ fontSize: 64 }} />
+                  </Avatar>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      minWidth: 'auto',
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      p: 0,
+                    }}
+                    onClick={() => setAvatarDialogOpen(true)}
+                  >
+                    <PhotoCamera />
+                  </Button>
+                </Box>
               </Grid>
 
               {/* User Info */}
@@ -337,6 +393,7 @@ const UserProfile = () => {
                           phone: user.phone || '',
                           locale: user.locale || 'es',
                           signature: user.signature || '',
+                          avatar: user.avatar || 'person',
                         });
                       }}
                       disabled={loading}
@@ -378,6 +435,18 @@ const UserProfile = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <AvatarSelector
+        open={avatarDialogOpen}
+        onClose={() => setAvatarDialogOpen(false)}
+        currentAvatar={user.avatar || formData.avatar || 'person'}
+        onSelect={handleAvatarSelect}
+      />
+
+      <ThemeCustomizer
+        open={themeDialogOpen}
+        onClose={() => setThemeDialogOpen(false)}
+      />
     </Box>
   );
 };
