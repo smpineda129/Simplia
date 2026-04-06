@@ -1,8 +1,8 @@
 import axiosInstance from '../../../api/axiosConfig';
 
 const userService = {
-  getAll: async () => {
-    const response = await axiosInstance.get('/users');
+  getAll: async (params = {}) => {
+    const response = await axiosInstance.get('/users', { params });
     return response.data;
   },
 
@@ -66,6 +66,24 @@ const userService = {
 
   getUserPermissions: async (userId) => {
     const response = await axiosInstance.get(`/users/${userId}/permissions`);
+    return response.data;
+  },
+
+  uploadAvatar: async (id, file) => {
+    const form = new FormData();
+    form.append('file', file);
+    const response = await axiosInstance.post(`/users/${id}/upload-avatar`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  uploadSignature: async (id, file) => {
+    const form = new FormData();
+    form.append('file', file);
+    const response = await axiosInstance.post(`/users/${id}/upload-signature`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 };

@@ -4,15 +4,19 @@ import { asyncHandler } from '../../utils/asyncHandler.js';
 export const impersonateController = {
     /**
      * Inicia la personificación de un usuario
-     * POST /api/users/:id/impersonate
+     * POST /api/users/impersonate
      */
     startImpersonation: asyncHandler(async (req, res) => {
         const impersonatorId = req.user.id;
-        const targetUserId = req.params.id;
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'El campo email es requerido' });
+        }
 
         const result = await impersonateService.startImpersonation(
             impersonatorId,
-            targetUserId
+            email
         );
 
         res.status(200).json({
@@ -44,22 +48,4 @@ export const impersonateController = {
         });
     }),
 
-    /**
-     * Verifica si el usuario actual puede personificar a un usuario específico
-     * GET /api/users/:id/can-impersonate
-     */
-    canImpersonate: asyncHandler(async (req, res) => {
-        const impersonatorId = req.user.id;
-        const targetUserId = req.params.id;
-
-        const result = await impersonateService.canImpersonate(
-            impersonatorId,
-            targetUserId
-        );
-
-        res.status(200).json({
-            success: true,
-            data: result,
-        });
-    }),
 };

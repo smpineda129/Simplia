@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [originalUser, setOriginalUser] = useState(null);
+  const [originalTokens, setOriginalTokens] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,18 +57,18 @@ export const AuthProvider = ({ children }) => {
     navigate('/auth/login');
   };
 
-  const startImpersonation = async (userId) => {
+  const startImpersonation = async (email) => {
     try {
-      // Guardar el usuario original antes de personificar
+      // Guardar tokens y usuario originales antes de personificar
+      const currentAccessToken = localStorage.getItem('accessToken');
+      const currentRefreshToken = localStorage.getItem('refreshToken');
+      setOriginalTokens({ accessToken: currentAccessToken, refreshToken: currentRefreshToken });
       setOriginalUser(user);
 
-      const response = await impersonateService.impersonateUser(userId);
+      const response = await impersonateService.impersonateUser(email);
       const { accessToken, user: impersonatedUser } = response.data;
 
-      // Actualizar el token
       localStorage.setItem('accessToken', accessToken);
-
-      // Actualizar el estado
       setUser(impersonatedUser);
       setIsImpersonating(true);
 
@@ -75,32 +76,29 @@ export const AuthProvider = ({ children }) => {
 
       return response;
     } catch (error) {
+      // Revertir en caso de error
+      setOriginalTokens(null);
+      setOriginalUser(null);
       console.error('Error starting impersonation:', error);
       throw error;
     }
   };
 
-  const leaveImpersonation = async () => {
-    try {
-      const response = await impersonateService.leaveImpersonation();
-      const { accessToken, refreshToken, user: restoredUser } = response.data;
+  const leaveImpersonation = () => {
+    if (!originalTokens) return;
 
-      // Actualizar tokens
-      localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-
-      // Restaurar el usuario original
-      setUser(restoredUser);
-      setIsImpersonating(false);
-      setOriginalUser(null);
-
-      return response;
-    } catch (error) {
-      console.error('Error leaving impersonation:', error);
-      throw error;
+    // Restaurar tokens originales sin llamada al backend
+    localStorage.setItem('accessToken', originalTokens.accessToken);
+    if (originalTokens.refreshToken) {
+      localStorage.setItem('refreshToken', originalTokens.refreshToken);
     }
+
+    setUser(originalUser);
+    setIsImpersonating(false);
+    setOriginalUser(null);
+    setOriginalTokens(null);
+
+    navigate('/dashboard');
   };
 
   const updateUser = (updatedData) => {

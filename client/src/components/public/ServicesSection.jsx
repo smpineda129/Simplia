@@ -1,158 +1,139 @@
-import { Box, Container, Typography, Grid, Paper, Chip } from '@mui/material';
-import {
-  FolderOpen,
-  CloudUpload,
-  Archive,
-  Description,
-  Search,
-  Shield,
-} from '@mui/icons-material';
+import { Box, Container, Typography, Grid, Chip } from '@mui/material';
+import { FolderOpen, CloudUpload, Archive, Description, Search, Shield } from '@mui/icons-material';
 
-const ServicesSection = () => {
-  const services = [
-    {
-      icon: <FolderOpen />,
-      title: 'Custodia Documental',
-      description: 'Almacenamiento seguro de documentos físicos y digitales con trazabilidad completa y acceso controlado.',
-      features: ['Almacenamiento seguro', 'Control de acceso', 'Trazabilidad total'],
-    },
-    {
-      icon: <CloudUpload />,
-      title: 'Digitalización',
-      description: 'Conversión de documentos físicos a formato digital con tecnología OCR para búsqueda de texto completo.',
-      features: ['Escaneo de alta calidad', 'OCR avanzado', 'Indexación automática'],
-    },
-    {
-      icon: <Archive />,
-      title: 'Organización Archivística',
-      description: 'Clasificación y organización según normativas archivísticas internacionales y mejores prácticas.',
-      features: ['Clasificación profesional', 'Tablas de retención', 'Normativa ISO'],
-    },
-    {
-      icon: <Description />,
-      title: 'Gestión de Archivos',
-      description: 'Sistema completo para administrar el ciclo de vida de documentos desde su creación hasta su disposición final.',
-      features: ['Ciclo de vida completo', 'Automatización', 'Reportes detallados'],
-    },
-    {
-      icon: <Search />,
-      title: 'Búsqueda Avanzada',
-      description: 'Motor de búsqueda inteligente con filtros avanzados, búsqueda por contenido y recuperación instantánea.',
-      features: ['Búsqueda full-text', 'Filtros múltiples', 'Resultados instantáneos'],
-    },
-    {
-      icon: <Shield />,
-      title: 'Consultoría Normativa',
-      description: 'Asesoramiento experto en cumplimiento de normativas de gestión documental y protección de datos.',
-      features: ['Auditorías', 'Cumplimiento GDPR', 'Asesoría legal'],
-    },
-  ];
+const services = [
+  {
+    icon: <FolderOpen />,
+    title: 'Custodia Documental',
+    description: 'Almacenamiento seguro de documentos físicos y digitales con trazabilidad completa y acceso controlado.',
+    features: ['Almacenamiento seguro', 'Control de acceso', 'Trazabilidad total'],
+    color: '#2563EB',
+  },
+  {
+    icon: <CloudUpload />,
+    title: 'Digitalización',
+    description: 'Conversión de documentos físicos a digital con tecnología OCR para búsqueda de texto completo.',
+    features: ['Escaneo de alta calidad', 'OCR avanzado', 'Indexación automática'],
+    color: '#6366F1',
+  },
+  {
+    icon: <Archive />,
+    title: 'Organización Archivística',
+    description: 'Clasificación y organización según normativas archivísticas internacionales y mejores prácticas.',
+    features: ['Clasificación profesional', 'Tablas de retención', 'Normativa ISO'],
+    color: '#0EA5E9',
+  },
+  {
+    icon: <Description />,
+    title: 'Gestión de Archivos',
+    description: 'Sistema completo para administrar el ciclo de vida de documentos desde su creación hasta su disposición final.',
+    features: ['Ciclo de vida completo', 'Automatización', 'Reportes detallados'],
+    color: '#10B981',
+  },
+  {
+    icon: <Search />,
+    title: 'Búsqueda Avanzada',
+    description: 'Motor de búsqueda inteligente con filtros avanzados, búsqueda por contenido y recuperación instantánea.',
+    features: ['Búsqueda full-text', 'Filtros múltiples', 'Resultados instantáneos'],
+    color: '#F59E0B',
+  },
+  {
+    icon: <Shield />,
+    title: 'Consultoría Normativa',
+    description: 'Asesoramiento experto en cumplimiento de normativas de gestión documental y protección de datos.',
+    features: ['Auditorías', 'Cumplimiento GDPR', 'Asesoría legal'],
+    color: '#EF4444',
+  },
+];
 
-  return (
-    <Box
-      id="servicios"
-      sx={{
-        py: 10,
-        bgcolor: 'grey.50',
-      }}
-    >
-      <Container maxWidth="xl">
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: 'primary.main',
-              fontWeight: 600,
-              letterSpacing: 2,
-            }}
-          >
-            NUESTROS SERVICIOS
-          </Typography>
-          <Typography
-            variant="h2"
-            sx={{
-              fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' },
-              fontWeight: 700,
-              mt: 2,
-              mb: 2,
-            }}
-          >
-            Soluciones Integrales de{' '}
-            <Box component="span" sx={{ color: 'primary.main' }}>
-              Gestión Documental
-            </Box>
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ maxWidth: 800, mx: 'auto' }}
-          >
-            Ofrecemos servicios completos para optimizar la gestión de documentos 
-            en tu organización, desde la digitalización hasta la consultoría especializada.
-          </Typography>
-        </Box>
+const ServicesSection = () => (
+  <Box id="servicios" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#ffffff' }}>
+    <Container maxWidth="xl">
+      {/* Header */}
+      <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563EB', letterSpacing: '0.1em', textTransform: 'uppercase', mb: 1.5 }}>
+          Nuestros servicios
+        </Typography>
+        <Typography
+          component="h2"
+          sx={{ fontWeight: 800, fontSize: { xs: '1.75rem', md: '2.5rem' }, color: '#0F172A', letterSpacing: '-0.03em', lineHeight: 1.15, mb: 2 }}
+        >
+          Soluciones integrales de{' '}
+          <Box component="span" sx={{ color: '#2563EB' }}>gestión documental</Box>
+        </Typography>
+        <Typography sx={{ color: '#64748B', fontSize: '1rem', maxWidth: 600, mx: 'auto', lineHeight: 1.7 }}>
+          Desde la digitalización hasta la consultoría especializada, cubrimos todo el ciclo de vida de tu documentación.
+        </Typography>
+      </Box>
 
-        <Grid container spacing={4}>
-          {services.map((service, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Paper
-                elevation={0}
+      {/* Cards */}
+      <Grid container spacing={3}>
+        {services.map((service) => (
+          <Grid item xs={12} sm={6} md={4} key={service.title}>
+            <Box
+              sx={{
+                p: 3.5,
+                height: '100%',
+                borderRadius: 2.5,
+                border: '1px solid #E2E8F0',
+                bgcolor: '#ffffff',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: service.color,
+                  boxShadow: `0 8px 24px ${service.color}14`,
+                  transform: 'translateY(-3px)',
+                },
+              }}
+            >
+              <Box
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  border: 1,
-                  borderColor: 'divider',
-                  bgcolor: 'background.paper',
-                  transition: 'all 0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: 6,
-                    borderColor: 'primary.main',
-                  },
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  bgcolor: `${service.color}12`,
+                  color: service.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mb: 2.5,
                 }}
               >
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 2,
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mb: 3,
-                  }}
-                >
-                  {service.icon}
-                </Box>
-                
-                <Typography variant="h6" fontWeight={700} gutterBottom>
-                  {service.title}
-                </Typography>
-                
-                <Typography color="text.secondary" paragraph>
-                  {service.description}
-                </Typography>
+                {service.icon}
+              </Box>
 
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                  {service.features.map((feature, i) => (
-                    <Chip
-                      key={i}
-                      label={feature}
-                      size="small"
-                      variant="outlined"
-                      sx={{ borderColor: 'primary.main', color: 'primary.main' }}
-                    />
-                  ))}
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-    </Box>
-  );
-};
+              <Typography sx={{ fontWeight: 700, fontSize: '1.0625rem', color: '#0F172A', mb: 1 }}>
+                {service.title}
+              </Typography>
+
+              <Typography sx={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.65, mb: 3, flexGrow: 1 }}>
+                {service.description}
+              </Typography>
+
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                {service.features.map((f) => (
+                  <Chip
+                    key={f}
+                    label={f}
+                    size="small"
+                    sx={{
+                      bgcolor: `${service.color}0d`,
+                      color: service.color,
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      border: `1px solid ${service.color}22`,
+                      height: 24,
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  </Box>
+);
 
 export default ServicesSection;

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../../db/prisma.js';
 import { tokenService } from '../../services/tokenService.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { presignUser } from '../../utils/s3Presign.js';
 
 export const authService = {
   getUserWithPermissions: async (userId) => {
@@ -64,8 +65,10 @@ export const authService = {
 
     const { password: _, ...userWithoutPassword } = user;
 
+    const presigned = await presignUser(userWithoutPassword);
+
     return {
-      ...userWithoutPassword,
+      ...presigned,
       allPermissions: Array.from(permissions),
       roles
     };

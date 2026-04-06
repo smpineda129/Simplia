@@ -70,6 +70,7 @@ class WarehouseService {
         code: data.code,
         companyId: BigInt(data.companyId),
         email: data.email,
+        address: data.address || null,
       },
       include: {
         company: true,
@@ -94,6 +95,7 @@ class WarehouseService {
         name: data.name,
         code: data.code,
         email: data.email,
+        address: data.address ?? undefined,
       },
       include: {
         company: true,
@@ -131,9 +133,12 @@ class WarehouseService {
       ...(search && {
         code: { contains: search, mode: 'insensitive' },
       }),
+      ...(warehouseId && {
+        box_warehouse: { some: { warehouse_id: BigInt(warehouseId), deleted_at: null } },
+      }),
     };
 
-    const [boxes, total] = await Promise.all([
+    const [rawBoxes, total] = await Promise.all([
       prisma.box.findMany({
         where,
         skip,
@@ -142,6 +147,7 @@ class WarehouseService {
         include: {
           company: { select: { id: true, name: true, short: true } },
           box_warehouse: {
+            where: { deleted_at: null },
             include: {
               warehouses: { select: { id: true, name: true, code: true } },
             },
@@ -150,6 +156,18 @@ class WarehouseService {
       }),
       prisma.box.count({ where }),
     ]);
+
+    const boxes = rawBoxes.map(box => {
+      const bw = box.box_warehouse?.[0];
+      return {
+        ...box,
+        warehouseId: bw?.warehouses?.id || null,
+        warehouse: bw?.warehouses || null,
+        island: bw?.island || null,
+        shelf: bw?.shelving || null,
+        level: bw?.shelf || null,
+      };
+    });
 
     return {
       boxes,
@@ -188,12 +206,36 @@ class WarehouseService {
         code: data.code,
         companyId: BigInt(data.companyId),
       },
-      include: {
-        company: true,
-      },
+      include: { company: true },
     });
 
-    return box;
+    if (data.warehouseId) {
+      await prisma.box_warehouse.create({
+        data: {
+          warehouse_id: BigInt(data.warehouseId),
+          box_id: box.id,
+          island: data.island || null,
+          shelving: data.shelf || null,
+          shelf: data.level || null,
+        },
+      });
+    }
+
+    const bwEntry = data.warehouseId
+      ? await prisma.box_warehouse.findFirst({
+          where: { box_id: box.id, deleted_at: null },
+          include: { warehouses: { select: { id: true, name: true, code: true } } },
+        })
+      : null;
+
+    return {
+      ...box,
+      warehouseId: bwEntry?.warehouses?.id || null,
+      warehouse: bwEntry?.warehouses || null,
+      island: bwEntry?.island || null,
+      shelf: bwEntry?.shelving || null,
+      level: bwEntry?.shelf || null,
+    };
   }
 
   async updateBox(id, data) {
@@ -207,15 +249,48 @@ class WarehouseService {
 
     const updated = await prisma.box.update({
       where: { id: parseInt(id) },
-      data: {
-        code: data.code,
-      },
-      include: {
-        company: true,
-      },
+      data: { code: data.code },
+      include: { company: true },
     });
 
-    return updated;
+    const existingBw = await prisma.box_warehouse.findFirst({
+      where: { box_id: BigInt(id), deleted_at: null },
+    });
+
+    if (existingBw) {
+      await prisma.box_warehouse.update({
+        where: { id: existingBw.id },
+        data: {
+          island: data.island || null,
+          shelving: data.shelf || null,
+          shelf: data.level || null,
+        },
+      });
+    } else if (data.warehouseId) {
+      await prisma.box_warehouse.create({
+        data: {
+          warehouse_id: BigInt(data.warehouseId),
+          box_id: BigInt(id),
+          island: data.island || null,
+          shelving: data.shelf || null,
+          shelf: data.level || null,
+        },
+      });
+    }
+
+    const bwEntry = await prisma.box_warehouse.findFirst({
+      where: { box_id: BigInt(id), deleted_at: null },
+      include: { warehouses: { select: { id: true, name: true, code: true } } },
+    });
+
+    return {
+      ...updated,
+      warehouseId: bwEntry?.warehouses?.id || null,
+      warehouse: bwEntry?.warehouses || null,
+      island: bwEntry?.island || null,
+      shelf: bwEntry?.shelving || null,
+      level: bwEntry?.shelf || null,
+    };
   }
 
   async deleteBox(id) {

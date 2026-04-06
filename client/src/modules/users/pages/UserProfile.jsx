@@ -13,7 +13,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { AccountCircle, Edit, Save, History, PhotoCamera, Palette } from '@mui/icons-material';
+import { AccountCircle, Edit, Save, History, PhotoCamera, Palette, CloudUpload } from '@mui/icons-material';
 import { useAuth } from '../../../hooks/useAuth';
 import userService from '../services/userService';
 import UserAssociations from '../components/UserAssociations';
@@ -21,7 +21,7 @@ import AuditTable from '../../audit/components/AuditTable';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import AvatarSelector from '../../../components/AvatarSelector';
 import ThemeCustomizer from '../../../components/ThemeCustomizer';
-import { getAvatarConfig } from '../../../utils/avatarUtils';
+import { getAvatarConfig, isAvatarUrl } from '../../../utils/avatarUtils';
 
 const UserProfile = () => {
   const { user, updateUser } = useAuth();
@@ -31,6 +31,9 @@ const UserProfile = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [signatureImagePreview, setSignatureImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -83,6 +86,47 @@ const UserProfile = () => {
     }
   };
 
+  const handleAvatarFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingAvatar(true);
+      const res = await userService.uploadAvatar(user.userId || user.id, file);
+      const url = res.data.url;
+      if (updateUser) updateUser({ avatar: url });
+      setFormData((prev) => ({ ...prev, avatar: url }));
+      showSnackbar('Foto de perfil actualizada', 'success');
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al subir la foto', 'error');
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleSignatureFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSignatureImagePreview({ file, preview: URL.createObjectURL(file) });
+  };
+
+  const handleSignatureImageUpload = async () => {
+    if (!signatureImagePreview?.file) return;
+    try {
+      setUploadingSignature(true);
+      const res = await userService.uploadSignature(user.userId || user.id, signatureImagePreview.file);
+      const url = res.data.url;
+      if (updateUser) updateUser({ signature: url });
+      setFormData((prev) => ({ ...prev, signature: url }));
+      setSignatureImagePreview(null);
+      showSnackbar('Firma actualizada', 'success');
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al subir la firma', 'error');
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -116,8 +160,10 @@ const UserProfile = () => {
 
   const currentUserId = user.userId || user.id;
 
-  const avatarConfig = getAvatarConfig(user.avatar || formData.avatar || 'person');
-  const AvatarIcon = avatarConfig.icon;
+  const currentAvatar = user.avatar || formData.avatar || 'person';
+  const avatarIsUrl = isAvatarUrl(currentAvatar);
+  const avatarConfig = avatarIsUrl ? null : getAvatarConfig(currentAvatar);
+  const AvatarIcon = avatarConfig?.icon;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -158,18 +204,49 @@ const UserProfile = () => {
               <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                 <Box sx={{ position: 'relative' }}>
                   <Avatar
+                    src={avatarIsUrl ? currentAvatar : undefined}
                     sx={{
                       width: 120,
                       height: 120,
-                      bgcolor: avatarConfig.color,
+                      bgcolor: avatarIsUrl ? 'grey.200' : avatarConfig?.color,
                       fontSize: '3rem',
                     }}
                   >
-                    <AvatarIcon sx={{ fontSize: 64 }} />
+                    {!avatarIsUrl && AvatarIcon && <AvatarIcon sx={{ fontSize: 64 }} />}
                   </Avatar>
+                  {/* Upload real photo */}
+                  <input
+                    id="avatar-file-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                    onChange={handleAvatarFileUpload}
+                  />
+                  <Button
+                    component="label"
+                    htmlFor="avatar-file-input"
+                    variant="contained"
+                    size="small"
+                    disabled={uploadingAvatar}
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: -44,
+                      minWidth: 'auto',
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      p: 0,
+                    }}
+                    title="Subir foto"
+                  >
+                    <CloudUpload sx={{ fontSize: 20 }} />
+                  </Button>
+                  {/* Select icon avatar */}
                   <Button
                     variant="contained"
                     size="small"
+                    color="secondary"
                     sx={{
                       position: 'absolute',
                       bottom: 0,
@@ -181,8 +258,9 @@ const UserProfile = () => {
                       p: 0,
                     }}
                     onClick={() => setAvatarDialogOpen(true)}
+                    title="Elegir ícono"
                   >
-                    <PhotoCamera />
+                    <PhotoCamera sx={{ fontSize: 20 }} />
                   </Button>
                 </Box>
               </Grid>
@@ -249,9 +327,18 @@ const UserProfile = () => {
                         Firma
                       </Typography>
                       <Paper sx={{ p: 2, bgcolor: 'grey.50', mt: 1 }}>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                          {user.signature}
-                        </Typography>
+                        {isAvatarUrl(user.signature) ? (
+                          <Box
+                            component="img"
+                            src={user.signature}
+                            alt="Firma"
+                            sx={{ maxHeight: 100, maxWidth: '100%', objectFit: 'contain' }}
+                          />
+                        ) : (
+                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                            {user.signature}
+                          </Typography>
+                        )}
                       </Paper>
                     </Grid>
                   )}
@@ -352,12 +439,74 @@ const UserProfile = () => {
                       fullWidth
                       multiline
                       rows={4}
-                      label="Firma"
+                      label="Firma (texto)"
                       name="signature"
-                      value={formData.signature}
+                      value={isAvatarUrl(formData.signature) ? '' : formData.signature}
                       onChange={handleChange}
                       placeholder="Escribe tu firma aquí..."
+                      disabled={isAvatarUrl(formData.signature)}
+                      helperText={isAvatarUrl(formData.signature) ? 'Actualmente se usa una imagen como firma' : ''}
                     />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                      Firma como imagen
+                    </Typography>
+                    {isAvatarUrl(formData.signature) && (
+                      <Box sx={{ mb: 1 }}>
+                        <Box
+                          component="img"
+                          src={formData.signature}
+                          alt="Firma actual"
+                          sx={{ maxHeight: 80, maxWidth: '100%', objectFit: 'contain', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}
+                        />
+                      </Box>
+                    )}
+                    {signatureImagePreview && (
+                      <Box sx={{ mb: 1 }}>
+                        <Typography variant="caption" color="text.secondary">Vista previa:</Typography>
+                        <Box
+                          component="img"
+                          src={signatureImagePreview.preview}
+                          alt="Vista previa firma"
+                          sx={{ maxHeight: 80, maxWidth: '100%', objectFit: 'contain', border: '1px solid', borderColor: 'primary.main', borderRadius: 1, p: 1, display: 'block', mt: 0.5 }}
+                        />
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<CloudUpload />}
+                          onClick={handleSignatureImageUpload}
+                          disabled={uploadingSignature}
+                          sx={{ mt: 1, mr: 1 }}
+                        >
+                          {uploadingSignature ? 'Subiendo...' : 'Subir firma'}
+                        </Button>
+                        <Button size="small" onClick={() => setSignatureImagePreview(null)} disabled={uploadingSignature} sx={{ mt: 1 }}>
+                          Cancelar
+                        </Button>
+                      </Box>
+                    )}
+                    {!signatureImagePreview && (
+                      <>
+                        <input
+                          id="signature-file-input"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          hidden
+                          onChange={handleSignatureFileSelect}
+                        />
+                        <Button
+                          component="label"
+                          htmlFor="signature-file-input"
+                          variant="outlined"
+                          size="small"
+                          startIcon={<CloudUpload />}
+                        >
+                          Seleccionar imagen de firma
+                        </Button>
+                      </>
+                    )}
                   </Grid>
 
                   <Grid item xs={12} md={6}>
@@ -439,7 +588,7 @@ const UserProfile = () => {
       <AvatarSelector
         open={avatarDialogOpen}
         onClose={() => setAvatarDialogOpen(false)}
-        currentAvatar={user.avatar || formData.avatar || 'person'}
+        currentAvatar={avatarIsUrl ? 'person' : (user.avatar || formData.avatar || 'person')}
         onSelect={handleAvatarSelect}
       />
 

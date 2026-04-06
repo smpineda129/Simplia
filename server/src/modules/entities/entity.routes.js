@@ -1,6 +1,6 @@
 import express from 'express';
 import entityController from './entity.controller.js';
-import { createEntityValidation, updateEntityValidation, createCategoryValidation } from './entity.validation.js';
+import { createEntityValidation, updateEntityValidation } from './entity.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
 import { hasPermission } from '../../middlewares/permission.middleware.js';
@@ -13,10 +13,6 @@ const router = express.Router();
  *   name: Entities
  *   description: Gestión de entidades externas
  */
-
-// Categories routes - DISABLED (tabla entity_categories no existe en BD importada)
-// router.get('/categories', authenticate, entityController.getAllCategories);
-// router.post('/categories', authenticate, createCategoryValidation, validate, entityController.createCategory);
 
 /**
  * @swagger

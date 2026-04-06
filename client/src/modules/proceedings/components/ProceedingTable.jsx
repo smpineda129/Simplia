@@ -71,10 +71,10 @@ const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pa
                   )}
                 </TableCell>
                 <TableCell>
-                  {proceeding.retention ? (
+                  {proceeding.retentionLine?.retention ? (
                     <Box>
-                      <div>{proceeding.retention.name}</div>
-                      <small style={{ color: 'gray' }}>{proceeding.retention.code}</small>
+                      <div>{proceeding.retentionLine.retention.name}</div>
+                      <small style={{ color: 'gray' }}>{proceeding.retentionLine.retention.code}</small>
                     </Box>
                   ) : (
                     '-'

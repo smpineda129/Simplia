@@ -1,64 +1,97 @@
-import { Box, keyframes } from '@mui/material';
+import { Box, keyframes, Typography } from '@mui/material';
 
-const fillAnimation = keyframes`
-  0% {
-    clip-path: inset(100% 0 0 0);
-  }
-  100% {
-    clip-path: inset(0 0 0 0);
-  }
+const slideProgress = keyframes`
+  0% { left: -45%; }
+  100% { left: 105%; }
 `;
 
-const pulseAnimation = keyframes`
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
-  }
+const fadeIn = keyframes`
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
 `;
 
-const LoadingLogo = ({ size = 150, fullScreen = false }) => {
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+`;
+
+const LoadingLogo = ({ size = 140, fullScreen = false }) => {
   const content = (
     <Box
       sx={{
-        position: 'relative',
-        width: size,
-        height: size,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: 2,
+        animation: `${fadeIn} 0.4s ease both`,
       }}
     >
-      {/* Base logo (grayscale) */}
+      {/* Logo mark + wordmark */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          component="img"
+          src="/Vertical_Logo.png"
+          alt="Simplia"
+          sx={{
+            height: size * 0.55,
+            width: size * 0.55,
+            objectFit: 'contain',
+            animation: `${pulse} 2s ease-in-out infinite`,
+          }}
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+        <Box>
+          <Typography
+            sx={{
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              fontWeight: 800,
+              fontSize: size * 0.18,
+              color: '#0F172A',
+              letterSpacing: '-0.03em',
+              lineHeight: 1,
+            }}
+          >
+            simplia
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              fontSize: size * 0.085,
+              color: '#94A3B8',
+              fontWeight: 500,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              mt: 0.25,
+            }}
+          >
+            Cargando...
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Progress bar */}
       <Box
-        component="img"
-        src="/Vertical_Logo.png"
-        alt="GDI Logo"
         sx={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          filter: 'grayscale(100%) opacity(0.3)',
+          width: size * 1.1,
+          height: 3,
+          bgcolor: '#E2E8F0',
+          borderRadius: 2,
+          overflow: 'hidden',
+          position: 'relative',
         }}
-      />
-      
-      {/* Animated colored logo */}
-      <Box
-        component="img"
-        src="/Vertical_Logo.png"
-        alt="GDI Logo"
-        sx={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          animation: `${fillAnimation} 1.5s ease-in-out infinite, ${pulseAnimation} 2s ease-in-out infinite`,
-        }}
-      />
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            height: '100%',
+            width: '45%',
+            background: 'linear-gradient(90deg, transparent, #2563EB, transparent)',
+            borderRadius: 2,
+            animation: `${slideProgress} 1.4s ease-in-out infinite`,
+          }}
+        />
+      </Box>
     </Box>
   );
 
@@ -67,46 +100,15 @@ const LoadingLogo = ({ size = 150, fullScreen = false }) => {
       <Box
         sx={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          inset: 0,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: 'background.default',
+          bgcolor: '#F8FAFC',
           zIndex: 9999,
-          gap: 3,
         }}
       >
         {content}
-        <Box
-          sx={{
-            width: 200,
-            height: 3,
-            bgcolor: 'grey.200',
-            borderRadius: 1.5,
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              height: '100%',
-              width: '40%',
-              bgcolor: 'primary.main',
-              borderRadius: 1.5,
-              animation: `${keyframes`
-                0% { left: -40%; }
-                100% { left: 100%; }
-              `} 1.5s ease-in-out infinite`,
-            }}
-          />
-        </Box>
       </Box>
     );
   }

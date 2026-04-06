@@ -2,40 +2,67 @@ import { prisma } from '../../db/prisma.js';
 import { ApiError } from '../../utils/ApiError.js';
 import bcrypt from 'bcryptjs';
 import userRoleService from './userRole.service.js';
+import { presignUser } from '../../utils/s3Presign.js';
 
 export const userService = {
   getAll: async (filters = {}) => {
-    const users = await prisma.user.findMany({
-      where: filters,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        companyId: true,
-        company: {
-          select: {
-            id: true,
-            name: true,
-            short: true,
+    const { search, role, page = 1, limit = 10, companyId } = filters;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where = {
+      deletedAt: null,
+      ...(companyId && { companyId: BigInt(companyId) }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
+      ...(role && {
+        modelHasRoles: {
+          some: {
+            role: { name: role },
+            modelType: 'App\\Models\\User',
           },
         },
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      }),
+    };
 
-    // Agregar roles de Spatie a cada usuario
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          phone: true,
+          avatar: true,
+          companyId: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+              short: true,
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    // Agregar roles de Spatie a cada usuario y generar pre-signed URLs
     const usersWithRoles = await Promise.all(
       users.map(async (user) => {
         const roles = await userRoleService.getUserRoles(user.id);
+        const presigned = await presignUser(user);
         return {
-          ...user,
+          ...presigned,
           roles: roles.map(r => ({
             name: r.name,
             roleLevel: r.role_level || r.roleLevel
@@ -44,7 +71,15 @@ export const userService = {
       })
     );
 
-    return usersWithRoles;
+    return {
+      users: usersWithRoles,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      },
+    };
   },
 
   getById: async (id) => {
@@ -92,8 +127,10 @@ export const userService = {
     const roles = await userRoleService.getUserRoles(parseInt(id));
     const permissions = await userRoleService.getUserPermissions(parseInt(id));
 
+    const presigned = await presignUser(user);
+
     return {
-      ...user,
+      ...presigned,
       roles: roles.map(r => ({
         name: r.name,
         roleLevel: r.role_level || r.roleLevel

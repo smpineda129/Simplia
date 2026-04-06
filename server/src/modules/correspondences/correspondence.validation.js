@@ -8,48 +8,27 @@ export const createCorrespondenceValidation = [
     .isLength({ min: 3, max: 255 })
     .withMessage('El título debe tener entre 3 y 255 caracteres'),
 
-  body('companyId')
+  body('user_type')
     .notEmpty()
-    .withMessage('La empresa es requerida')
-    .isInt()
-    .withMessage('El ID de empresa debe ser un número entero'),
-
-  body('correspondenceTypeId')
-    .notEmpty()
-    .withMessage('El tipo de correspondencia es requerido')
-    .isInt()
-    .withMessage('El ID de tipo debe ser un número entero'),
-
-  body('recipientType')
-    .notEmpty()
-    .withMessage('El tipo de destinatario es requerido')
+    .withMessage('El tipo de usuario es requerido')
     .isIn(['internal', 'external'])
     .withMessage('El tipo debe ser internal o external'),
 
-  body('recipientName')
-    .trim()
+  body('user_id')
     .notEmpty()
-    .withMessage('El nombre del destinatario es requerido')
-    .isLength({ min: 2, max: 255 })
-    .withMessage('El nombre debe tener entre 2 y 255 caracteres'),
+    .withMessage('El usuario es requerido')
+    .isInt()
+    .withMessage('El ID de usuario debe ser un número entero'),
 
-  body('recipientEmail')
-    .trim()
-    .notEmpty()
-    .withMessage('El email del destinatario es requerido')
-    .isEmail()
-    .withMessage('Debe ser un email válido'),
-
-  body('advisorCode')
-    .optional()
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage('El código de asesor debe tener máximo 255 caracteres'),
+  body('correspondenceTypeId')
+    .optional({ nullable: true, checkFalsy: true })
+    .isInt()
+    .withMessage('El ID de tipo debe ser un número entero'),
 
   body('assignedUserId')
     .optional({ nullable: true, checkFalsy: true })
     .isInt()
-    .withMessage('El ID de usuario debe ser un número entero'),
+    .withMessage('El ID de usuario asignado debe ser un número entero'),
 
   body('comments')
     .optional()
@@ -62,24 +41,6 @@ export const updateCorrespondenceValidation = [
     .trim()
     .isLength({ min: 3, max: 255 })
     .withMessage('El título debe tener entre 3 y 255 caracteres'),
-
-  body('recipientName')
-    .optional()
-    .trim()
-    .isLength({ min: 2, max: 255 })
-    .withMessage('El nombre debe tener entre 2 y 255 caracteres'),
-
-  body('recipientEmail')
-    .optional()
-    .trim()
-    .isEmail()
-    .withMessage('Debe ser un email válido'),
-
-  body('advisorCode')
-    .optional()
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage('El código de asesor debe tener máximo 255 caracteres'),
 
   body('assignedUserId')
     .optional({ nullable: true, checkFalsy: true })

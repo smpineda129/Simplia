@@ -140,14 +140,22 @@ const LoginForm = () => {
               disabled={isSubmitting}
               endIcon={isSubmitting ? null : <ArrowForward />}
               sx={{
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 600,
-                boxShadow: 2,
+                py: 1.625,
+                fontSize: '0.9375rem',
+                fontWeight: 700,
+                borderRadius: 2,
+                bgcolor: '#2563EB',
+                boxShadow: 'none',
                 '&:hover': {
-                  boxShadow: 4,
+                  bgcolor: '#1D4ED8',
+                  boxShadow: '0 8px 20px rgba(37,99,235,0.3)',
+                  transform: 'translateY(-1px)',
                 },
+                '&:active': {
+                  transform: 'translateY(0)',
+                  boxShadow: 'none',
+                },
+                transition: 'all 0.15s ease',
               }}
             >
               {isSubmitting ? (

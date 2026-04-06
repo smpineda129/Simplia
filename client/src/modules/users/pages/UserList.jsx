@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Paper,
   Alert,
   Snackbar,
 } from '@mui/material';
@@ -11,8 +10,6 @@ import { Add } from '@mui/icons-material';
 import UserTable from '../components/UserTable';
 import UserModalForm from '../components/UserModalForm';
 import userService from '../services/userService';
-import LoadingSpinner from '../../../components/LoadingSpinner';
-import TableSkeleton from '../../../components/TableSkeleton';
 import { usePermissions } from '../../../hooks/usePermissions';
 
 const UserList = () => {
@@ -22,22 +19,37 @@ const UserList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [search, roleFilter, page]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const response = await userService.getAll();
+      const response = await userService.getAll({ search, role: roleFilter || undefined, page, limit: 10 });
       setUsers(response.data);
+      setPagination(response.pagination);
     } catch (error) {
       showSnackbar('Error al cargar usuarios', 'error');
       console.error('Error loading users:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const handleRoleFilterChange = (value) => {
+    setRoleFilter(value);
+    setPage(1);
   };
 
   const showSnackbar = (message, severity = 'success') => {
@@ -122,20 +134,21 @@ const UserList = () => {
         )}
       </Box>
 
-      {loading ? (
-        <TableSkeleton rows={5} columns={4} />
-      ) : (
-        <Paper sx={{ p: 0 }}>
-          <UserTable
-            users={users}
-            onEdit={handleOpenModal}
-            onDelete={handleDelete}
-            loading={loading}
-            canEdit={hasPermission('user.update')}
-            canDelete={hasPermission('user.delete')}
-          />
-        </Paper>
-      )}
+      <UserTable
+        users={users}
+        onEdit={handleOpenModal}
+        onDelete={handleDelete}
+        loading={loading}
+        canEdit={hasPermission('user.update')}
+        canDelete={hasPermission('user.delete')}
+        search={search}
+        onSearchChange={handleSearchChange}
+        roleFilter={roleFilter}
+        onRoleFilterChange={handleRoleFilterChange}
+        pagination={pagination}
+        page={page}
+        onPageChange={setPage}
+      />
 
       <UserModalForm
         open={openModal}

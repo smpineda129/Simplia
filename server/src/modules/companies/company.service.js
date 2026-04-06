@@ -82,6 +82,7 @@ class CompanyService {
         website: data.website,
         watermarkUrl: data.watermarkUrl,
         maxUsers: data.maxUsers || 10,
+        createdAt: new Date(),
       },
     });
 

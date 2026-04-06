@@ -37,6 +37,8 @@ model Company {
   users           User[]
   warehouses      Warehouse[]
   supportTickets  SupportTicket[]
+  entities        Entity[]
+
 
   @@map("companies")
 }
@@ -55,7 +57,7 @@ model User {
   phone                                                        String?                @db.VarChar(40)
   locale                                                       String?                @default("es") @db.VarChar(10)
   signature                                                    String?
-  avatar                                                       String?                @db.VarChar(50)
+  avatar                                                       String?
   role                                                         String?                @db.VarChar(191)
   areaUsers                                                    AreaUser[]
   correspondence_threads_correspondence_threads_from_idTousers CorrespondenceThread[] @relation("correspondence_threads_from_idTousers")
@@ -221,6 +223,7 @@ model CorrespondenceThread {
   to_id                                       BigInt?
   message                                     String
   answer                                      String?
+  tagged_users                                Json?          @db.Json
   createdAt                                   DateTime?      @map("created_at") @db.Timestamp(0)
   updatedAt                                   DateTime?      @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt                                   DateTime?      @map("deleted_at") @db.Timestamp(0)
@@ -260,15 +263,18 @@ model Document {
 }
 
 model Entity {
-  id                 BigInt    @id @default(autoincrement())
-  entity_category_id BigInt
-  name               String    @db.VarChar(191)
-  identification     String    @db.VarChar(191)
-  meta               Json      @db.Json
-  createdAt          DateTime? @map("created_at") @db.Timestamp(0)
-  updatedAt          DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt          DateTime? @map("deleted_at") @db.Timestamp(0)
+  id               BigInt    @id @default(autoincrement())
+  companyId        BigInt?   @map("company_id")
+  entityCategoryId BigInt?   @map("entity_category_id")
+  name             String    @db.VarChar(191)
+  identification   String?   @db.VarChar(191)
+  meta             Json?     @db.Json
+  createdAt        DateTime? @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamp(0)
+  company          Company?  @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([companyId])
   @@map("entities")
 }
 
@@ -281,6 +287,7 @@ model Warehouse {
   deletedAt     DateTime?       @map("deleted_at") @db.Timestamp(0)
   code          String?         @db.VarChar(40)
   email         String?         @db.VarChar(191)
+  address       String?         @db.VarChar(500)
   box_warehouse box_warehouse[]
   company       Company         @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 

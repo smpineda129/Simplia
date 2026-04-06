@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import {
   Dialog,
@@ -8,59 +7,50 @@ import {
   Button,
   TextField,
   Grid,
-  Alert,
   MenuItem,
 } from '@mui/material';
 import * as Yup from 'yup';
+import { useAuth } from '../../../hooks/useAuth';
 
 const entitySchema = Yup.object().shape({
-  name: Yup.string()
-    .required('El nombre es requerido')
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(255, 'El nombre debe tener máximo 255 caracteres'),
-  categoryId: Yup.number()
-    .required('La categoría es requerida')
-    .positive('Debe seleccionar una categoría válida'),
-  companyId: Yup.number()
-    .required('La empresa es requerida')
-    .positive('Debe seleccionar una empresa válida'),
-  email: Yup.string()
-    .email('Debe ser un email válido')
-    .nullable(),
-  phone: Yup.string()
-    .nullable(),
-  address: Yup.string()
-    .nullable(),
+  name: Yup.string().required('El nombre es requerido').min(2).max(255),
+  lastName: Yup.string().nullable(),
+  email: Yup.string().email('Debe ser un email válido').nullable(),
+  dni: Yup.string().nullable(),
+  phone: Yup.string().nullable(),
+  state: Yup.string().nullable(),
+  city: Yup.string().nullable(),
+  address: Yup.string().nullable(),
 });
 
-const EntityModalForm = ({ open, onClose, onSave, entity, companies, categories }) => {
-  const [error, setError] = useState('');
+const EntityModalForm = ({ open, onClose, onSave, entity, companies }) => {
+  const { user, isOwner } = useAuth();
 
   const initialValues = {
     name: entity?.name || '',
-    categoryId: entity?.categoryId || '',
-    companyId: entity?.companyId || '',
+    lastName: entity?.lastName || '',
     email: entity?.email || '',
+    dni: entity?.dni || '',
     phone: entity?.phone || '',
+    state: entity?.state || '',
+    city: entity?.city || '',
     address: entity?.address || '',
+    companyId: entity?.companyId?.toString() || (!isOwner ? user?.companyId?.toString() : '') || '',
   };
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      setError('');
       await onSave(values);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al guardar la entidad');
+      setFieldError('name', err.response?.data?.message || 'Error al guardar la entidad');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        {entity ? 'Editar Entidad' : 'Nueva Entidad'}
-      </DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{entity ? 'Editar Usuario Externo' : 'Nuevo Usuario Externo'}</DialogTitle>
 
       <Formik
         initialValues={initialValues}
@@ -68,60 +58,11 @@ const EntityModalForm = ({ open, onClose, onSave, entity, companies, categories 
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({ errors, touched, isSubmitting, values, setFieldValue }) => (
+        {({ errors, touched, isSubmitting }) => (
           <Form>
             <DialogContent>
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Field
-                    as={TextField}
-                    select
-                    name="companyId"
-                    label="Empresa *"
-                    fullWidth
-                    value={values.companyId}
-                    onChange={(e) => setFieldValue('companyId', e.target.value)}
-                    error={touched.companyId && Boolean(errors.companyId)}
-                    helperText={touched.companyId && errors.companyId}
-                    disabled={!!entity}
-                  >
-                    <MenuItem value="">Seleccione una empresa</MenuItem>
-                    {companies.map((company) => (
-                      <MenuItem key={company.id} value={company.id}>
-                        {company.name}
-                      </MenuItem>
-                    ))}
-                  </Field>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <Field
-                    as={TextField}
-                    select
-                    name="categoryId"
-                    label="Categoría *"
-                    fullWidth
-                    value={values.categoryId}
-                    onChange={(e) => setFieldValue('categoryId', e.target.value)}
-                    error={touched.categoryId && Boolean(errors.categoryId)}
-                    helperText={touched.categoryId && errors.categoryId}
-                  >
-                    <MenuItem value="">Seleccione una categoría</MenuItem>
-                    {categories.map((category) => (
-                      <MenuItem key={category.id} value={category.id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </Field>
-                </Grid>
-
-                <Grid item xs={12}>
                   <Field
                     as={TextField}
                     name="name"
@@ -131,54 +72,92 @@ const EntityModalForm = ({ open, onClose, onSave, entity, companies, categories 
                     helperText={touched.name && errors.name}
                   />
                 </Grid>
-
+                <Grid item xs={12} md={6}>
+                  <Field
+                    as={TextField}
+                    name="lastName"
+                    label="Apellido"
+                    fullWidth
+                  />
+                </Grid>
                 <Grid item xs={12} md={6}>
                   <Field
                     as={TextField}
                     name="email"
-                    label="Email"
+                    label="Correo"
                     type="email"
                     fullWidth
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
                   />
                 </Grid>
-
+                <Grid item xs={12} md={6}>
+                  <Field
+                    as={TextField}
+                    name="dni"
+                    label="Identificación / DNI"
+                    fullWidth
+                  />
+                </Grid>
                 <Grid item xs={12} md={6}>
                   <Field
                     as={TextField}
                     name="phone"
                     label="Teléfono"
                     fullWidth
-                    error={touched.phone && Boolean(errors.phone)}
-                    helperText={touched.phone && errors.phone}
                   />
                 </Grid>
-
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6}>
+                  <Field
+                    as={TextField}
+                    name="state"
+                    label="Departamento / Estado"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Field
+                    as={TextField}
+                    name="city"
+                    label="Ciudad"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
                   <Field
                     as={TextField}
                     name="address"
                     label="Dirección"
                     fullWidth
-                    multiline
-                    rows={2}
-                    error={touched.address && Boolean(errors.address)}
-                    helperText={touched.address && errors.address}
                   />
                 </Grid>
+
+                {isOwner && (
+                  <Grid item xs={12}>
+                    <Field
+                      as={TextField}
+                      name="companyId"
+                      label="Empresa *"
+                      select
+                      fullWidth
+                      error={touched.companyId && Boolean(errors.companyId)}
+                      helperText={touched.companyId && errors.companyId}
+                    >
+                      <MenuItem value="">Seleccione una empresa</MenuItem>
+                      {companies.map((company) => (
+                        <MenuItem key={company.id} value={company.id.toString()}>
+                          {company.name}
+                        </MenuItem>
+                      ))}
+                    </Field>
+                  </Grid>
+                )}
               </Grid>
             </DialogContent>
 
             <DialogActions>
-              <Button onClick={onClose} disabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isSubmitting}
-              >
+              <Button onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
+              <Button type="submit" variant="contained" disabled={isSubmitting}>
                 {isSubmitting ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogActions>

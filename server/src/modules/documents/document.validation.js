@@ -14,30 +14,23 @@ export const createDocumentValidation = [
     .isInt()
     .withMessage('El ID de empresa debe ser un número entero'),
 
-  body('filePath')
-    .trim()
-    .notEmpty()
-    .withMessage('La ruta del archivo es requerida'),
+  body('medium')
+    .optional()
+    .isIn(['digital', 'physical'])
+    .withMessage('El medio debe ser digital o physical'),
 
-  body('fileSize')
-    .notEmpty()
-    .withMessage('El tamaño del archivo es requerido')
-    .isInt()
-    .withMessage('El tamaño debe ser un número entero'),
-
-  body('mimeType')
-    .trim()
-    .notEmpty()
-    .withMessage('El tipo MIME es requerido'),
-
-  body('description')
+  body('file')
     .optional()
     .trim(),
 
-  body('proceedingId')
-    .optional()
+  body('correspondenceId')
+    .optional({ nullable: true, checkFalsy: true })
     .isInt()
-    .withMessage('El ID de expediente debe ser un número entero'),
+    .withMessage('El ID de correspondencia debe ser un número entero'),
+
+  body('notes')
+    .optional()
+    .trim(),
 ];
 
 export const updateDocumentValidation = [
@@ -47,12 +40,7 @@ export const updateDocumentValidation = [
     .isLength({ min: 2, max: 255 })
     .withMessage('El nombre debe tener entre 2 y 255 caracteres'),
 
-  body('description')
+  body('notes')
     .optional()
     .trim(),
-
-  body('proceedingId')
-    .optional()
-    .isInt()
-    .withMessage('El ID de expediente debe ser un número entero'),
 ];

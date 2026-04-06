@@ -153,7 +153,7 @@ const CompanyWarehouses = ({ companyId }) => {
                   </Typography>
                 )}
                 <Chip
-                  label={`${warehouse._count?.boxes || 0} cajas`}
+                  label={`${warehouse._count?.box_warehouse || 0} cajas`}
                   size="small"
                   color="info"
                 />

@@ -24,9 +24,9 @@ import {
 } from '@mui/icons-material';
 import { usePermissions } from '../../../hooks/usePermissions';
 import proceedingService from '../services/proceedingService';
-import { warehouseService } from '../../warehouses';
+import boxService from '../../warehouses/services/boxService';
 
-const ProceedingBoxes = ({ proceedingId, boxes = [], onUpdate }) => {
+const ProceedingBoxes = ({ proceedingId, companyId, boxes = [], onUpdate }) => {
   const { hasPermission } = usePermissions();
   const [openSearch, setOpenSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,7 +37,7 @@ const ProceedingBoxes = ({ proceedingId, boxes = [], onUpdate }) => {
     if (!searchTerm) return;
     setSearching(true);
     try {
-      const response = await warehouseService.getBoxes({ search: searchTerm, limit: 5 });
+      const response = await boxService.getAll({ search: searchTerm, limit: 5, companyId });
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error searching boxes:', error);
@@ -120,7 +120,12 @@ const ProceedingBoxes = ({ proceedingId, boxes = [], onUpdate }) => {
             </ListItemIcon>
             <ListItemText
               primary={`Caja #${box.code || box.id}`}
-              secondary={box.warehouse ? `Bodega: ${box.warehouse.name}` : ''}
+              secondary={[
+                box.warehouse?.name && `Bodega: ${box.warehouse.name}`,
+                box.island && `Isla: ${box.island}`,
+                box.shelf && `Estante: ${box.shelf}`,
+                box.level && `Nivel: ${box.level}`,
+              ].filter(Boolean).join(' · ') || undefined}
             />
           </ListItem>
         ))}
@@ -154,7 +159,12 @@ const ProceedingBoxes = ({ proceedingId, boxes = [], onUpdate }) => {
                 </ListItemIcon>
                 <ListItemText
                     primary={box.code || `Caja #${box.id}`}
-                    secondary={box.warehouse?.name}
+                    secondary={[
+                      box.warehouse?.name && `Bodega: ${box.warehouse.name}`,
+                      box.island && `Isla: ${box.island}`,
+                      box.shelf && `Estante: ${box.shelf}`,
+                      box.level && `Nivel: ${box.level}`,
+                    ].filter(Boolean).join(' · ') || undefined}
                 />
                 <Button size="small" variant="outlined" onClick={() => handleAttach(box)}>
                   Adjuntar

@@ -74,15 +74,15 @@ const CorrespondenceTable = ({ correspondences, onEdit, onDelete, page, onPageCh
               <TableRow key={correspondence.id} hover>
                 <TableCell>
                   <Box>
-                    <Chip 
-                      label={correspondence.incomingRadicado} 
-                      size="small" 
-                      color="primary" 
+                    <Chip
+                      label={correspondence.in_settled}
+                      size="small"
+                      color="primary"
                       variant="outlined"
                     />
-                    {correspondence.outgoingRadicado && (
-                      <Chip 
-                        label={correspondence.outgoingRadicado} 
+                    {correspondence.out_settled && (
+                      <Chip
+                        label={correspondence.out_settled}
                         size="small" 
                         color="success" 
                         variant="outlined"
@@ -95,10 +95,14 @@ const CorrespondenceTable = ({ correspondences, onEdit, onDelete, page, onPageCh
                   <strong>{correspondence.title}</strong>
                 </TableCell>
                 <TableCell>
-                  <Box>
-                    <div>{correspondence.recipientName}</div>
-                    <small style={{ color: 'gray' }}>{correspondence.recipientEmail}</small>
-                  </Box>
+                  {correspondence.correspondenceUser ? (
+                    <Box>
+                      <div>{correspondence.correspondenceUser.name}</div>
+                      <small style={{ color: 'gray' }}>{correspondence.correspondenceUser.email}</small>
+                    </Box>
+                  ) : (
+                    '-'
+                  )}
                 </TableCell>
                 <TableCell>
                   {correspondence.correspondenceType?.name || '-'}

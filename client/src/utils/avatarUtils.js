@@ -31,3 +31,5 @@ export const AVATAR_MAP = {
 export const getAvatarConfig = (avatarId) => {
   return AVATAR_MAP[avatarId] || AVATAR_MAP['person'];
 };
+
+export const isAvatarUrl = (avatar) => avatar?.startsWith('http');

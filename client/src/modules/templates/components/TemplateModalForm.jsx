@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react'; // useRef kept for ReactQuill ref
 import { Formik, Form, Field } from 'formik';
 import {
   Dialog,
@@ -18,10 +18,13 @@ import {
   AccordionDetails,
 } from '@mui/material';
 import { ExpandMore, Code } from '@mui/icons-material';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { templateSchema } from '../schemas/templateSchema';
 
 const TemplateModalForm = ({ open, onClose, onSave, template, companies, helpers }) => {
   const [error, setError] = useState('');
+  const editorRef = useRef(null);
 
   const initialValues = {
     title: template?.title || '',
@@ -42,8 +45,7 @@ const TemplateModalForm = ({ open, onClose, onSave, template, companies, helpers
   };
 
   const insertHelper = (helper, setFieldValue, currentContent) => {
-    const newContent = currentContent + ' ' + helper;
-    setFieldValue('content', newContent);
+    setFieldValue('content', (currentContent || '') + helper);
   };
 
   return (
@@ -149,17 +151,29 @@ const TemplateModalForm = ({ open, onClose, onSave, template, companies, helpers
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Field
-                    as={TextField}
-                    name="content"
-                    label="Contenido de la Plantilla *"
-                    fullWidth
-                    multiline
-                    rows={12}
-                    error={touched.content && Boolean(errors.content)}
-                    helperText={touched.content && errors.content || 'Usa los helpers de arriba para insertar variables dinámicas'}
-                    placeholder="Escribe el contenido de tu plantilla aquí. Puedes usar los helpers para insertar datos dinámicos como {nombre}, {fecha}, etc."
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Contenido de la Plantilla *
+                  </Typography>
+                  <ReactQuill
+                    ref={editorRef}
+                    value={values.content}
+                    onChange={(val) => setFieldValue('content', val)}
+                    theme="snow"
+                    style={{ height: 360, marginBottom: 42 }}
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ align: [] }],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link'],
+                        ['clean'],
+                      ],
+                    }}
                   />
+                  {touched.content && errors.content && (
+                    <Typography variant="caption" color="error">{errors.content}</Typography>
+                  )}
                 </Grid>
               </Grid>
             </DialogContent>

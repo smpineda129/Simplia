@@ -1,210 +1,169 @@
-import { Box, Container, Typography, Grid, Paper } from '@mui/material';
-import {
-  Warning,
-  CheckCircle,
-  Speed,
-  Security,
-  Inventory,
-  Gavel,
-} from '@mui/icons-material';
+import { Box, Container, Typography, Grid } from '@mui/material';
+import { Warning, CheckCircle, Inventory, Security, Gavel } from '@mui/icons-material';
 
-const SolutionsSection = () => {
-  const problems = [
-    {
-      icon: <Warning />,
-      title: 'Caos y Desorden',
-      description: 'Documentos dispersos en múltiples ubicaciones, pérdida de tiempo buscando información crítica.',
-      points: [
-        'Archivos en múltiples ubicaciones',
-        'Dificultad para encontrar documentos',
-      ],
-    },
-    {
-      icon: <Speed />,
-      title: 'Orden y Control',
-      description: 'Sistema centralizado con búsqueda inteligente, acceso instantáneo a toda tu documentación.',
-      points: [
-        'Acceso inmediato 24/7',
-        'Búsqueda avanzada y filtros',
-      ],
-    },
-  ];
+const problems = [
+  {
+    icon: <Warning sx={{ fontSize: 22 }} />,
+    title: 'El problema',
+    headline: 'Caos y desorden documental',
+    description: 'Documentos dispersos en múltiples ubicaciones, pérdida de tiempo buscando información crítica.',
+    points: ['Archivos en múltiples ubicaciones', 'Dificultad para encontrar documentos', 'Riesgo de pérdida de información'],
+    accent: '#EF4444',
+    bgLight: 'rgba(239,68,68,0.04)',
+    border: 'rgba(239,68,68,0.15)',
+  },
+  {
+    icon: <CheckCircle sx={{ fontSize: 22 }} />,
+    title: 'La solución',
+    headline: 'Orden y control total',
+    description: 'Sistema centralizado con búsqueda inteligente, acceso instantáneo a toda tu documentación.',
+    points: ['Acceso inmediato 24/7', 'Búsqueda avanzada y filtros', 'Trazabilidad y auditoría completa'],
+    accent: '#10B981',
+    bgLight: 'rgba(16,185,129,0.04)',
+    border: 'rgba(16,185,129,0.15)',
+  },
+];
 
-  const solutions = [
-    {
-      icon: <Inventory />,
-      title: 'Organización Archivística',
-      description: 'Aplicamos principios de archivo moderno, facilitando la clasificación y recuperación de documentos según normativas internacionales.',
-    },
-    {
-      icon: <Security />,
-      title: 'Seguridad Certificada',
-      description: 'Cumplimiento de estándares ISO 27001 para protección de datos, con encriptación de extremo a extremo y auditorías completas.',
-    },
-    {
-      icon: <Gavel />,
-      title: 'Cumplimiento Legal',
-      description: 'Garantizamos el cumplimiento de normativas de retención documental y protección de datos personales (GDPR, LOPD).',
-    },
-  ];
+const solutions = [
+  {
+    icon: <Inventory />,
+    title: 'Organización Archivística',
+    description: 'Clasificación y recuperación según normativas internacionales y mejores prácticas de archivo moderno.',
+  },
+  {
+    icon: <Security />,
+    title: 'Seguridad Certificada',
+    description: 'Cumplimiento ISO 27001 con encriptación de extremo a extremo, auditorías y control de acceso granular.',
+  },
+  {
+    icon: <Gavel />,
+    title: 'Cumplimiento Legal',
+    description: 'Garantizamos el cumplimiento de normativas de retención documental y protección de datos personales.',
+  },
+];
 
-  return (
-    <Box
-      id="solucion"
-      sx={{
-        py: 10,
-        bgcolor: 'background.default',
-      }}
-    >
-      <Container maxWidth="xl">
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: 'primary.main',
-              fontWeight: 600,
-              letterSpacing: 2,
-            }}
-          >
-            EL PROBLEMA VS. LA SOLUCIÓN
-          </Typography>
-          <Typography
-            variant="h2"
-            sx={{
-              fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' },
-              fontWeight: 700,
-              mt: 2,
-              mb: 2,
-            }}
-          >
-            Transformamos datos en{' '}
-            <Box component="span" sx={{ color: 'primary.main' }}>
-              decisiones inteligentes
-            </Box>
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ maxWidth: 800, mx: 'auto' }}
-          >
-            Dejamos atrás el caos documental y te ofrecemos un sistema organizado, 
-            seguro y eficiente para gestionar toda tu información empresarial.
-          </Typography>
-        </Box>
+const SolutionsSection = () => (
+  <Box id="solucion" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#F8FAFC' }}>
+    <Container maxWidth="xl">
+      {/* Header */}
+      <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563EB', letterSpacing: '0.1em', textTransform: 'uppercase', mb: 1.5 }}>
+          El problema vs. la solución
+        </Typography>
+        <Typography
+          component="h2"
+          sx={{ fontWeight: 800, fontSize: { xs: '1.75rem', md: '2.5rem' }, color: '#0F172A', letterSpacing: '-0.03em', lineHeight: 1.15, mb: 2 }}
+        >
+          Transformamos el caos en{' '}
+          <Box component="span" sx={{ color: '#2563EB' }}>decisiones inteligentes</Box>
+        </Typography>
+        <Typography sx={{ color: '#64748B', fontSize: '1rem', maxWidth: 600, mx: 'auto', lineHeight: 1.7 }}>
+          Dejamos atrás el desorden documental con un sistema organizado, seguro y eficiente para tu empresa.
+        </Typography>
+      </Box>
 
-        <Grid container spacing={4} sx={{ mb: 8 }}>
-          {problems.map((item, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  height: '100%',
-                  border: 1,
-                  borderColor: index === 0 ? 'error.light' : 'success.light',
-                  bgcolor: index === 0 ? 'error.lighter' : 'success.lighter',
-                  transition: 'transform 0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                  },
-                }}
-              >
+      {/* Problem vs Solution */}
+      <Grid container spacing={3} sx={{ mb: 10 }}>
+        {problems.map((item) => (
+          <Grid item xs={12} md={6} key={item.title}>
+            <Box
+              sx={{
+                p: 4,
+                height: '100%',
+                borderRadius: 3,
+                border: `1px solid ${item.border}`,
+                bgcolor: item.bgLight,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
                 <Box
                   sx={{
-                    width: 56,
-                    height: 56,
+                    width: 40,
+                    height: 40,
                     borderRadius: 2,
-                    bgcolor: index === 0 ? 'error.main' : 'success.main',
-                    color: 'white',
+                    bgcolor: item.accent,
+                    color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    mb: 3,
                   }}
                 >
                   {item.icon}
                 </Box>
-                <Typography variant="h5" fontWeight={700} gutterBottom>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: item.accent, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {item.title}
                 </Typography>
-                <Typography color="text.secondary" paragraph>
-                  {item.description}
-                </Typography>
-                <Box component="ul" sx={{ pl: 2 }}>
-                  {item.points.map((point, i) => (
-                    <Typography
-                      component="li"
-                      key={i}
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 1 }}
-                    >
-                      {point}
-                    </Typography>
-                  ))}
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+              </Box>
+              <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#0F172A', mb: 1.5 }}>
+                {item.headline}
+              </Typography>
+              <Typography sx={{ color: '#64748B', fontSize: '0.9rem', lineHeight: 1.65, mb: 3 }}>
+                {item.description}
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {item.points.map((pt) => (
+                  <Box key={pt} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: item.accent, flexShrink: 0 }} />
+                    <Typography sx={{ fontSize: '0.875rem', color: '#475569', fontWeight: 500 }}>{pt}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
 
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            Organización Archivística
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto' }}>
-            Aplicamos principios de archivo moderno, facilitando la clasificación y recuperación 
-            de documentos según las mejores prácticas y normativas internacionales.
-          </Typography>
-        </Box>
-
-        <Grid container spacing={4}>
-          {solutions.map((solution, index) => (
-            <Grid item xs={12} md={4} key={index}>
-              <Paper
-                elevation={0}
+      {/* Solutions */}
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', md: '2rem' }, color: '#0F172A', letterSpacing: '-0.02em' }}>
+          Nuestro enfoque archivístico
+        </Typography>
+      </Box>
+      <Grid container spacing={3}>
+        {solutions.map((s) => (
+          <Grid item xs={12} md={4} key={s.title}>
+            <Box
+              sx={{
+                p: 3.5,
+                height: '100%',
+                borderRadius: 2.5,
+                border: '1px solid #E2E8F0',
+                bgcolor: '#ffffff',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: '#2563EB',
+                  boxShadow: '0 8px 24px rgba(37,99,235,0.08)',
+                  transform: 'translateY(-3px)',
+                },
+              }}
+            >
+              <Box
                 sx={{
-                  p: 4,
-                  height: '100%',
-                  textAlign: 'center',
-                  border: 1,
-                  borderColor: 'divider',
-                  transition: 'all 0.3s',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    boxShadow: 4,
-                  },
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  bgcolor: 'rgba(37,99,235,0.08)',
+                  color: '#2563EB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mb: 2.5,
                 }}
               >
-                <Box
-                  sx={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: '50%',
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mx: 'auto',
-                    mb: 3,
-                  }}
-                >
-                  {solution.icon}
-                </Box>
-                <Typography variant="h6" fontWeight={700} gutterBottom>
-                  {solution.title}
-                </Typography>
-                <Typography color="text.secondary">
-                  {solution.description}
-                </Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-    </Box>
-  );
-};
+                {s.icon}
+              </Box>
+              <Typography sx={{ fontWeight: 700, fontSize: '1.0625rem', color: '#0F172A', mb: 1 }}>
+                {s.title}
+              </Typography>
+              <Typography sx={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.65 }}>
+                {s.description}
+              </Typography>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  </Box>
+);
 
 export default SolutionsSection;

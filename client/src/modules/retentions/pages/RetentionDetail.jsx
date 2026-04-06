@@ -12,11 +12,17 @@ import {
   Snackbar,
   IconButton,
   Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
 } from '@mui/material';
-import { ArrowBack, Add } from '@mui/icons-material';
+import { ArrowBack, Add, OpenInNew } from '@mui/icons-material';
 import retentionService from '../services/retentionService';
 import RetentionLineTable from '../components/RetentionLineTable';
 import RetentionLineForm from '../components/RetentionLineForm';
+import proceedingService from '../../proceedings/services/proceedingService';
 
 const RetentionDetail = () => {
   const { id } = useParams();
@@ -27,11 +33,22 @@ const RetentionDetail = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedLine, setSelectedLine] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [proceedings, setProceedings] = useState([]);
 
   useEffect(() => {
     loadRetention();
     loadRetentionLines();
+    loadProceedings();
   }, [id]);
+
+  const loadProceedings = async () => {
+    try {
+      const result = await proceedingService.getAll({ retentionId: id, limit: 50 });
+      setProceedings(result.data || []);
+    } catch (error) {
+      console.error('Error loading proceedings:', error);
+    }
+  };
 
   const loadRetention = async () => {
     try {
@@ -223,6 +240,53 @@ const RetentionDetail = () => {
         onEdit={handleEditLine}
         onDelete={handleDeleteLine}
       />
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* Expedientes Asociados */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+          Expedientes Asociados
+        </Typography>
+        {proceedings.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No hay expedientes asociados a esta tabla de retención.
+          </Typography>
+        ) : (
+          <Paper>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nombre</TableCell>
+                  <TableCell>Código</TableCell>
+                  <TableCell>Empresa</TableCell>
+                  <TableCell>Fecha Inicio</TableCell>
+                  <TableCell align="right">Acción</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {proceedings.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell>{p.name}</TableCell>
+                    <TableCell>{p.code}</TableCell>
+                    <TableCell>{p.company?.name || '—'}</TableCell>
+                    <TableCell>{p.startDate ? new Date(p.startDate).toLocaleDateString('es-ES') : '—'}</TableCell>
+                    <TableCell align="right">
+                      <Button
+                        size="small"
+                        startIcon={<OpenInNew />}
+                        onClick={() => navigate(`/proceedings/${p.id}`)}
+                      >
+                        Ver
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        )}
+      </Box>
 
       <RetentionLineForm
         open={openModal}

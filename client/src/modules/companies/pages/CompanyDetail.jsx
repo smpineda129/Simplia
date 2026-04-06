@@ -13,8 +13,9 @@ import {
   CardContent,
   Chip,
   IconButton,
+  Snackbar,
 } from '@mui/material';
-import { ArrowBack, Business, AccountTree, Mail, Warehouse, Inventory, ReplayCircleFilled } from '@mui/icons-material';
+import { ArrowBack, Business, AccountTree, Mail, Warehouse, Inventory, ReplayCircleFilled, OpenInNew, ContentCopy } from '@mui/icons-material';
 import { companyService } from '../index';
 import CompanyAreas from '../components/CompanyAreas';
 import CompanyCorrespondenceTypes from '../components/CompanyCorrespondenceTypes';
@@ -31,6 +32,7 @@ const CompanyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentTab, setCurrentTab] = useState(0);
+  const [copySnackbar, setCopySnackbar] = useState(false);
 
   useEffect(() => {
     loadCompany();
@@ -143,6 +145,58 @@ const CompanyDetail = () => {
         </Grid>
       </Paper>
 
+      {/* Portal de Correspondencia */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <OpenInNew sx={{ mr: 1, color: 'primary.main' }} />
+          <Typography variant="h6" fontWeight={600}>
+            Portal de Correspondencia
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Enlace público para que usuarios externos radiquen correspondencia en esta empresa.
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              bgcolor: 'grey.100',
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {`${window.location.origin}/correspondence/${company.id}/company`}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ContentCopy />}
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/correspondence/${company.id}/company`);
+              setCopySnackbar(true);
+            }}
+          >
+            Copiar
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<OpenInNew />}
+            href={`/correspondence/${company.id}/company`}
+            target="_blank"
+          >
+            Abrir portal
+          </Button>
+        </Box>
+      </Paper>
+
       {/* Tabs */}
       <Paper sx={{ mb: 2 }}>
         <Tabs
@@ -165,6 +219,14 @@ const CompanyDetail = () => {
         {currentTab === 2 && <CompanyWarehouses companyId={company.id} />}
         {currentTab === 3 && <CompanyBoxes companyId={company.id} />}
       </Box>
+
+      <Snackbar
+        open={copySnackbar}
+        autoHideDuration={3000}
+        onClose={() => setCopySnackbar(false)}
+        message="Enlace copiado al portapapeles"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Box>
   );
 };

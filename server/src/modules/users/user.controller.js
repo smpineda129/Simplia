@@ -8,12 +8,13 @@ export const userController = {
       req.query.companyId = req.user.companyId;
     }
 
-    const users = await userService.getAll(req.query);
+    const result = await userService.getAll(req.query);
 
     res.status(200).json({
       success: true,
-      data: users,
-      count: users.length,
+      data: result.users,
+      pagination: result.pagination,
+      count: result.pagination.total,
     });
   }),
 
@@ -27,7 +28,12 @@ export const userController = {
   }),
 
   create: asyncHandler(async (req, res) => {
-    const user = await userService.create(req.body);
+    // If the requester belongs to a company, force the new user into that company
+    const body = { ...req.body };
+    if (req.user.companyId && !body.companyId) {
+      body.companyId = req.user.companyId;
+    }
+    const user = await userService.create(body);
 
     res.status(201).json({
       success: true,
@@ -53,5 +59,27 @@ export const userController = {
       success: true,
       message: 'Usuario eliminado exitosamente',
     });
+  }),
+
+  uploadAvatar: asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No se recibió ningún archivo' });
+    }
+    const { presignValue } = await import('../../utils/s3Presign.js');
+    const key = req.file.key;
+    await userService.update(req.params.id, { avatar: key });
+    const url = await presignValue(key);
+    res.json({ success: true, data: { url } });
+  }),
+
+  uploadSignature: asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No se recibió ningún archivo' });
+    }
+    const { presignValue } = await import('../../utils/s3Presign.js');
+    const key = req.file.key;
+    await userService.update(req.params.id, { signature: key });
+    const url = await presignValue(key);
+    res.json({ success: true, data: { url } });
   }),
 };

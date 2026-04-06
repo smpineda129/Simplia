@@ -13,13 +13,10 @@ import {
   InputLabel,
   Grid,
   Paper,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
-import { Add, Search, Group } from '@mui/icons-material';
+import { Add, Search, Group, Edit, Delete } from '@mui/icons-material';
 import entityService from '../services/entityService';
 import { companyService } from '../../companies';
 import EntityModalForm from '../components/EntityModalForm';
@@ -28,23 +25,20 @@ import LoadingLogo from '../../../components/LoadingLogo';
 const EntityList = () => {
   const [entities, setEntities] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [page, setPage] = useState(1);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     loadCompanies();
-    loadCategories();
   }, []);
 
   useEffect(() => {
     loadEntities();
-  }, [page, search, selectedCompany, selectedCategory]);
+  }, [page, search, selectedCompany]);
 
   const loadCompanies = async () => {
     try {
@@ -55,22 +49,12 @@ const EntityList = () => {
     }
   };
 
-  const loadCategories = async () => {
-    try {
-      const response = await entityService.getAllCategories();
-      setCategories(response.data);
-    } catch (error) {
-      console.error('Error al cargar categorías:', error);
-    }
-  };
-
   const loadEntities = async () => {
     try {
       setLoading(true);
       const response = await entityService.getAll({
         search,
         companyId: selectedCompany,
-        categoryId: selectedCategory,
         page,
         limit: 10,
       });
@@ -97,6 +81,22 @@ const EntityList = () => {
     setOpenModal(true);
   };
 
+  const handleEdit = (entity) => {
+    setSelectedEntity(entity);
+    setOpenModal(true);
+  };
+
+  const handleDelete = async (entityId) => {
+    if (!window.confirm('¿Está seguro de eliminar este usuario externo?')) return;
+    try {
+      await entityService.delete(entityId);
+      showSnackbar('Entidad eliminada exitosamente', 'success');
+      loadEntities();
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al eliminar entidad', 'error');
+    }
+  };
+
   const handleSave = async (data) => {
     try {
       if (selectedEntity) {
@@ -117,7 +117,7 @@ const EntityList = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Entidades / Terceros</Typography>
+        <Typography variant="h4">Usuarios Externos</Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -166,26 +166,6 @@ const EntityList = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
-            <InputLabel>Categoría</InputLabel>
-            <Select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setPage(1);
-              }}
-              label="Categoría"
-            >
-              <MenuItem value="">Todas</MenuItem>
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
       </Grid>
 
       {loading ? (
@@ -204,28 +184,32 @@ const EntityList = () => {
               <Paper sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Group color="primary" sx={{ mr: 1 }} />
-                  <Typography variant="h6">{entity.name}</Typography>
+                  <Typography variant="h6">{entity.name}{entity.lastName ? ` ${entity.lastName}` : ''}</Typography>
                 </Box>
-                <Chip 
-                  label={entity.category?.name} 
-                  size="small" 
-                  color="primary" 
-                  variant="outlined"
-                  sx={{ mb: 1 }}
-                />
                 {entity.email && (
-                  <Typography variant="body2" color="text.secondary">
-                    📧 {entity.email}
-                  </Typography>
+                  <Typography variant="body2" color="text.secondary">📧 {entity.email}</Typography>
                 )}
                 {entity.phone && (
-                  <Typography variant="body2" color="text.secondary">
-                    📞 {entity.phone}
-                  </Typography>
+                  <Typography variant="body2" color="text.secondary">📞 {entity.phone}</Typography>
+                )}
+                {entity.city && (
+                  <Typography variant="body2" color="text.secondary">📍 {entity.city}{entity.state ? `, ${entity.state}` : ''}</Typography>
                 )}
                 <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                   {entity.company?.name}
                 </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <Tooltip title="Editar">
+                    <IconButton size="small" onClick={() => handleEdit(entity)}>
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Eliminar">
+                    <IconButton size="small" color="error" onClick={() => handleDelete(entity.id)}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </Paper>
             </Grid>
           ))}
@@ -238,7 +222,6 @@ const EntityList = () => {
         onSave={handleSave}
         entity={selectedEntity}
         companies={companies}
-        categories={categories}
       />
 
       <Snackbar

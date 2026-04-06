@@ -1,215 +1,200 @@
-import { Box, Container, Typography, Grid, Paper, Button, Chip } from '@mui/material';
-import {
-  Article,
-  VideoLibrary,
-  MenuBook,
-  Download,
-  ArrowForward,
-} from '@mui/icons-material';
+import { Box, Container, Typography, Grid, Button } from '@mui/material';
+import { Article, VideoLibrary, MenuBook, Download, ArrowForward } from '@mui/icons-material';
 
-const ResourcesSection = () => {
-  const resources = [
-    {
-      type: 'Guía',
-      icon: <MenuBook />,
-      title: 'Guía Completa de Gestión Documental',
-      description: 'Aprende las mejores prácticas para implementar un sistema de gestión documental efectivo en tu organización.',
-      tags: ['PDF', '45 páginas', 'Gratis'],
-      color: '#1976d2',
-    },
-    {
-      type: 'Whitepaper',
-      icon: <Article />,
-      title: 'Transformación Digital en la Gestión de Archivos',
-      description: 'Descubre cómo la digitalización puede reducir costos y mejorar la eficiencia operativa de tu empresa.',
-      tags: ['PDF', '28 páginas', 'Gratis'],
-      color: '#388e3c',
-    },
-    {
-      type: 'Video',
-      icon: <VideoLibrary />,
-      title: 'Demo en Vivo de la Plataforma',
-      description: 'Mira una demostración completa de todas las funcionalidades y capacidades de nuestra plataforma.',
-      tags: ['Video', '15 min', 'Gratis'],
-      color: '#d32f2f',
-    },
-    {
-      type: 'Caso de Éxito',
-      icon: <Article />,
-      title: 'Banco Nacional: Reducción de Costos del 60%',
-      description: 'Conoce cómo una institución financiera optimizó su gestión documental y redujo costos operativos significativamente.',
-      tags: ['PDF', '12 páginas', 'Gratis'],
-      color: '#f57c00',
-    },
-    {
-      type: 'Checklist',
-      icon: <Download />,
-      title: 'Checklist de Cumplimiento Normativo',
-      description: 'Verifica que tu organización cumple con todas las normativas de gestión documental y protección de datos.',
-      tags: ['PDF', '8 páginas', 'Gratis'],
-      color: '#7b1fa2',
-    },
-    {
-      type: 'Infografía',
-      icon: <Article />,
-      title: 'ROI de la Gestión Documental Digital',
-      description: 'Visualiza el retorno de inversión y los beneficios tangibles de implementar un sistema de gestión documental.',
-      tags: ['PDF', '1 página', 'Gratis'],
-      color: '#0288d1',
-    },
-  ];
+const resources = [
+  {
+    type: 'Guía',
+    icon: <MenuBook sx={{ fontSize: 28 }} />,
+    title: 'Guía Completa de Gestión Documental',
+    description: 'Aprende las mejores prácticas para implementar un sistema de gestión documental efectivo en tu organización.',
+    meta: '45 páginas · PDF · Gratis',
+    color: '#2563EB',
+  },
+  {
+    type: 'Whitepaper',
+    icon: <Article sx={{ fontSize: 28 }} />,
+    title: 'Transformación Digital en Archivos',
+    description: 'Descubre cómo la digitalización puede reducir costos y mejorar la eficiencia operativa de tu empresa.',
+    meta: '28 páginas · PDF · Gratis',
+    color: '#10B981',
+  },
+  {
+    type: 'Video',
+    icon: <VideoLibrary sx={{ fontSize: 28 }} />,
+    title: 'Demo en Vivo de la Plataforma',
+    description: 'Mira una demostración completa de todas las funcionalidades y capacidades de Simplia.',
+    meta: '15 min · Video · Gratis',
+    color: '#6366F1',
+  },
+  {
+    type: 'Caso de Éxito',
+    icon: <Article sx={{ fontSize: 28 }} />,
+    title: 'Banco Nacional: ROI del 60%',
+    description: 'Conoce cómo una institución financiera optimizó su gestión documental y redujo costos operativos.',
+    meta: '12 páginas · PDF · Gratis',
+    color: '#F59E0B',
+  },
+  {
+    type: 'Checklist',
+    icon: <Download sx={{ fontSize: 28 }} />,
+    title: 'Checklist de Cumplimiento Normativo',
+    description: 'Verifica que tu organización cumple con todas las normativas de gestión documental y protección de datos.',
+    meta: '8 páginas · PDF · Gratis',
+    color: '#EF4444',
+  },
+  {
+    type: 'Infografía',
+    icon: <Article sx={{ fontSize: 28 }} />,
+    title: 'ROI de la Gestión Documental Digital',
+    description: 'Visualiza el retorno de inversión y los beneficios tangibles de implementar un sistema de gestión documental.',
+    meta: '1 página · PDF · Gratis',
+    color: '#0EA5E9',
+  },
+];
 
-  return (
-    <Box
-      id="recursos"
-      sx={{
-        py: 10,
-        bgcolor: 'background.default',
-      }}
-    >
-      <Container maxWidth="xl">
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: 'primary.main',
-              fontWeight: 600,
-              letterSpacing: 2,
-            }}
-          >
-            RECURSOS GRATUITOS
-          </Typography>
-          <Typography
-            variant="h2"
-            sx={{
-              fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' },
-              fontWeight: 700,
-              mt: 2,
-              mb: 2,
-            }}
-          >
-            Aprende y{' '}
-            <Box component="span" sx={{ color: 'primary.main' }}>
-              Optimiza
-            </Box>
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ maxWidth: 800, mx: 'auto' }}
-          >
-            Accede a nuestra biblioteca de recursos gratuitos con guías, casos de éxito, 
-            whitepapers y herramientas para mejorar tu gestión documental.
-          </Typography>
-        </Box>
+const ResourcesSection = () => (
+  <Box id="recursos" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#F8FAFC' }}>
+    <Container maxWidth="xl">
+      {/* Header */}
+      <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563EB', letterSpacing: '0.1em', textTransform: 'uppercase', mb: 1.5 }}>
+          Recursos gratuitos
+        </Typography>
+        <Typography
+          component="h2"
+          sx={{ fontWeight: 800, fontSize: { xs: '1.75rem', md: '2.5rem' }, color: '#0F172A', letterSpacing: '-0.03em', lineHeight: 1.15, mb: 2 }}
+        >
+          Aprende y{' '}
+          <Box component="span" sx={{ color: '#2563EB' }}>optimiza</Box>
+        </Typography>
+        <Typography sx={{ color: '#64748B', fontSize: '1rem', maxWidth: 560, mx: 'auto', lineHeight: 1.7 }}>
+          Accede a nuestra biblioteca de recursos con guías, casos de éxito y herramientas para mejorar tu gestión.
+        </Typography>
+      </Box>
 
-        <Grid container spacing={4}>
-          {resources.map((resource, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Paper
-                elevation={0}
+      {/* Resource cards */}
+      <Grid container spacing={3}>
+        {resources.map((r) => (
+          <Grid item xs={12} sm={6} md={4} key={r.title}>
+            <Box
+              sx={{
+                height: '100%',
+                borderRadius: 2.5,
+                border: '1px solid #E2E8F0',
+                bgcolor: '#ffffff',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: r.color,
+                  boxShadow: `0 8px 24px ${r.color}12`,
+                  transform: 'translateY(-3px)',
+                },
+              }}
+            >
+              {/* Card header */}
+              <Box
                 sx={{
-                  height: '100%',
-                  border: 1,
-                  borderColor: 'divider',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: 6,
-                    borderColor: resource.color,
-                  },
+                  px: 3,
+                  py: 3,
+                  bgcolor: `${r.color}08`,
+                  borderBottom: `1px solid ${r.color}18`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
                 }}
               >
+                <Box sx={{ color: r.color }}>{r.icon}</Box>
                 <Box
                   sx={{
-                    height: 120,
-                    bgcolor: resource.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
+                    px: 1.25,
+                    py: 0.35,
+                    borderRadius: 1,
+                    bgcolor: r.color,
+                    display: 'inline-block',
                   }}
                 >
-                  <Box sx={{ fontSize: 64 }}>
-                    {resource.icon}
-                  </Box>
-                </Box>
-                
-                <Box sx={{ p: 3 }}>
-                  <Chip
-                    label={resource.type}
-                    size="small"
-                    sx={{
-                      mb: 2,
-                      bgcolor: resource.color,
-                      color: 'white',
-                      fontWeight: 600,
-                    }}
-                  />
-                  
-                  <Typography variant="h6" fontWeight={700} gutterBottom>
-                    {resource.title}
+                  <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.04em' }}>
+                    {r.type.toUpperCase()}
                   </Typography>
-                  
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {resource.description}
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-                    {resource.tags.map((tag, i) => (
-                      <Chip
-                        key={i}
-                        label={tag}
-                        size="small"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-
-                  <Button
-                    variant="outlined"
-                    endIcon={<ArrowForward />}
-                    fullWidth
-                    sx={{
-                      borderColor: resource.color,
-                      color: resource.color,
-                      '&:hover': {
-                        borderColor: resource.color,
-                        bgcolor: `${resource.color}10`,
-                      },
-                    }}
-                  >
-                    Descargar Recurso
-                  </Button>
                 </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+              </Box>
 
-        <Box sx={{ textAlign: 'center', mt: 8 }}>
-          <Typography variant="h5" fontWeight={700} gutterBottom>
-            ¿Necesitas más información?
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Nuestro equipo está listo para ayudarte a encontrar la solución perfecta para tu empresa
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => {
-              const element = document.querySelector('#contacto');
-              if (element) element.scrollIntoView({ behavior: 'smooth' });
-            }}
-            sx={{ px: 4, py: 1.5 }}
-          >
-            Contactar con un Experto
-          </Button>
-        </Box>
-      </Container>
-    </Box>
-  );
-};
+              {/* Card body */}
+              <Box sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography sx={{ fontWeight: 700, fontSize: '0.9375rem', color: '#0F172A', mb: 1, lineHeight: 1.4 }}>
+                  {r.title}
+                </Typography>
+                <Typography sx={{ color: '#64748B', fontSize: '0.8375rem', lineHeight: 1.65, mb: 2.5, flexGrow: 1 }}>
+                  {r.description}
+                </Typography>
+                <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 500, mb: 2.5 }}>
+                  {r.meta}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  endIcon={<ArrowForward sx={{ fontSize: 16 }} />}
+                  fullWidth
+                  sx={{
+                    borderColor: r.color,
+                    color: r.color,
+                    fontWeight: 600,
+                    fontSize: '0.8125rem',
+                    borderRadius: 1.5,
+                    borderWidth: '1.5px',
+                    py: 0.875,
+                    '&:hover': {
+                      borderWidth: '1.5px',
+                      borderColor: r.color,
+                      bgcolor: `${r.color}08`,
+                    },
+                  }}
+                >
+                  Descargar recurso
+                </Button>
+              </Box>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Bottom CTA */}
+      <Box
+        sx={{
+          mt: 8,
+          p: { xs: 3, md: 5 },
+          textAlign: 'center',
+          borderRadius: 3,
+          border: '1px solid #E2E8F0',
+          bgcolor: '#ffffff',
+        }}
+      >
+        <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#0F172A', mb: 1 }}>
+          ¿Necesitas más información?
+        </Typography>
+        <Typography sx={{ color: '#64748B', mb: 3, fontSize: '0.9rem' }}>
+          Nuestro equipo está listo para ayudarte a encontrar la solución perfecta para tu empresa.
+        </Typography>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={() => document.querySelector('#contacto')?.scrollIntoView({ behavior: 'smooth' })}
+          sx={{
+            bgcolor: '#2563EB',
+            fontWeight: 700,
+            px: 4,
+            py: 1.375,
+            borderRadius: 2,
+            boxShadow: 'none',
+            '&:hover': { bgcolor: '#1D4ED8', boxShadow: '0 8px 20px rgba(37,99,235,0.25)' },
+          }}
+        >
+          Hablar con un experto
+        </Button>
+      </Box>
+    </Container>
+  </Box>
+);
 
 export default ResourcesSection;

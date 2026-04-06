@@ -4,6 +4,8 @@ import { createDocumentValidation, updateDocumentValidation } from './document.v
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
 import { hasPermission } from '../../middlewares/permission.middleware.js';
+import upload from '../../middlewares/upload.js';
+import { prisma } from '../../db/prisma.js';
 
 const router = express.Router();
 
@@ -44,6 +46,46 @@ const router = express.Router();
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
+/**
+ * @swagger
+ * /api/documents/upload:
+ *   post:
+ *     summary: Subir archivo a S3
+ *     tags: [Documents]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Archivo subido exitosamente, retorna URL y key de S3
+ */
+// Middleware que inyecta companyShort antes de que multer-s3 construya el key
+const injectCompanyShort = async (req, res, next) => {
+  try {
+    if (req.user?.companyId) {
+      const company = await prisma.company.findUnique({
+        where: { id: req.user.companyId },
+        select: { short: true },
+      });
+      req.companyShort = company?.short || 'general';
+    }
+    next();
+  } catch {
+    next();
+  }
+};
+
+router.post('/upload', authenticate, hasPermission('document.create'), injectCompanyShort, upload.single('file'), documentController.upload);
+
 router.get('/', authenticate, hasPermission('document.view'), documentController.getAll);
 
 /**

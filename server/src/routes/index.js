@@ -16,11 +16,14 @@ import permissionRoutes from '../modules/permissions/permission.routes.js';
 import notificationRoutes from '../modules/notifications/notification.routes.js';
 import auditRoutes from '../modules/audit/audit.routes.js';
 import ticketRoutes from '../modules/support-tickets/ticket.routes.js';
+import surveyRoutes from '../modules/surveys/survey.routes.js';
+import publicRoutes from './public.routes.js';
 import { authenticate } from '../middlewares/auth.js';
 import { hasPermission } from '../middlewares/permission.middleware.js';
 
 const router = Router();
 
+router.use('/public', publicRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/companies', companyRoutes);
@@ -38,6 +41,7 @@ router.use('/permissions', permissionRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/audit', auditRoutes);
 router.use('/tickets', ticketRoutes);
+router.use('/surveys', surveyRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

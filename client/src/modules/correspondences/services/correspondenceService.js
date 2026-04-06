@@ -50,6 +50,29 @@ const correspondenceService = {
     const response = await axiosInstance.post(`/correspondences/${id}/mark-delivered`);
     return response.data;
   },
+
+  getAreaUsers: async (correspondenceTypeId) => {
+    const response = await axiosInstance.get('/correspondences/area-users', {
+      params: { correspondenceTypeId },
+    });
+    return response.data;
+  },
+
+  getCompanyUsers: async (type = 'internal', companyId = null) => {
+    const params = { type };
+    if (companyId) params.companyId = companyId;
+    const response = await axiosInstance.get('/correspondences/company-users', { params });
+    return response.data;
+  },
+
+  uploadDocument: async (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    const response = await axiosInstance.post('/documents/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
 };
 
 export default correspondenceService;

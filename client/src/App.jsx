@@ -16,6 +16,8 @@ import { TemplateList } from './modules/templates';
 import { ProceedingList, ProceedingDetail } from './modules/proceedings';
 import { CorrespondenceList, CorrespondenceDetail } from './modules/correspondences';
 import { EntityList } from './modules/entities';
+import { SurveyPage, SurveyResultsPage } from './modules/surveys';
+import { CustodiaPage } from './modules/custodia';
 import { WarehouseList } from './modules/warehouses';
 import { RoleList } from './modules/roles';
 import { PermissionList } from './modules/permissions';
@@ -23,6 +25,7 @@ import NotificationsPage from './modules/notifications/pages/NotificationsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/public/LandingPage';
 import PQRSPage from './pages/public/PQRSPage';
+import CorrespondencePortalPage from './pages/public/CorrespondencePortalPage';
 import UserSupportPage from './modules/support-tickets/pages/UserSupportPage';
 import AdminTicketsPage from './modules/support-tickets/pages/AdminTicketsPage';
 import TicketDetailPage from './modules/support-tickets/pages/TicketDetailPage';
@@ -71,6 +74,9 @@ function App() {
         
         {/* Ruta pública - PQRS */}
         <Route path="/pqrs" element={<PQRSPage />} />
+
+        {/* Ruta pública - Portal de Correspondencia */}
+        <Route path="/correspondence/:companyId/company" element={<CorrespondencePortalPage />} />
 
         {/* Rutas de autenticación */}
         <Route element={<AuthLayout />}>
@@ -220,6 +226,13 @@ function App() {
           />
           <Route path="/notifications" element={<NotificationsPage />} />
           
+          {/* Surveys / Instrumentos Routes */}
+          <Route path="/surveys" element={<SurveyPage />} />
+          <Route path="/surveys/results" element={<SurveyResultsPage />} />
+
+          {/* Custodia Digital */}
+          <Route path="/custodia" element={<CustodiaPage />} />
+
           {/* Support Tickets Routes */}
           <Route path="/support" element={<UserSupportPage />} />
           <Route path="/support/tickets/:id" element={<TicketDetailPage />} />

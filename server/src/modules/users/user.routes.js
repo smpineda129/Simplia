@@ -6,6 +6,7 @@ import { authenticate, authorize } from '../../middlewares/auth.js';
 import { hasPermission, isSelfOrHasPermission } from '../../middlewares/permission.middleware.js';
 import userRoleController from './userRole.controller.js';
 import userAreaController from './userArea.controller.js';
+import uploadImage from '../../middlewares/uploadImage.js';
 
 const router = Router();
 
@@ -330,26 +331,50 @@ router.post('/:userId/permissions', hasPermission('user.attach-permission'), use
  */
 router.delete('/:userId/permissions/:permissionId', hasPermission('user.detach-permission'), userRoleController.removePermission);
 
+// ==================== RUTAS DE UPLOAD DE IMAGEN ====================
+
+const injectUploadFolder = (folderType) => async (req, res, next) => {
+  try {
+    const { prisma } = await import('../../db/prisma.js');
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(req.params.id) },
+      select: { company: { select: { short: true } } },
+    });
+    const short = user?.company?.short;
+    req.uploadFolder = short ? `${short}/${folderType}` : `admin-docs/${folderType}`;
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+router.post(
+  '/:id/upload-avatar',
+  isSelfOrHasPermission('user.update', 'id'),
+  injectUploadFolder('avatars'),
+  uploadImage.single('file'),
+  userController.uploadAvatar
+);
+
+router.post(
+  '/:id/upload-signature',
+  isSelfOrHasPermission('user.update', 'id'),
+  injectUploadFolder('signatures'),
+  uploadImage.single('file'),
+  userController.uploadSignature
+);
+
 // ==================== RUTAS DE PERSONIFICACIÓN ====================
 
 import { impersonateController } from './impersonate.controller.js';
 
 /**
  * @swagger
- * /api/users/{id}/can-impersonate:
- *   get:
- *     summary: Verificar si se puede personificar a un usuario
- *     tags: [Users]
- */
-router.get('/:id/can-impersonate', hasPermission('user.impersonate'), impersonateController.canImpersonate);
-
-/**
- * @swagger
- * /api/users/{id}/impersonate:
+ * /api/users/impersonate:
  *   post:
- *     summary: Iniciar personificación de un usuario
+ *     summary: Iniciar personificación de un usuario (solo Owner)
  *     tags: [Users]
  */
-router.post('/:id/impersonate', hasPermission('user.impersonate'), impersonateController.startImpersonation);
+router.post('/impersonate', impersonateController.startImpersonation);
 
 export default router;

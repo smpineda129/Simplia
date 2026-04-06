@@ -1,0 +1,393 @@
+[
+    {
+        "images": {
+            "_comment": "exteriores modelo 10",
+            "exterior": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/698de66165c7873daf657a0ce1d237df1773148500978.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=T1YR8E7QcaOxtlUUDEieGqVlL4zLGNhrQ7w98YgcuUQPYDpCs%2FdfNVMG7vSriMIkhFsK75I6GkW1jA2jjLhWLWQT3tip%2BCRiNSWYe1ySOPh3rSN5%2Fzn9yBLLO19x%2F%2FUWuWdkW6An1oGJgEfh9JZqtJ6qb%2Fh1QXzeDLLKUcKc2TbMpvewCNNnJp26zm9X62RoqpIvtu63sXNdGmRJ8B3u4fVKrI6aPTGNgAPVeOpacFTsvjh88DwJCvqJZn88ddjoRKezhsIJJMKiFTt9YJqNVsyJ3swP2BNiJiVOSPKu5nJJiAs%2FO5sleoUL%2FDsmgYBLDnHU4PcEWMbjb3tvtTQfIw%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "_comment": "interiores basicos modelo 10 opcion comedor",
+            "interior": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/ae9f261efd4fc7c84ac94210d3bef1301773154731218.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=een083lUk20HdEVBVkgyEers5fXXx6gzXU0Bxi5k%2FjCZ4UKgMb8EZXcvXKH1%2FUFm6PUCPbwZ1o6AFlplSEIuQ8hps9VZzwqKgylrmvF2D%2BNJoVtJo7n7S6r0VJJg1ENaiKYc1Scj80lMTCPkhdTboSg5YH%2FlUa2IDu%2BDbo35MsRIRbZGlVRxbgDx5ZY8%2F5fTg3hZ8EhtNOBSHJ1h6NJszZhS1lMVIXSYrGoodZrfrNd7ZpORuEbApvflDc2QuQjoa9PBSgRGdQnBf1r1Loi76zxxehGzFOJHaT%2B7k44eJh3g9sVa0Qf3qnh5Ui%2BHQ9VDEEEVnTmi24PxbZiF%2BHc%2Bvw%3D%3D",
+                    "isPublic": false
+                }
+            ]
+        },
+        "blueprints": {
+            "_comment": "planos modelo 10 opcion comedor",
+            "default": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/fccb2267df9dd8ac6762766403a3aacc1773154890950.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=V0xJ52E9D5U4kd5hJIbH1VEnsbcahphJyB9LgmpWJf11nQ08kHYsqokNoRMC4nukJYo0TCGWGgsd4tNLygWWV%2F3JPlQKVT80MYx8bSa439yIOp%2FU1p5k9KLPgvZUG0ZMYhiy9WF6LTxemFbbUx4A3pxHjQnC5LxbQjibYi9JzEZ24OsU%2BCQ2rHjKEM4h7mlucht%2FQhHGhGKA4Uyc657kNhM6vW8GeUHZ59UcV2r43QnNYjT4GQBvNbRzG40EWxuqDS%2FDSUfKinIdPHyMdaKQc%2BWwT8OeHNDsGpZkIq3GLh2TCJ%2Bm1P7v%2FWpvlPuhlbGQth8KXP1PAaOchCQyIdmsDg%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "_comment": "planos modelo 10 opcion estudio",
+            "withBalcony": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/3d50fa6862c9fc2eb45b5fc173c8abda1773158051153.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=UZtYsV%2FFJMl0fsEpHr8EX%2By76P5SxHNgXB5Tc0FzdZ%2FEZbcq5yMWjkmFVc5sjG5EF0eCsA1YMnx%2FLrSd%2FlofYvq9HeonzlmNOVdhfZN3OFuiePDCfklLYC8DcauBnBiQV451%2BQeabX%2FJ0nt1HNcAnUk4Dc0%2Fx%2FnGoz3Qjw7IULGoexqmoDTAvLCayk9qClsOS7JE7kOQfASPnzrrW3UlKR7pXyTt9yUqR3FoudKgWtnpFqCKUGSMfe%2FAVkhl%2FuwXc1waw96AwfCJOc%2BM33YMzIK6Jbg3qRFgHWuCliGR%2F%2F52Oup2lJ50Wf8s1I2l7Tf%2BguhW9puQRrn27UTtyQM28A%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "withStorage": [],
+            "_comment": "omitir",
+            "withBalconyAndStorage": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/3d50fa6862c9fc2eb45b5fc173c8abda1773158051153.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=UZtYsV%2FFJMl0fsEpHr8EX%2By76P5SxHNgXB5Tc0FzdZ%2FEZbcq5yMWjkmFVc5sjG5EF0eCsA1YMnx%2FLrSd%2FlofYvq9HeonzlmNOVdhfZN3OFuiePDCfklLYC8DcauBnBiQV451%2BQeabX%2FJ0nt1HNcAnUk4Dc0%2Fx%2FnGoz3Qjw7IULGoexqmoDTAvLCayk9qClsOS7JE7kOQfASPnzrrW3UlKR7pXyTt9yUqR3FoudKgWtnpFqCKUGSMfe%2FAVkhl%2FuwXc1waw96AwfCJOc%2BM33YMzIK6Jbg3qRFgHWuCliGR%2F%2F52Oup2lJ50Wf8s1I2l7Tf%2BguhW9puQRrn27UTtyQM28A%3D%3D",
+                    "isPublic": true
+                }
+            ]
+        },
+        "_id": "6977c7bbd1f24768968719de",
+        "model": "Model 10",
+        "modelNumber": "10",
+        "price": 5000,
+        "balconies": [
+            {
+                "images": {
+                    "_comment": "exteriores modelo 10",
+                    "exterior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/dc323352d6ccd02a90277367cabcb5481773148952384.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=YKQoxQ4%2Frps36bP7wi5P%2Fb%2FeVuEZ2uTl18yL01xABMWJ8VdDqpvDBCR0pRsje8FR1pHcw1nmfrm7siPEho2LtZyb%2BYxRE%2BHU8DRSZi1MdEtBrSLKBSJvvAvSxsHaCG0%2FQNWxq%2BrDEjBlqd1K7AGlBp6wNb4hYddtAjQA5Zn3Pr2mofgf75dQKEiX34bZa5Njdcz0AoPWhM9ffOLiZX6odc1mUrMq5GZVCP2JwCoTvSSc2tob40%2BGL8vWmNgBLFzfGFpKq4LZyPrQ09z8dmvfS9AAsmdV3xAPkX0og8N2XyuZZpeQ0njcCXHH04FcRUA319KMsmIQMceV1JnXnmCVfQ%3D%3D",
+                            "isPublic": true
+                        }
+                    ],
+                    "_comment": "interiores basicos modelo 10 opcion estudio",
+                    "interior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/ee4a53da5abd3be0b664a4c9e7ca5c1f1773155666025.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=YIrG278SO0RxArniRpxmVJBWh27EGcifRA%2Bdb3Xpzkkevk55b2bieDPf1CjqtGZ1c6yvDHvQbPQuTS76gBJYzmG8PWgUvdXf3luLuc5p8fgAoi5ZRoa74MnA4xhZiIUnl%2BObvvSRGnFXQSNkKHT9L3jJ%2BWh6lg51pn5Yqq55STyEHeuY%2BUBuVs3S3hgTrPiqRJatytrIBTZhYTMQEYcDNE9k7PexkDqp%2F%2B7DvvbKlVR83b7bfI%2BprIRmv7BPIfPepi54HiHpJjYBg3rQ1oFguL57WMbGrGVIUEnVfK784wwMWXNefm2tYVT%2Bps%2BOscXBnRJ1TKirP8BefrJnd6zQEA%3D%3D",
+                            "isPublic": false
+                        }
+                    ]
+                },
+                "name": "Opción Balcón",
+                "price": 500,
+                "description": "Balcón adicional para este modelo",
+                "sqft": 0,
+                "status": "active",
+                "_id": "69b0440f400048a845baf452",
+                "createdAt": "2026-03-10T16:17:19.137Z",
+                "updatedAt": "2026-03-12T18:01:02.401Z"
+            }
+        ],
+        "upgrades": [
+            {
+                "images": {
+                    "_comment": "interiores upgrade modelo 10 opcion estudio",
+                    "exterior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/61c948bb8e2fc2b17ce25cf5717977991773158804969.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=VAd0%2B504AXrfPkVIdY8VzfJXfUxxKtuolm74KQSOfvdBA77pFoYYrT0PZU%2BLNvMzP9afbGCN6%2BoaWqK8oUtcBJwgWPudfdwTXiPuOJMINj%2BICZBtnY8CjukhfzvFM7CSl4jtC5DUiDz3EpS574rJg33B8LdmlcpoV1YNNnJgQ%2BgctRcnZDfUytNkC4%2FDbbfGe8Pbmn4IlxpHRW3FMgTV8%2FgKfydZGATsCFaV3stfwqmLq0n7biF6v0aClBjAPZswQYovRo4DP%2BOe9FFA8cd04hmDOmVTHTtVPtW3rl85HjU6Zrtj9FqpX%2BGSJQ046CwPuKfa9hroEkznUZcgHhsibg%3D%3D",
+                            "isPublic": false
+                        }
+                    ],
+                    "_comment": "interiores upgrade modelo 10 opcion comedor",
+                    "interior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/4c4f6e2ca6d3539aa1383130aa1d54e81773158102527.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=Ph3EY1IJhRQtJ%2FEnmRAw%2BAJ02vAskHPRI1YFHN6T89v5uMbqUv7qf8krmXCtohVvMFMLRRIc25C2NbDeZnxKFLnAYz9Il1LnUjPbsnRvMygFb7fkQRAT8FhmL1G2svfk7bdtD1cLmukGcDCeE3diUJu0iy6Pq7xAbV11%2BRkqFij6XLFymtDoA2DvevVXgAOPpBAt71kdaZayGJSh5QgQ%2FUMyM6D%2BXcvpwbZr0yk315D1XopwYM5v%2FwOHrCx%2FRap9cr6TuZyWQ%2FEJgQQR7OB%2B0niys2Aiwe4l3y2MjlOeZblngbeoKYEJEHSDKNV2K5Od4FPKv9ndUVzjjuS4XL4Zlg%3D%3D",
+                            "isPublic": false
+                        }
+                    ]
+                },
+                "name": "Opción Upgrade",
+                "price": 2000,
+                "description": "Mejora premium para este modelo",
+                "features": [],
+                "status": "active",
+                "_id": "69b0440f400048a845baf453",
+                "createdAt": "2026-03-10T16:17:19.137Z",
+                "updatedAt": "2026-03-12T18:01:02.401Z"
+            }
+        ],
+        "_comment": "omitir",
+        "storages": [
+            {
+                "images": {
+                    "exterior": [],
+                    "interior": []
+                },
+                "name": "Opción Bodega",
+                "price": 500,
+                "description": "Espacio de bodega adicional",
+                "sqft": 0,
+                "status": "active",
+                "_id": "69b0440f400048a845baf454",
+                "createdAt": "2026-03-10T16:17:19.137Z",
+                "updatedAt": "2026-03-10T16:17:19.137Z"
+            }
+        ],
+        "_comment": "informacion modelo 10",
+        "bedrooms": 3,
+        "bathrooms": 5,
+        "sqft": 3638,
+        "stories": 3,
+        "description": "",
+        "status": "active",
+        "createdAt": "2026-01-26T19:59:55.833Z",
+        "updatedAt": "2026-03-12T18:01:02.401Z",
+        "__v": 42,
+        "project": "69a73ce5b20401b061da6451"
+    },
+    {
+        "images": {
+            "_comment": "exteriores modelo 5 sin balcon",
+            "exterior": [ 
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/1f9225666e6e3429920ece20e06359421773149069495.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=bqVmYQMxocdIYzjotP1aTcTKan7NobxukBFGq33NRHfxmLqTWPKDdAcHnJn%2FlrAWqad%2BbzCqYS%2Fl0OcGDlH4Z0WTWh654NQMzwIHF4pqHsVnRxZpZfNteoNpnHb6%2BKHeGWH8xTwfLuraS7diG61UUvSGSV4FLQh7Zp5H1JeIeNfjzSQ5ViUw0mwR6BWcg0O6lPWr7WXWAneTS%2FWVdhEuM2ONeZH8ZmvpEfdIazq2UehfoVYv%2FGnJ1BesSKj%2FeKAZmHXhlGbsXRvujFjR6LWYJmN6OU3UAGXZvlHcFQ6a0mw2b8WeEGFlYycnLVhMNxtFFs%2F37WeujgsB%2Ffwro%2Fr81A%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "_comment": "interiores basicos modelo 5 sin balcon",
+            "interior": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/54c87446ea9ff72da08b36c8043b141e1773153551214.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=LnCs%2BHyRcBW%2FfZbwgbeqVIcw7PfyEdo%2FjLblHcatPrqo8%2BSgRWKfMaUW5K7P%2Bso41XVEMvWYNA0bGlw%2BYrQIGRu4owRhqUsVVH%2FALeQKRgAlD0WQCdQDvZ10BCl%2B59pQWSxCr%2Fd%2BDzi6Tp7EpiSeIa5puGtaMyPT0g1vIug88d29DEVLlH20tWD4wmCAx%2Feet8gsYha7NPDGbuOHA3h9nvx5VSfrdQzWXgqj9YV02Mt%2F4eGZr0QzDzxqWtw2w97L1QXMPjyh2QcpYw%2FVkq5ovpjdEfoXz2y2KHQeLLwiJE0YlZgiJlRjfvj5Z3RGq6P%2BEKCzPxxu74CMFr5YSBw5Uw%3D%3D",
+                    "isPublic": true
+                }
+            ]
+        },
+        "blueprints": {
+            "_comment": "planos modelo 5 sin balcon",
+            "default": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/66fbc4676159ee6b49d0df9299ca0c9f1773152520005.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=jifDZOoHY65VQCrYxjLfygpxi%2FDzdDqrz2Xm%2Ffa5HMCwSOc8uX13MxOV9J4225vmIJJAeq2%2F4M4bWbYi9Qh5DG807RkFNSmRlVb4%2FoRiQan5mb2qZ0cTNqSTlK8EeXSmXgVLQYKI3VKNydF%2BNp9Y4ycU83a8TCAsJ6E%2BqVbuRV4KF5of4Wy6JcjZV9lrjMTn%2Biv9QAcLp5VW6VyxDcvMqTVPZ%2BnXMcPQpipdEGLwlqAXsy%2FAc5YerP8ljc7%2FoTwlV%2FBZz%2BBn9ivoqYNUS2NiakMtZHJ2DxaMJavOsANmAviQBiDxsFEuERILfezccySWW3kLRF8as4NIMcwk7b962A%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "_comment": "planos modelo 5 con balcon",
+            "withBalcony": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/2b17c01d58ec6f03c1548eb62cbef3061773152538089.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=GyghgcfRRKSSSymFzTwZUtAgyi3cm9BoqhDawuCCswrEacTluRaEqEB9olwHYIYwE6ZwmqEBualIICZuEI9kjKAIWDZQPoqsQHJPS14TlatX%2FmdcGU%2FBLxVxOhtegy7xqN18R40AiqkmLFrfO697CKXUSTRQ3P6GqMGLk81B3lhbQDkv2koTpQLkCRvU6RtVGo42hCdf2%2BAlE%2BrqdNLK9L%2B7%2BPjkAc0QmzTNrA1wA5czUTLXsch1%2B%2BMRQhuEJG7o3GED6DqWsNhNP9JXOJeHSmG%2FlqcjETCrvS2ZmjaAMiz1%2BgKPgSDDPXy%2BQLM3dab2LB8UDL3FHVWp94I911ZFsQ%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "withStorage": [],
+            "_comment": "omitir",
+            "withBalconyAndStorage": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/2b17c01d58ec6f03c1548eb62cbef3061773152538089.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=GyghgcfRRKSSSymFzTwZUtAgyi3cm9BoqhDawuCCswrEacTluRaEqEB9olwHYIYwE6ZwmqEBualIICZuEI9kjKAIWDZQPoqsQHJPS14TlatX%2FmdcGU%2FBLxVxOhtegy7xqN18R40AiqkmLFrfO697CKXUSTRQ3P6GqMGLk81B3lhbQDkv2koTpQLkCRvU6RtVGo42hCdf2%2BAlE%2BrqdNLK9L%2B7%2BPjkAc0QmzTNrA1wA5czUTLXsch1%2B%2BMRQhuEJG7o3GED6DqWsNhNP9JXOJeHSmG%2FlqcjETCrvS2ZmjaAMiz1%2BgKPgSDDPXy%2BQLM3dab2LB8UDL3FHVWp94I911ZFsQ%3D%3D",
+                    "isPublic": true
+                }
+            ]
+        },
+        "_id": "6977c3e7d1f247689687194a",
+        "model": "Model 5",
+        "modelNumber": "5",
+        "price": 2000,
+        "balconies": [
+            {
+                "images": {
+                    "_comment": "exteriores modelo 5 con balcon",
+                    "exterior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/ca5f5940fe805ab18127de80787321211773149246132.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=F7apzuasbKiEzHuckuvVDoxbDfEfX7GyhufMoXAC3eWznicNUckuQggFem2G7fPOXvv2cs114XjWnz0KyXA78%2FnQO4NqXwMxXr0uZt6dJkt9fASo5L%2B2Kr0tSCP%2FymiveITi%2FxQT%2Fv9d%2Bvv5sl3%2BufV6LmD0w200E4Y47pX4FOzB2MF0G6KZXKXCC6eQn8G%2FRz8K15lpDd2b%2FJ8jwoUI86LHCQFl%2F5wOe2dbRupZrFcKhiPyfmyIWXMbF71ilrGOPzPL5TErhMQkfVPfQPBId3P%2FIImGnt%2BSBIBhkjLGJsBc5x%2FPDGUXoGiqyWEwdL30JURZ4FizR3kAo7TYCQGZ3Q%3D%3D",
+                            "isPublic": true
+                        }
+                    ],
+                    "_comment": "interiores basicos modelo 5 con balcon",
+                    "interior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/23abb244018a37ddce9acb08139eb9db1773154089182.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429608&Signature=RCqvmwZvdn%2B8mf7anNzUKe9tl%2BkKReFsRgCqiRQZkZ5BwIrxtkppIFpn84FQ7vSkJyltKz0nZwvImk39xIy7UqRcDlzAY8pVQwtzkY60fwdvdC3QMVn5zTsZP0bKQ9sTgxoIyhgD5PRdaKlgxH4ph1XZ7SesQMJk%2BDJuKGdIO%2B%2BZBQ0eyq6Kv8y%2F5R4nm%2FEHKthp1fH2n7e7SWT%2BqetdL5lYTmqVcDT1n0HBd%2BYr6gaAunfCvDQLpvN3S2D9gBvTRanBNMWaD30oWwOK74TjvgdrULrJu3i28pQxopuiZgtqnlHxIJHiTupsZ7BVKyoYLNbO%2F7CcxoyLRT%2BORp1mFQ%3D%3D",
+                            "isPublic": true
+                        }
+                    ]
+                },
+                "name": "Opción Balcón",
+                "price": 1000,
+                "description": "Balcón adicional para este modelo",
+                "sqft": 0,
+                "status": "active",
+                "_id": "69b3b6655feba30e316c50f5",
+                "createdAt": "2026-03-13T07:01:57.520Z",
+                "updatedAt": "2026-03-13T07:01:57.520Z"
+            }
+        ],
+        "upgrades": [
+            {
+                "images": {
+                    "_comment": "omitir",
+                    "exterior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/6b0342dfc2c20744ec639c46971c58071773164898444.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=nx8p7PEmLsTD1lnvu9hCNhBAtzaCxsfzOjTRIz4%2BUCRt3ENdiV5ehsgP%2BtvkS2LLukU3dh%2BwfmwcNfMJtnQ%2FR12ZYy329quw%2BI0R0lxSUxh4uNDpY5NrlbsEuFSPKzzdnqIGed0WFjPYU7GIZxb%2FvNmsTLicQfxnnP8FFBgOg76rQEpN6frpg9a508HUAslCbTZBoql9CLcToPjWOyNeWxDjJBgnCswZrks5nC4pENx3STT%2FsuaR%2B%2FZEGH3y1FIxFUM%2Fv1YVgkBpA%2Fm4mwomigZQNEuFXv%2FDeBDMOECW3Cf7DOpQ5X31KY7YZxQosfVOYIHu9cDUnezsHinBOhXqAg%3D%3D",
+                            "isPublic": true
+                        }
+                    ],
+                    "_comment": "interiores upgrade modelo 5",
+                    "interior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/393d07c0a19a67690b599063298b07791773164937762.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=AeSpxSZu9es5TI4%2BUXCnFnf%2FrK31N9jr3%2B9R1hzZ3OGsJ%2Bga34EfOkXOpmlHodVnLvuKiE%2FJ%2F1uO%2Bep%2BDJwWEwPJYV%2BPACxpV7taVuCvlSXuYuJQ4dnn2K15wm32hbmwXCQf2sbINZqjVV%2F0Ja5YSJJKXjKGeJdmlaMQw1LN1CClsMfvNbbfBJ4rS6E%2Fxm2v0%2B%2BoH%2FhNaPkvRbREZNxBR4sGpEUUoK0%2FlLJIZ8lXNs7w7gCQDGGU2WS3iirprvVaGBbmIuxVI6Pmig8KrhMoyubd4DBd3h%2F1C%2F4ApB4ylcUQZ%2Fyx1JQ2CX%2BxJ56762BCPXXnwFwE3pVMpi0%2F7NQwFQ%3D%3D",
+                            "isPublic": false
+                        }
+                    ]
+                },
+                "name": "Opción Upgrade",
+                "price": 1000,
+                "description": "Mejora premium para este modelo",
+                "features": [],
+                "status": "active",
+                "_id": "69b3b6655feba30e316c50f6",
+                "createdAt": "2026-03-13T07:01:57.520Z",
+                "updatedAt": "2026-03-13T07:01:57.520Z"
+            }
+        ],
+        "_comment": "omitir",
+        "storages": [
+            {
+                "images": {
+                    "exterior": [],
+                    "interior": []
+                },
+                "name": "Opción Bodega",
+                "price": 1000,
+                "description": "Espacio de bodega adicional",
+                "sqft": 0,
+                "status": "active",
+                "_id": "69b3b6655feba30e316c50f7",
+                "createdAt": "2026-03-13T07:01:57.520Z",
+                "updatedAt": "2026-03-13T07:01:57.520Z"
+            }
+        ],
+        "_comment": "informacion modelo 5",
+        "bedrooms": 3,
+        "bathrooms": 3,
+        "sqft": 1549,
+        "stories": 2,
+        "description": "",
+        "status": "active",
+        "createdAt": "2026-01-26T19:43:35.131Z",
+        "updatedAt": "2026-03-13T07:01:57.520Z",
+        "__v": 78,
+        "projectId": "69a73b414ed00531a69b6cbe",
+        "project": "69a73ce5b20401b061da6451"
+    },
+    {
+        "images": {
+            "_comment": "exteriores modelo 9 sin balcon",
+            "exterior": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/d24f9e17267642bef749bcb2fb44237e1773150084656.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=FIhU3KrmB91%2Fp2DCt4BTBRWWl%2FnD8yRWE6SKDdq6i105f6pEfKAosU5Q2WW2zNwjds%2FTFt5pnS%2BvkQkq9pi0OOz6HXJy920X%2Bq2ltup552q%2BHRJ2gZsJkAbql3sXETaB2c%2Bqn5gSsn%2BKs8Lm051t5HTErbJ8KWl%2Btnkvih1%2F5u0CpsJKMR9aRP2vOEZFdJXTAkpEh%2Bqzijipk7KCk%2F14n1UQ5u9d%2Bh1nebTb5TdRyJgmQnMpAko2rGuMKXeVR3Orwaluojv49aYLpW4OdIR9HgJc4zD0e3HohySqoKAuAG6%2F%2FJ7kRfNgHpFfBOYruAlAsEaJgAVPmSBdsh3ZHuKAMA%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "_comment": "interiores basicos modelo 9 sin balcon",
+            "interior": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/80b7270df24fd1640e83322742cdfd5c1773150734714.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=WFLRj75RmlTFtNDKXfIHN2Rg55jitYjtxgLhV%2F71CBjf3phywcFsOUwk0aArVmQTTcyNKvd5NM68RrdQSYWWt%2B2Xs6SA8rwR37QgIwYCtZW844DV4q%2BK4Dk9rzOdciIcOsQUzvzY1J6XAyLwxOZ1PF%2Fw6i3KV43cKnko1K4rGT3L0J8FCOgLAOoVEfV7sEPvyJROLhHvXexDst5%2FvW0vxUPdX5LyPXjk2yu9QCD3cxcedi%2FgOaVxeZoF12zz4p2xncnVaTjNYJWzBVq5dLF7sBXXxGwAB7CgWKRZkCXdvDol4uBTuQq61zUbbwNMDFOl1UvEwwL4VgfQIwaA5BXHKw%3D%3D",
+                    "isPublic": false
+                }
+            ]
+        },
+        "blueprints": {
+            "_comment": "planos modelo 9 sin balcon",
+            "default": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/dbc734f9ad7f74de83c1e3ddee1041ef1773152471624.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=PBHo8sz0rAzEPtD%2FvuE5VEfFsvvY%2B1OHRXMBRM13um94GS30BSSnheTCJCumaqw0YIYBd3Xovnsw8pEa%2FoCxG5bchfOvvDccCyp%2BKzI1YBtSoCpZVgxLkD0PNUo6Ce%2BVHLZ0zDWCb4V53RCnHgmivyNmXKRAdx4lew3%2F2VwS1pW6cmRq9SkeMy%2BNjDlnCy7HQhBZMG04aVAU%2BMIzBYWNAZqUWOxn%2BU2%2BA5HUF3gor5cRdFqvxOzhdHUdPWBwA8b%2Fx%2BLFptFMp6YkZBWi8kPvApU6HV95c7IaL6L6Y3qVrWKGRiMXP0e6ac7aJP46gRzgX5%2BE0KL63saKUzR1ksQ2Ow%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "_comment": "planos modelo 9 con balcon",
+            "withBalcony": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/f2aa3c588923b34e3e625413c381d0511773152454238.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=ESLgmzwSAlLYU8VgRl3ygUlDcXZBYwhCvyYgF6Day8UGBvtko3DkslTpfY9isJ2A0EDJ1ekoz4eNpWLR75LdHACAPZJY6X18%2FSo82In8YWOPQkEGu%2BXiAZXHyrvzrhi4WeS2TdvO599bdDqBCMGeJWY6Bjy4PSCP5Lw9Uascj%2B96FFC3t6l4oQOPg1tMhF2%2Bnr%2FGBeQ8uIe96XivZg2egwi%2Bc6L%2BpZJVH5ptUA5kZNCJ0KLdiEGCcBhZz29PMOOTZKuySaTxtkS4LGYMlMdIB81lWsq1s14rrLk0dudG8a1xdGHIrj3%2BJs730w7FqPL4oLsIfD7xwpbQSQRvmNEcRA%3D%3D",
+                    "isPublic": true
+                }
+            ],
+            "withStorage": [],
+            "_comment": "omitir",
+            "withBalconyAndStorage": [
+                {
+                    "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/f2aa3c588923b34e3e625413c381d0511773152454238.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=ESLgmzwSAlLYU8VgRl3ygUlDcXZBYwhCvyYgF6Day8UGBvtko3DkslTpfY9isJ2A0EDJ1ekoz4eNpWLR75LdHACAPZJY6X18%2FSo82In8YWOPQkEGu%2BXiAZXHyrvzrhi4WeS2TdvO599bdDqBCMGeJWY6Bjy4PSCP5Lw9Uascj%2B96FFC3t6l4oQOPg1tMhF2%2Bnr%2FGBeQ8uIe96XivZg2egwi%2Bc6L%2BpZJVH5ptUA5kZNCJ0KLdiEGCcBhZz29PMOOTZKuySaTxtkS4LGYMlMdIB81lWsq1s14rrLk0dudG8a1xdGHIrj3%2BJs730w7FqPL4oLsIfD7xwpbQSQRvmNEcRA%3D%3D",
+                    "isPublic": true
+                }
+            ]
+        },
+        "_id": "6977c547d1f2476896871969",
+        "model": "Model 9",
+        "modelNumber": "9",
+        "price": 3000,
+        "balconies": [
+            {
+                "images": {
+                    "_comment": "exteriores modelo 9 con balcon",
+                    "exterior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/d262847d9cbb1ef561f00055a732970e1773149844814.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=RD0vHW5Q5IQHUH7EcSvbRiVfxQY2vQavdpayYpAGfrIPbXXFE3kapak0K6jl2t77WNFDfSnMCKCJRFodedjQwOGQFmRAG%2BaKnjGXjqxOlzX5m2Q3Hp6jflTrV50nHXr38J7vRNPjstTAuM%2BJyDfEgaREhyZLO6UDvojK%2BgDzc5WtKVnACpXHmsRFHoNt%2FUEuxdCB7saGER%2B0IQkFQp83rhKImYtaZRhQr3qsUFoTGWtyT561a1EOnzCW%2BgLk%2F64xOFA5e6naKGXhTrrVkkIsD%2FoGbZCVGI5ZUbzSc%2Bz%2FkCstHqtenm5z7keNkh4vKBT7zKY1DhBickyaqvb4%2FNPfCg%3D%3D",
+                            "isPublic": true
+                        }
+                    ],
+                    "_comment": "interiores modelo 9 con balcon",
+                    "interior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/79f472ba526fde89e45e067984a3d8861773151550999.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=gshFa2K6092UYQw%2FpmRbnI%2FI19U4jwvytetJKuICUBjOLbQRw5kYrq75WPn7vldXP7vrCH6E%2FMy%2BW5hufjuZ%2FSg3RbCmPas1MkLYqUIeaTf8w1uOsYQ7iI3f7xiVuf409mlwXHl%2FnTtPWaTPYKfafjKjaNeIkMtsA7z3yiHI1XKW%2FDSOuU8qwb7jGXRSVaFNeJlh9PPGiJ8jTfjACOkGGnP2blvRTNgw4lCpks%2BzQ%2F7mpjDxexdfhS57SgC9Xm4KfpAizrjk6c%2Fw4iK4xwgE0%2BW0CAaff%2FJrqEPI%2BLC62rM%2FE4X%2BERmiErxxbETFLHCirpEWKJcaCNAvtdpQHFDdDA%3D%3D",
+                            "isPublic": false
+                        }
+                    ]
+                },
+                "name": "Opción Balcón",
+                "price": 1000,
+                "description": "Balcón adicional para este modelo",
+                "sqft": 0,
+                "status": "active",
+                "_id": "69b07151e9806004d8010c95",
+                "createdAt": "2026-03-10T19:30:25.160Z",
+                "updatedAt": "2026-03-12T18:01:02.276Z"
+            }
+        ],
+        "upgrades": [
+            {
+                "images": {
+                    "_comment": "omitir",
+                    "exterior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/c483d406f26133b1bb37e7436185a2201773167002449.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=iSIZhHQn0wzkx0JNBL%2BmJ9D%2BKG8%2FV3MSpEBim3Gr6PWrN7MFhv0yf5FbYCmSgLezN9xcvNH8IgD1AE0UCIyfnNOVVP8VMAIw1PXJZ%2FiL3IhqSf1wCVE7MYwl4VmbI5sdyc3ZWGbnCpP1i1%2Bbp2nK4nrNwJ4bh9FkkWg2718J8lhiYW5aiJTbMD1FMt42vsMaYFE5kKgKTbJx84kmxmF7ABm4Pc3z4K3fd7u8WyyVcOFO%2FSsziMgeVwvSu1QBzWbTnQNsyjb7FIHlwt01ebwD67bVDCYY6uGIoRKO6zjtNFjZ9GqJ1G6SUx6%2FyVfauDJEMjXiJwWV6gwcltf1L77mBg%3D%3D",
+                            "isPublic": false
+                        }
+                    ],
+                    "_comment": "interiores upgrade modelo 9",
+                    "interior": [
+                        {
+                            "url": "https://storage.googleapis.com/customer-service-7cc/pdn/models/69f7f82b9214019b411bcb720b9be44b1773167100504.jpg?GoogleAccessId=firebase-storage-centurions%40centurions-car-wash-442201.iam.gserviceaccount.com&Expires=1806429609&Signature=JeFYOFdNW%2FkBHMENaSlLEuKHznYlv8iQKYtSOELiJdTiz2H8DSFeCBgLXR064DvUjsveHNsN5rv5ihIScVKeqMwQIsttuFovYHDqAlbADSRZRt1JOgFD6zloab%2Bdm23TYAW9iH2S0VJffBQTFiX9X4eZTHFSqYNw5uokYsTqwFUQwhkGpOHngRMI%2BHYY1dSIvG%2BzK2X2HfYUggAf4Dc%2Byq4A7e37RKOPMTpcBC1hxKtOEdd4vmzJNoPMF%2BCwsQUvF4Oniex9AtVd88IzG3fG0%2BdpBR80V7rMErjuiybzmFmu3NtCvsHVUObEHyOcGiB%2BOG6yhwkMM7hhQpJpudJ7rw%3D%3D",
+                            "isPublic": false
+                        }
+                    ]
+                },
+                "name": "Opción Upgrade",
+                "price": 1000,
+                "description": "Mejora premium para este modelo",
+                "features": [],
+                "status": "active",
+                "_id": "69b07151e9806004d8010c96",
+                "createdAt": "2026-03-10T19:30:25.161Z",
+                "updatedAt": "2026-03-12T18:01:02.276Z"
+            }
+        ],
+        "_comment": "omitir",
+        "storages": [
+            {
+                "images": {
+                    "exterior": [],
+                    "interior": []
+                },
+                "name": "Opción Bodega",
+                "price": 1000,
+                "description": "Espacio de bodega adicional",
+                "sqft": 0,
+                "status": "active",
+                "_id": "69b07151e9806004d8010c97",
+                "createdAt": "2026-03-10T19:30:25.161Z",
+                "updatedAt": "2026-03-10T19:30:25.161Z"
+            }
+        ],
+        "_comment": "informacion modelo 9",
+        "bedrooms": 3,
+        "bathrooms": 3,
+        "sqft": 1921,
+        "stories": 2,
+        "description": "",
+        "status": "active",
+        "createdAt": "2026-01-26T19:49:27.046Z",
+        "updatedAt": "2026-03-12T18:01:02.276Z",
+        "__v": 51,
+        "project": "69a73ce5b20401b061da6451"
+    }
+]

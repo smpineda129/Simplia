@@ -1,6 +1,22 @@
 import app from './app.js';
 import { config } from './config/env.js';
-import { connectDB, disconnectDB } from './db/prisma.js';
+import { connectDB, disconnectDB, prisma } from './db/prisma.js';
+import { connectMongoDB, disconnectMongoDB } from './db/mongoose.js';
+
+const cleanupOldEvents = async () => {
+  try {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const result = await prisma.action_events.deleteMany({
+      where: { created_at: { lt: oneMonthAgo } },
+    });
+    if (result.count > 0) {
+      console.log(`🧹 Limpieza de eventos: ${result.count} registros eliminados (> 1 mes)`);
+    }
+  } catch (err) {
+    console.error('⚠️ Error en limpieza de eventos:', err.message);
+  }
+};
 
 // Serializar BigInt a String en JSON
 BigInt.prototype.toJSON = function() {
@@ -9,8 +25,13 @@ BigInt.prototype.toJSON = function() {
 
 const startServer = async () => {
   try {
-    // Conectar a la base de datos
+    // Conectar a las bases de datos
     await connectDB();
+    await connectMongoDB();
+
+    // Limpieza inicial + programar cada 24h
+    await cleanupOldEvents();
+    setInterval(cleanupOldEvents, 24 * 60 * 60 * 1000);
 
     // Iniciar servidor
     const server = app.listen(config.port, () => {
@@ -26,6 +47,7 @@ const startServer = async () => {
       server.close(async () => {
         console.log('Servidor HTTP cerrado');
         await disconnectDB();
+        await disconnectMongoDB();
         console.log('Conexión a base de datos cerrada');
         process.exit(0);
       });

@@ -11,9 +11,10 @@ import {
   Chip,
   IconButton,
 } from '@mui/material';
-import { Add, Edit, Delete, AccountTree } from '@mui/icons-material';
+import { Add, Edit, Delete, AccountTree, Visibility } from '@mui/icons-material';
 import { areaService } from '../../areas';
 import AreaModalForm from '../../areas/components/AreaModalForm';
+import AreaDetailModal from '../../areas/components/AreaDetailModal';
 import { companyService } from '../index';
 import { usePermissions } from '../../../hooks/usePermissions';
 
@@ -25,6 +26,7 @@ const CompanyAreas = ({ companyId }) => {
   const [selectedArea, setSelectedArea] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [companies, setCompanies] = useState([]);
+  const [detailAreaId, setDetailAreaId] = useState(null);
 
   useEffect(() => {
     loadAreas();
@@ -134,6 +136,9 @@ const CompanyAreas = ({ companyId }) => {
                     <Typography variant="h6">{area.name}</Typography>
                   </Box>
                   <Box>
+                    <IconButton size="small" onClick={() => setDetailAreaId(area.id)} title="Ver detalle">
+                      <Visibility fontSize="small" />
+                    </IconButton>
                     {hasPermission('area.update') && (
                       <IconButton size="small" onClick={() => handleEdit(area)}>
                         <Edit fontSize="small" />
@@ -152,7 +157,7 @@ const CompanyAreas = ({ companyId }) => {
                   </Typography>
                 )}
                 <Chip
-                  label={`${area._count?.users || 0} usuarios`}
+                  label={`${area._count?.areaUsers || 0} usuarios`}
                   size="small"
                   color="info"
                 />
@@ -161,6 +166,12 @@ const CompanyAreas = ({ companyId }) => {
           ))}
         </Grid>
       )}
+
+      <AreaDetailModal
+        open={!!detailAreaId}
+        areaId={detailAreaId}
+        onClose={() => setDetailAreaId(null)}
+      />
 
       <AreaModalForm
         open={openModal}

@@ -1,4 +1,7 @@
 import documentService from './document.service.js';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import s3, { BUCKET } from '../../config/storage.js';
+import { prisma } from '../../db/prisma.js';
 
 class DocumentController {
   async getAll(req, res) {
@@ -8,8 +11,8 @@ class DocumentController {
         req.query.companyId = req.user.companyId;
       }
 
-      const { search, companyId, proceedingId, page, limit } = req.query;
-      const result = await documentService.getAll({ search, companyId, proceedingId, page, limit });
+      const { search, companyId, proceedingId, correspondenceId, page, limit } = req.query;
+      const result = await documentService.getAll({ search, companyId, proceedingId, correspondenceId, page, limit });
 
       res.json({
         success: true,
@@ -72,6 +75,28 @@ class DocumentController {
         success: false,
         message: error.message,
       });
+    }
+  }
+
+  async upload(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No se proporcionó ningún archivo' });
+      }
+
+      const file = req.file;
+      res.json({
+        success: true,
+        data: {
+          url: file.location,
+          key: file.key,
+          originalName: file.originalname,
+          size: file.size,
+          mimeType: file.mimetype,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 

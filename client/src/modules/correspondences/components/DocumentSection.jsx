@@ -16,23 +16,105 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
-import { Add, Edit, Delete, InsertDriveFile, Download } from '@mui/icons-material';
+import { Add, Delete, InsertDriveFile, Download, Visibility, Close, OpenInNew } from '@mui/icons-material';
 import { documentService } from '../../documents';
-import DocumentModalForm from '../../documents/components/DocumentModalForm';
+import correspondenceService from '../services/correspondenceService';
+import { useAuth } from '../../../hooks/useAuth';
 
+const PREVIEWABLE_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+const getFileExt = (filename) => {
+  if (!filename) return '';
+  return filename.split('.').pop().toLowerCase();
+};
+
+const isPreviewable = (doc) => {
+  const name = doc.file_original_name || doc.name || doc.file || '';
+  return PREVIEWABLE_TYPES.includes(getFileExt(name));
+};
+
+const isImage = (doc) => {
+  const name = doc.file_original_name || doc.name || doc.file || '';
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(getFileExt(name));
+};
+
+// ── Preview Modal ────────────────────────────────────────────────────────────
+const PreviewModal = ({ doc, url, open, onClose, onDownload }) => {
+  const name = doc?.file_original_name || doc?.name || 'Documento';
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth
+      PaperProps={{ sx: { height: '90vh', display: 'flex', flexDirection: 'column' } }}
+    >
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          <InsertDriveFile color="primary" />
+          <Typography variant="subtitle1" noWrap title={name}>
+            {name}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+          <Tooltip title="Abrir en nueva pestaña">
+            <IconButton size="small" onClick={() => window.open(url, '_blank')}>
+              <OpenInNew fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Descargar">
+            <IconButton size="small" onClick={onDownload}>
+              <Download fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Cerrar">
+            <IconButton size="small" onClick={onClose}>
+              <Close fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent sx={{ flex: 1, p: 0, overflow: 'hidden' }}>
+        {isImage(doc) ? (
+          <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#111', p: 2 }}>
+            <img
+              src={url}
+              alt={name}
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+            />
+          </Box>
+        ) : (
+          <iframe
+            src={url}
+            title={name}
+            width="100%"
+            height="100%"
+            style={{ border: 'none', display: 'block' }}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ── Main Component ───────────────────────────────────────────────────────────
 const DocumentSection = ({ correspondenceId }) => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [companies, setCompanies] = useState([]);
-  const [proceedings, setProceedings] = useState([]);
+
+  // Preview state
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     loadDocuments();
-    loadCompanies();
   }, [correspondenceId]);
 
   const loadDocuments = async () => {
@@ -48,79 +130,89 @@ const DocumentSection = ({ correspondenceId }) => {
     }
   };
 
-  const loadCompanies = async () => {
-    try {
-      const { companyService } = await import('../../companies');
-      const response = await companyService.getAll({ limit: 100 });
-      setCompanies(response.data || []);
-    } catch (error) {
-      console.error('Error loading companies:', error);
-    }
-  };
-
-  const loadProceedings = async (companyId) => {
-    try {
-      const { proceedingService } = await import('../../proceedings');
-      const response = await proceedingService.getAll({ companyId, limit: 100 });
-      setProceedings(response.data || []);
-    } catch (error) {
-      console.error('Error loading proceedings:', error);
-    }
-  };
-
-  const handleCreate = () => {
-    setSelectedDocument(null);
-    setOpenModal(true);
-  };
-
-  const handleEdit = (document) => {
-    setSelectedDocument(document);
-    setOpenModal(true);
-  };
-
-  const handleSave = async (data) => {
-    try {
-      // Agregar correspondenceId a los datos
-      const documentData = {
-        ...data,
-        correspondenceId: parseInt(correspondenceId),
-      };
-
-      if (selectedDocument) {
-        await documentService.update(selectedDocument.id, documentData);
-        showSnackbar('Documento actualizado exitosamente');
-      } else {
-        await documentService.create(documentData);
-        showSnackbar('Documento creado exitosamente');
+  const fetchDocUrl = async (docId) => {
+    const response = await documentService.getById(docId);
+    const doc = response.data || response;
+    if (!doc?.url) {
+      if (doc?.fileExists === false) {
+        throw new Error('El archivo no está disponible en el almacenamiento.');
       }
-      setOpenModal(false);
+      throw new Error('No se pudo obtener la URL del documento.');
+    }
+    return doc.url;
+  };
+
+  const handlePreview = async (doc) => {
+    try {
+      setPreviewLoading(true);
+      const url = await fetchDocUrl(doc.id);
+      setPreviewDoc(doc);
+      setPreviewUrl(url);
+    } catch (error) {
+      showSnackbar(error.message, 'warning');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDownload = async (docId) => {
+    try {
+      const url = await fetchDocUrl(docId);
+      window.open(url, '_blank');
+    } catch (error) {
+      showSnackbar(error.message, 'warning');
+    }
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const uploadResponse = await correspondenceService.uploadDocument(file);
+      const { key, originalName } = uploadResponse.data;
+
+      await documentService.create({
+        name: originalName || file.name,
+        file: key,
+        medium: 'digital',
+        companyId: user?.companyId,
+        correspondenceId: parseInt(correspondenceId),
+      });
+
+      showSnackbar('Documento agregado exitosamente');
       loadDocuments();
     } catch (error) {
-      console.error('Error saving document:', error);
-      showSnackbar(error.response?.data?.message || 'Error al guardar el documento', 'error');
-      throw error;
+      console.error('Error uploading document:', error);
+      showSnackbar(error.response?.data?.message || 'Error al subir el documento', 'error');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (docId) => {
     if (!window.confirm('¿Está seguro de eliminar este documento?')) return;
 
     try {
-      await documentService.delete(id);
+      await documentService.delete(docId);
       showSnackbar('Documento eliminado exitosamente');
       loadDocuments();
     } catch (error) {
-      console.error('Error deleting document:', error);
       showSnackbar(error.response?.data?.message || 'Error al eliminar el documento', 'error');
     }
   };
 
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({ open: true, message, severity });
+  const getMediumLabel = (medium) => {
+    if (!medium) return 'digital';
+    const num = Number(medium);
+    if (!isNaN(num)) return num >= 1 ? 'digital' : 'físico';
+    return medium;
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
   };
 
   if (loading) {
@@ -138,11 +230,18 @@ const DocumentSection = ({ correspondenceId }) => {
           Documentos de la Correspondencia
         </Typography>
         <Button
+          component="label"
           variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
+          startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <Add />}
+          disabled={uploading}
         >
-          Agregar Documento
+          {uploading ? 'Subiendo...' : 'Agregar Documento'}
+          <input
+            type="file"
+            hidden
+            onChange={handleFileSelect}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+          />
         </Button>
       </Box>
 
@@ -152,8 +251,7 @@ const DocumentSection = ({ correspondenceId }) => {
             <TableHead>
               <TableRow>
                 <TableCell>NOMBRE</TableCell>
-                <TableCell>TIPO</TableCell>
-                <TableCell>EXPEDIENTE</TableCell>
+                <TableCell>MEDIO</TableCell>
                 <TableCell>FECHA</TableCell>
                 <TableCell align="right">ACCIONES</TableCell>
               </TableRow>
@@ -161,8 +259,8 @@ const DocumentSection = ({ correspondenceId }) => {
             <TableBody>
               {documents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    No hay documentos. Haz clic en "Agregar Documento" para crear uno.
+                  <TableCell colSpan={4} align="center">
+                    No hay documentos. Haz clic en "Agregar Documento" para subir uno.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -171,28 +269,41 @@ const DocumentSection = ({ correspondenceId }) => {
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <InsertDriveFile color="primary" />
-                        <strong>{doc.name}</strong>
+                        <Typography variant="body2" fontWeight={500}>
+                          {doc.file_original_name || doc.name}
+                        </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip label={doc.type || 'Documento'} size="small" />
+                      <Chip label={getMediumLabel(doc.medium)} size="small" />
                     </TableCell>
                     <TableCell>
-                      {doc.proceeding?.name || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(doc.createdAt).toLocaleDateString()}
+                      {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('es-ES') : '—'}
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Editar">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleEdit(doc)}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      {doc.file && isPreviewable(doc) && (
+                        <Tooltip title="Vista previa">
+                          <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() => handlePreview(doc)}
+                            disabled={previewLoading}
+                          >
+                            {previewLoading ? <CircularProgress size={16} /> : <Visibility fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {doc.file && (
+                        <Tooltip title="Descargar">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleDownload(doc.id)}
+                          >
+                            <Download fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                       <Tooltip title="Eliminar">
                         <IconButton
                           size="small"
@@ -211,23 +322,23 @@ const DocumentSection = ({ correspondenceId }) => {
         </TableContainer>
       </Paper>
 
-      <DocumentModalForm
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSave={handleSave}
-        document={selectedDocument}
-        companies={companies}
-        proceedings={proceedings}
-        onCompanyChange={loadProceedings}
-      />
+      {previewDoc && previewUrl && (
+        <PreviewModal
+          doc={previewDoc}
+          url={previewUrl}
+          open={Boolean(previewDoc && previewUrl)}
+          onClose={() => { setPreviewDoc(null); setPreviewUrl(''); }}
+          onDownload={() => handleDownload(previewDoc.id)}
+        />
+      )}
 
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

@@ -51,116 +51,30 @@ export const impersonateService = {
     },
 
     /**
-     * Verifica si un usuario puede personificar a otro
+     * Verifica si un usuario puede personificar (solo rol Owner)
      * @param {number} impersonatorId - ID del usuario que quiere personificar
-     * @param {number} targetUserId - ID del usuario a personificar
-     * @returns {Promise<{canImpersonate: boolean, reason?: string}>}
+     * @returns {Promise<void>} - Lanza ApiError si no puede
      */
-    async canImpersonate(impersonatorId, targetUserId) {
-        // 1. Verificar que el usuario objetivo existe
-        const targetUser = await prisma.user.findUnique({
-            where: { id: parseInt(targetUserId) },
-        });
-
-        if (!targetUser || targetUser.deletedAt) {
-            return {
-                canImpersonate: false,
-                reason: 'Usuario objetivo no encontrado o eliminado',
-            };
+    async assertCanImpersonate(impersonatorId) {
+        const level = await this.getUserLowestRoleLevel(impersonatorId);
+        if (level !== 1) {
+            throw new ApiError(403, 'Solo el rol Owner puede personificar usuarios');
         }
-
-        // 2. No puede personificarse a sí mismo
-        if (parseInt(impersonatorId) === parseInt(targetUserId)) {
-            return {
-                canImpersonate: false,
-                reason: 'No puedes personificarte a ti mismo',
-            };
-        }
-
-        // 3. Verificar que el impersonador tiene el permiso 'user.impersonate'
-        const hasPermission = await userRoleService.hasPermission(
-            impersonatorId,
-            'user.impersonate'
-        );
-
-        if (!hasPermission) {
-            return {
-                canImpersonate: false,
-                reason: 'No tienes el permiso user.impersonate',
-            };
-        }
-
-        // 4. Verificar niveles de rol y restricciones de empresa
-        const impersonatorLevel = await this.getUserLowestRoleLevel(impersonatorId);
-        const targetLevel = await this.getUserLowestRoleLevel(targetUserId);
-
-        // REGLA 1: Owner (Nivel 1) puede personificar a cualquiera siempre que tenga nivel 1,
-        // excepto a otro Owner (Nivel 1).
-        // Interpretación: Si soy Owner (Lvl 1), puedo personificar a cualquiera (Lvl 1, 2, 3...)
-        // pero si el objetivo es Lvl 1 y es Owner, no puedo.
-        if (impersonatorLevel === 1) {
-            // Verificar si el objetivo también es un Owner con Nivel 1
-            const targetRoles = await userRoleService.getUserRoles(targetUserId);
-            const isTargetOwnerLvl1 = targetRoles.some(r => 
-                (r.role_level === 1 || r.roleLevel === 1) && r.name === 'Owner'
-            );
-
-            if (isTargetOwnerLvl1) {
-                return {
-                    canImpersonate: false,
-                    reason: 'Un Owner no puede personificar a otro Owner de nivel 1',
-                };
-            }
-            return { canImpersonate: true };
-        }
-
-        // REGLA 2: Otros roles con permiso deben tener nivel menor (numéricamente) al objetivo y ser de la misma compañía
-        // Obtener datos de ambos para comparar compañía
-        const impersonator = await prisma.user.findUnique({
-            where: { id: parseInt(impersonatorId) },
-            select: { companyId: true }
-        });
-
-        const impCompanyId = impersonator?.companyId?.toString();
-        const targetCompanyId = targetUser?.companyId?.toString();
-
-        if (!impersonator || !targetCompanyId || impCompanyId !== targetCompanyId) {
-            return {
-                canImpersonate: false,
-                reason: 'Solo puedes personificar a usuarios de tu misma empresa',
-            };
-        }
-
-        if (impersonatorLevel >= targetLevel) {
-            return {
-                canImpersonate: false,
-                reason: 'No tienes suficiente nivel de privilegio para personificar a este usuario (tu nivel debe ser superior)',
-            };
-        }
-
-        return { canImpersonate: true };
     },
 
     /**
      * Inicia una sesión de personificación
      * @param {number} impersonatorId - ID del usuario que personifica
-     * @param {number} targetUserId - ID del usuario a personificar
+     * @param {string} targetEmail - Email del usuario a personificar
      * @returns {Promise<{accessToken: string, user: object}>}
      */
-    async startImpersonation(impersonatorId, targetUserId) {
-        // Verificar si puede personificar
-        const { canImpersonate, reason } = await this.canImpersonate(
-            impersonatorId,
-            targetUserId
-        );
+    async startImpersonation(impersonatorId, targetEmail) {
+        // Verificar que el impersonador es Owner
+        await this.assertCanImpersonate(impersonatorId);
 
-        if (!canImpersonate) {
-            throw new ApiError(403, reason || 'No puedes personificar a este usuario');
-        }
-
-        // Obtener datos del usuario objetivo
-        const targetUser = await prisma.user.findUnique({
-            where: { id: parseInt(targetUserId) },
+        // Buscar usuario objetivo por email
+        const targetUser = await prisma.user.findFirst({
+            where: { email: targetEmail, deletedAt: null },
             select: {
                 id: true,
                 email: true,
@@ -178,13 +92,29 @@ export const impersonateService = {
             },
         });
 
+        if (!targetUser) {
+            throw new ApiError(404, 'Usuario no encontrado');
+        }
+
+        if (parseInt(impersonatorId) === parseInt(targetUser.id)) {
+            throw new ApiError(400, 'No puedes personificarte a ti mismo');
+        }
+
+        // No permitir personificar a otro Owner
+        const targetRoles = await userRoleService.getUserRoles(parseInt(targetUser.id));
+        const isTargetOwnerLvl1 = targetRoles.some(r =>
+            (r.role_level === 1 || r.roleLevel === 1) && r.name === 'Owner'
+        );
+        if (isTargetOwnerLvl1) {
+            throw new ApiError(403, 'Un Owner no puede personificar a otro Owner');
+        }
+
         // Obtener roles y permisos del usuario objetivo
-        const roles = await userRoleService.getUserRoles(parseInt(targetUserId));
-        const permissions = await userRoleService.getUserPermissions(parseInt(targetUserId));
+        const permissions = await userRoleService.getUserPermissions(parseInt(targetUser.id));
 
         const userWithPermissions = {
             ...targetUser,
-            roles: roles.map(r => ({
+            roles: targetRoles.map(r => ({
                 name: r.name,
                 roleLevel: r.role_level || r.roleLevel
             })),
@@ -194,7 +124,7 @@ export const impersonateService = {
         // Generar token de personificación
         const accessToken = tokenService.generateImpersonationToken(
             impersonatorId,
-            targetUserId
+            targetUser.id
         );
 
         return {

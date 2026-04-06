@@ -6,7 +6,6 @@ class CorrespondenceController {
       const { search, status, correspondenceTypeId, page, limit } = req.query;
       let { companyId } = req.query;
 
-      // Enforce company scope
       if (req.user.companyId) {
         companyId = req.user.companyId;
       }
@@ -21,33 +20,28 @@ class CorrespondenceController {
         pagination: result.pagination,
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
   async getById(req, res) {
     try {
       const correspondence = await correspondenceService.getById(req.params.id);
-
-      res.json({
-        success: true,
-        data: correspondence,
-      });
+      res.json({ success: true, data: correspondence });
     } catch (error) {
-      res.status(404).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(404).json({ success: false, message: error.message });
     }
   }
 
   async create(req, res) {
     try {
-      const userId = req.user.userId; // Del middleware de autenticación
-      const correspondence = await correspondenceService.create(req.body, userId);
+      const userId = req.user.id;
+      // Inject companyId from auth context if user has one
+      const data = {
+        ...req.body,
+        companyId: req.user.companyId ? req.user.companyId : req.body.companyId,
+      };
+      const correspondence = await correspondenceService.create(data, userId);
 
       res.status(201).json({
         success: true,
@@ -55,49 +49,35 @@ class CorrespondenceController {
         data: correspondence,
       });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
   async update(req, res) {
     try {
       const correspondence = await correspondenceService.update(req.params.id, req.body);
-
       res.json({
         success: true,
         message: 'Correspondencia actualizada exitosamente',
         data: correspondence,
       });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
   async delete(req, res) {
     try {
       await correspondenceService.delete(req.params.id);
-
-      res.json({
-        success: true,
-        message: 'Correspondencia eliminada exitosamente',
-      });
+      res.json({ success: true, message: 'Correspondencia eliminada exitosamente' });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
   async createThread(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const thread = await correspondenceService.createThread(req.params.id, req.body, userId);
 
       res.status(201).json({
@@ -106,16 +86,22 @@ class CorrespondenceController {
         data: thread,
       });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  async deleteThread(req, res) {
+    try {
+      await correspondenceService.deleteThread(req.params.id, req.params.threadId);
+      res.json({ success: true, message: 'Hilo eliminado exitosamente' });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
   async respond(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const correspondence = await correspondenceService.respond(req.params.id, req.body, userId);
 
       res.json({
@@ -124,44 +110,59 @@ class CorrespondenceController {
         data: correspondence,
       });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
   async markAsDelivered(req, res) {
     try {
       const correspondence = await correspondenceService.markAsDelivered(req.params.id);
-
       res.json({
         success: true,
         message: 'Marcado como entregado físicamente',
         data: correspondence,
       });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
   async getStats(req, res) {
     try {
-      const { companyId } = req.query;
+      const companyId = req.user.companyId || req.query.companyId;
       const stats = await correspondenceService.getStats(companyId);
-
-      res.json({
-        success: true,
-        data: stats,
-      });
+      res.json({ success: true, data: stats });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getAreaUsers(req, res) {
+    try {
+      const { correspondenceTypeId } = req.query;
+      if (!correspondenceTypeId) {
+        return res.status(400).json({ success: false, message: 'correspondenceTypeId es requerido' });
+      }
+      const users = await correspondenceService.getAreaUsers(correspondenceTypeId);
+      res.json({ success: true, data: users });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getCompanyUsers(req, res) {
+    try {
+      let { companyId, type = 'internal' } = req.query;
+      if (req.user.companyId) {
+        companyId = req.user.companyId;
+      }
+      if (!companyId) {
+        return res.status(400).json({ success: false, message: 'companyId es requerido' });
+      }
+      const users = await correspondenceService.getCompanyUsers(companyId, type);
+      res.json({ success: true, data: users });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 }

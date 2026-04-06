@@ -70,8 +70,7 @@ export const usePermissions = () => {
     };
 
     /**
-     * Verifica si el usuario puede personificar a otro usuario
-     * Requiere el permiso 'user.impersonate'
+     * Verifica si el usuario puede personificar a otro usuario (solo rol Owner)
      * @param {object} targetUser - Usuario objetivo con roles
      * @returns {boolean}
      */
@@ -79,70 +78,24 @@ export const usePermissions = () => {
         if (!user || !targetUser) return false;
         if (user.id === targetUser.id) return false;
 
-        // Si ya está personificando, no permitir otra capa de personificación
-        if (user.impersonatorId || user.impersonator_id || user.isImpersonating) {
-            return false;
-        }
+        // No permitir personificación anidada
+        if (user.impersonatorId || user.impersonator_id) return false;
 
-        // Debe tener el permiso de personificación
-        if (!hasPermission('user.impersonate')) {
-            return false;
-        }
+        // Solo el rol Owner (roleLevel 1) puede personificar
+        const isOwner = user?.roles?.some(r =>
+            (typeof r === 'object' ? r.name : r) === 'Owner' ||
+            (typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null) === 1
+        );
+        if (!isOwner) return false;
 
-        const getLevel = (u) => {
-            let levels = [];
-            if (u.roles && Array.isArray(u.roles)) {
-                u.roles.forEach(r => {
-                    const l = typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null;
-                    const name = typeof r === 'object' ? r.name : r;
-                    
-                    // Solo permitir nivel 1 si el nombre del rol es 'Owner'
-                    if (l === 1 && name !== 'Owner') {
-                        levels.push(999); // Nivel no válido para no-owner
-                    } else if (l !== null && l !== undefined) {
-                        levels.push(l);
-                    }
-                });
-            }
-            // Fallbacks para roles estáticos si no hay niveles definidos
-            if (u.role === 'Owner') levels.push(1);
-            else if (u.role === 'ADMIN' || u.role === 'CompanyAdmin') levels.push(2);
+        // No permitir personificar a otro Owner
+        const isTargetOwner = targetUser?.roles?.some(r =>
+            (typeof r === 'object' ? r.name : r) === 'Owner' ||
+            (typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null) === 1
+        );
+        if (isTargetOwner) return false;
 
-            // IMPORTANTE: Asegurarnos de que si no hay roles definidos pero tiene el permiso, 
-            // el nivel sea alto (999) para que pueda ser personificado
-            if (levels.length === 0) return 999;
-            return Math.min(...levels);
-        };
-
-        const currentLvl = getLevel(user);
-        const targetLvl = getLevel(targetUser);
-
-        // REGLA 1: Owner (Nivel 1) puede personificar a cualquiera siempre que tenga nivel 1,
-        // excepto a otro Owner (Nivel 1).
-        if (currentLvl === 1) {
-            // Verificar si el objetivo es un Owner con nivel 1
-            const targetRoles = targetUser.roles || [];
-            const isTargetOwnerLvl1 = targetRoles.some(r => {
-                const l = typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null;
-                const name = typeof r === 'object' ? r.name : r;
-                return l === 1 && name === 'Owner';
-            });
-
-            if (isTargetOwnerLvl1) return false;
-            return true;
-        }
-
-        // REGLA 2: Otros roles con permiso deben tener nivel menor (numéricamente) al objetivo y ser de la misma compañía
-        const currentCompanyId = user.companyId?.toString();
-        const targetCompanyId = targetUser.companyId?.toString();
-
-        const sameCompany = currentCompanyId && targetCompanyId &&
-            currentCompanyId === targetCompanyId;
-
-        if (!sameCompany) return false;
-
-        // Verificar nivel superior (numéricamente menor)
-        return currentLvl < targetLvl;
+        return true;
     };
 
     return {

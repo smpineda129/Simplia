@@ -24,8 +24,7 @@ import {
 } from '@mui/icons-material';
 import { usePermissions } from '../../../hooks/usePermissions';
 import proceedingService from '../services/proceedingService';
-// Assuming userService or a dedicated service for external users
-import userService from '../../users/services/userService';
+import entityService from '../../entities/services/entityService';
 
 const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
   const { hasPermission } = usePermissions();
@@ -38,18 +37,10 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
     if (!searchTerm) return;
     setSearching(true);
     try {
-      // Mocking search for external users.
-      // Often external users are a specific role or a different table.
-      // For now, searching regular users as a placeholder.
-      const response = await userService.getAll(); // Should support params like { search: searchTerm, role: 'external' }
-      // Filter manually if needed or assume service handles it
-      const filtered = response.data.filter(u =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setSearchResults(filtered);
+      const response = await entityService.getAll({ search: searchTerm, limit: 10 });
+      setSearchResults(response.data || []);
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error('Error searching external users:', error);
     } finally {
       setSearching(false);
     }
@@ -59,10 +50,12 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
     try {
       await proceedingService.shareWithUser(proceedingId, user.id);
       setOpenSearch(false);
+      setSearchTerm('');
+      setSearchResults([]);
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error sharing with user:', error);
-      alert('Error al compartir con usuario.');
+      alert(error.response?.data?.message || 'Error al compartir con usuario.');
     }
   };
 
@@ -88,7 +81,7 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
         <TextField
           fullWidth
           size="small"
-          placeholder="Buscar..."
+          placeholder="Buscar usuario externo..."
           onClick={() => setOpenSearch(true)}
           InputProps={{
             startAdornment: (
@@ -107,7 +100,7 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
             sx={{ mt: 1 }}
             onClick={() => setOpenSearch(true)}
           >
-            Adjuntar Usuarios externo
+            Compartir con usuario externo
           </Button>
         )}
       </Box>
@@ -118,7 +111,7 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
             key={user.id}
             secondaryAction={
               hasPermission('proceeding.share') && (
-                <IconButton edge="end" aria-label="delete" onClick={() => handleDetach(user.id)}>
+                <IconButton edge="end" onClick={() => handleDetach(user.id)}>
                   <Delete color="error" />
                 </IconButton>
               )
@@ -128,14 +121,14 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
               <Share />
             </ListItemIcon>
             <ListItemText
-              primary={user.name}
-              secondary={user.email}
+              primary={`${user.name}${user.lastName ? ` ${user.lastName}` : ''}`}
+              secondary={[user.email, user.phone, user.city].filter(Boolean).join(' · ')}
             />
           </ListItem>
         ))}
         {users.length === 0 && (
           <Typography variant="body2" color="text.secondary" align="center">
-            Ningún recurso coincide con los criterios dados.
+            No hay usuarios externos con acceso a este expediente.
           </Typography>
         )}
       </List>
@@ -146,7 +139,7 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
           <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 1 }}>
             <TextField
               fullWidth
-              placeholder="Nombre, email..."
+              placeholder="Nombre, email, DNI..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -159,11 +152,14 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
             {searchResults.map((user) => (
               <ListItem key={user.id}>
                 <ListItemIcon>
-                   <Share />
+                  <Share />
                 </ListItemIcon>
-                <ListItemText primary={user.name} secondary={user.email} />
+                <ListItemText
+                  primary={`${user.name}${user.lastName ? ` ${user.lastName}` : ''}`}
+                  secondary={user.email}
+                />
                 <Button size="small" variant="outlined" onClick={() => handleAttach(user)}>
-                  Adjuntar
+                  Compartir
                 </Button>
               </ListItem>
             ))}

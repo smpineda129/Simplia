@@ -188,7 +188,9 @@ class TemplateService {
       '{correo}': data.destinatario?.correo || '',
       '{radicado_entrada}': data.correspondencia?.radicadoEntrada || '',
       '{radicado_salida}': data.correspondencia?.radicadoSalida || '',
-      '{firma}': data.usuario?.firma || '',
+      '{firma}': data.usuario?.firma
+        ? `<img src="${data.usuario.firma}" alt="Firma" style="max-height:80px;display:block;" />`
+        : '',
       '{mi_nombre}': data.usuario?.nombre || '',
       '{mi_correo}': data.usuario?.correo || '',
       '{mi_cargo}': data.usuario?.cargo || '',

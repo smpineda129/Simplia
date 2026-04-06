@@ -2,33 +2,33 @@ import { prisma } from '../../db/prisma.js';
 
 class EntityService {
   async getAll(filters = {}) {
-    const { search, companyId, categoryId, page = 1, limit = 10 } = filters;
-    const skip = (page - 1) * limit;
+    const { search, companyId, page = 1, limit = 10 } = filters;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {
       deletedAt: null,
-      ...(companyId && { companyId: parseInt(companyId) }),
-      ...(categoryId && { categoryId: parseInt(categoryId) }),
+      ...(companyId && { companyId: BigInt(companyId) }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
           { email: { contains: search, mode: 'insensitive' } },
+          { dni: { contains: search, mode: 'insensitive' } },
         ],
       }),
     };
 
     const [entities, total] = await Promise.all([
-      prisma.entity.findMany({
+      prisma.externalUser.findMany({
         where,
         skip,
         take: parseInt(limit),
         orderBy: { createdAt: 'desc' },
         include: {
           company: { select: { id: true, name: true, short: true } },
-          category: { select: { id: true, name: true } },
         },
       }),
-      prisma.entity.count({ where }),
+      prisma.externalUser.count({ where }),
     ]);
 
     return {
@@ -37,17 +37,16 @@ class EntityService {
         total,
         page: parseInt(page),
         limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / parseInt(limit)),
       },
     };
   }
 
   async getById(id) {
-    const entity = await prisma.entity.findFirst({
-      where: { id: parseInt(id), deletedAt: null },
+    const entity = await prisma.externalUser.findFirst({
+      where: { id: BigInt(id), deletedAt: null },
       include: {
-        company: true,
-        category: true,
+        company: { select: { id: true, name: true, short: true } },
       },
     });
 
@@ -59,19 +58,20 @@ class EntityService {
   }
 
   async create(data) {
-    const entity = await prisma.entity.create({
+    const entity = await prisma.externalUser.create({
       data: {
         name: data.name,
-        categoryId: parseInt(data.categoryId),
-        companyId: parseInt(data.companyId),
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        metadata: data.metadata || null,
+        lastName: data.lastName || null,
+        email: data.email || '',
+        phone: data.phone || null,
+        dni: data.dni || data.identification || null,
+        state: data.state || data.department || null,
+        city: data.city || null,
+        address: data.address || null,
+        ...(data.companyId && { companyId: BigInt(data.companyId) }),
       },
       include: {
-        company: true,
-        category: true,
+        company: { select: { id: true, name: true, short: true } },
       },
     });
 
@@ -79,27 +79,30 @@ class EntityService {
   }
 
   async update(id, data) {
-    const entity = await prisma.entity.findFirst({
-      where: { id: parseInt(id), deletedAt: null },
+    const entity = await prisma.externalUser.findFirst({
+      where: { id: BigInt(id), deletedAt: null },
     });
 
     if (!entity) {
       throw new Error('Entidad no encontrada');
     }
 
-    const updated = await prisma.entity.update({
-      where: { id: parseInt(id) },
+    const updated = await prisma.externalUser.update({
+      where: { id: BigInt(id) },
       data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        metadata: data.metadata,
-        ...(data.categoryId && { categoryId: parseInt(data.categoryId) }),
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.lastName !== undefined && { lastName: data.lastName || null }),
+        ...(data.email !== undefined && { email: data.email }),
+        ...(data.phone !== undefined && { phone: data.phone || null }),
+        ...(data.dni !== undefined && { dni: data.dni || null }),
+        ...(data.identification !== undefined && { dni: data.identification || null }),
+        ...(data.state !== undefined && { state: data.state || null }),
+        ...(data.department !== undefined && { state: data.department || null }),
+        ...(data.city !== undefined && { city: data.city || null }),
+        ...(data.address !== undefined && { address: data.address || null }),
       },
       include: {
-        company: true,
-        category: true,
+        company: { select: { id: true, name: true, short: true } },
       },
     });
 
@@ -107,42 +110,20 @@ class EntityService {
   }
 
   async delete(id) {
-    const entity = await prisma.entity.findFirst({
-      where: { id: parseInt(id), deletedAt: null },
+    const entity = await prisma.externalUser.findFirst({
+      where: { id: BigInt(id), deletedAt: null },
     });
 
     if (!entity) {
       throw new Error('Entidad no encontrada');
     }
 
-    await prisma.entity.update({
-      where: { id: parseInt(id) },
+    await prisma.externalUser.update({
+      where: { id: BigInt(id) },
       data: { deletedAt: new Date() },
     });
 
     return { message: 'Entidad eliminada correctamente' };
-  }
-
-  // Categories
-  async getAllCategories(companyId) {
-    return await prisma.entityCategory.findMany({
-      where: {
-        deletedAt: null,
-        ...(companyId && { companyId: parseInt(companyId) }),
-      },
-      include: {
-        _count: { select: { entities: true } },
-      },
-    });
-  }
-
-  async createCategory(data) {
-    return await prisma.entityCategory.create({
-      data: {
-        name: data.name,
-        companyId: parseInt(data.companyId),
-      },
-    });
   }
 }
 
