@@ -311,6 +311,7 @@ class ProceedingService {
           proceedingCode: record.proceeding.code,
           proceedingUrl,
           companyName: record.proceeding.company?.name || 'Simplia',
+          logoUrl: `${clientUrl}/Horizontal_Logo.jpeg`,
         });
 
         console.log('[ProceedingService] Calling emailService.send...');
@@ -350,11 +351,62 @@ class ProceedingService {
   // ─── Threads (Loans) ──────────────────────────────────────────────────────
 
   async createThread(proceedingId, data, userId) {
+    // Get proceeding data to replace helpers
+    const proceeding = await prisma.proceeding.findFirst({
+      where: { id: parseInt(proceedingId), deletedAt: null },
+      include: {
+        company: { select: { name: true } },
+      },
+    });
+
+    if (!proceeding) {
+      throw new Error('Expediente no encontrado');
+    }
+
+    // Get logged-in user data for all personal helpers
+    const loggedUser = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { id: true, name: true, email: true, phone: true },
+    });
+
+    // Process helpers in the reason field
+    let processedReason = data.reason || '';
+    
+    console.log('[ProceedingService] Original reason:', processedReason.substring(0, 200));
+    
+    // Split logged user name into parts
+    const nameParts = (loggedUser?.name || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    console.log('[ProceedingService] User data:', {
+      firstName,
+      lastName,
+      phone: loggedUser?.phone,
+      email: loggedUser?.email,
+      proceedingCode: proceeding.code
+    });
+
+    // Replace all helpers with logged-in user data (case insensitive, handle HTML entities)
+    processedReason = processedReason
+      .replace(/\{radicado_entrada\}/gi, proceeding.code || '')
+      .replace(/\{radicado_salida\}/gi, proceeding.code || '')
+      .replace(/\{nombre\}/gi, firstName)
+      .replace(/\{apellido\}/gi, lastName)
+      .replace(/\{dni\}/gi, loggedUser?.phone || '')
+      .replace(/\{correo\}/gi, loggedUser?.email || '')
+      .replace(/\{firma\}/gi, loggedUser?.name || '')
+      .replace(/\{mi_nombre\}/gi, firstName)
+      .replace(/\{mi_correo\}/gi, loggedUser?.email || '')
+      .replace(/\{mi_cargo\}/gi, '');
+
+    console.log('[ProceedingService] Processed reason:', processedReason.substring(0, 200));
+
     const thread = await prisma.proceedingThread.create({
       data: {
         proceedingId: parseInt(proceedingId),
         fromId: BigInt(userId),
-        reason: data.reason,
+        reason: processedReason,
         name: data.name,
         document: data.document,
         address: data.address || '',

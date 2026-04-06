@@ -115,9 +115,9 @@ const MainLayout = () => {
     {
       label: 'Diagnóstico',
       items: [
-        { text: 'Instrumentos', icon: <Assignment sx={{ fontSize: 18 }} />, path: '/surveys', permission: null },
-        { text: 'Resultados DX', icon: <InsertDriveFile sx={{ fontSize: 18 }} />, path: '/surveys/results', permission: null },
-        { text: 'Custodia Digital', icon: <Storage sx={{ fontSize: 18 }} />, path: '/custodia', permission: null },
+        { text: 'Instrumentos', icon: <Assignment sx={{ fontSize: 18 }} />, path: '/surveys', permission: null, ownerOnly: true },
+        { text: 'Resultados DX', icon: <InsertDriveFile sx={{ fontSize: 18 }} />, path: '/surveys/results', permission: null, ownerOnly: true },
+        { text: 'Custodia Digital', icon: <Storage sx={{ fontSize: 18 }} />, path: '/custodia', permission: null, ownerOnly: true },
       ],
     },
     {
@@ -126,8 +126,8 @@ const MainLayout = () => {
         { text: 'Permisos', icon: <VpnKey sx={{ fontSize: 18 }} />, path: '/permissions', permission: 'permission.view' },
         { text: 'Roles', icon: <Security sx={{ fontSize: 18 }} />, path: '/roles', permission: 'role.view' },
         { text: 'Usuarios', icon: <People sx={{ fontSize: 18 }} />, path: '/users', permission: 'user.view' },
-        { text: 'Soporte', icon: <ContactSupport sx={{ fontSize: 18 }} />, path: '/support', permission: null },
-        { text: 'Admin Tickets', icon: <Assignment sx={{ fontSize: 18 }} />, path: '/support/admin', permission: null },
+        { text: 'Soporte', icon: <ContactSupport sx={{ fontSize: 18 }} />, path: '/support', permission: null, ownerOnly: true },
+        { text: 'Admin Tickets', icon: <Assignment sx={{ fontSize: 18 }} />, path: '/support/admin', permission: null, ownerOnly: true },
       ],
     },
   ];
@@ -183,7 +183,9 @@ const MainLayout = () => {
       {/* Nav Groups */}
       <Box sx={{ flexGrow: 1, overflowY: 'auto', py: 2, px: 2 }}>
         {menuGroups.map((group) => {
-          const visibleItems = group.items.filter((item) => hasPermission(item.permission));
+          const visibleItems = group.items.filter((item) =>
+            hasPermission(item.permission) && (!item.ownerOnly || isOwner)
+          );
           if (visibleItems.length === 0) return null;
           return (
             <Box key={group.label} sx={{ mb: 1 }}>

@@ -92,8 +92,9 @@ const TemplateList = () => {
     if (window.confirm('¿Estás seguro de eliminar esta plantilla?')) {
       try {
         await templateService.delete(id);
+        setTemplates(prev => prev.filter(t => t.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Plantilla eliminada exitosamente', 'success');
-        loadTemplates();
       } catch (error) {
         showSnackbar('Error al eliminar plantilla', 'error');
       }
@@ -104,13 +105,17 @@ const TemplateList = () => {
     try {
       if (selectedTemplate) {
         await templateService.update(selectedTemplate.id, data);
+        setTemplates(prev => prev.map(t =>
+          t.id === selectedTemplate.id ? { ...t, ...data } : t
+        ));
         showSnackbar('Plantilla actualizada exitosamente', 'success');
       } else {
         await templateService.create(data);
         showSnackbar('Plantilla creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadTemplates();
       }
       setOpenModal(false);
-      loadTemplates();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar plantilla', 'error');
       throw error;
@@ -122,7 +127,7 @@ const TemplateList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (

@@ -74,7 +74,7 @@ const WarehouseList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
@@ -88,13 +88,17 @@ const WarehouseList = () => {
     try {
       if (selectedWarehouse) {
         await warehouseService.update(selectedWarehouse.id, data);
+        setWarehouses(prev => prev.map(w =>
+          w.id === selectedWarehouse.id ? { ...w, ...data } : w
+        ));
         showSnackbar('Bodega actualizada exitosamente', 'success');
       } else {
         await warehouseService.create(data);
         showSnackbar('Bodega creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadWarehouses();
       }
       setOpenModal(false);
-      loadWarehouses();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar bodega', 'error');
       throw error;

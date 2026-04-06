@@ -120,9 +120,9 @@ const CorrespondenceList = () => {
     if (window.confirm('¿Estás seguro de eliminar esta correspondencia?')) {
       try {
         await correspondenceService.delete(id);
+        setCorrespondences(prev => prev.filter(c => c.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Correspondencia eliminada exitosamente', 'success');
-        loadCorrespondences();
-        loadStats();
       } catch (error) {
         showSnackbar('Error al eliminar correspondencia', 'error');
       }
@@ -133,14 +133,18 @@ const CorrespondenceList = () => {
     try {
       if (selectedCorrespondence) {
         await correspondenceService.update(selectedCorrespondence.id, data);
+        setCorrespondences(prev => prev.map(c =>
+          c.id === selectedCorrespondence.id ? { ...c, ...data } : c
+        ));
         showSnackbar('Correspondencia actualizada exitosamente', 'success');
       } else {
         await correspondenceService.create(data);
         showSnackbar('Correspondencia creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadCorrespondences();
+        loadStats();
       }
       setOpenModal(false);
-      loadCorrespondences();
-      loadStats();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar correspondencia', 'error');
       throw error;
@@ -152,7 +156,7 @@ const CorrespondenceList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (

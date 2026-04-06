@@ -1,4 +1,5 @@
 import { authService } from './auth.service.js';
+import { userService } from '../users/user.service.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
 export const authController = {
@@ -47,5 +48,14 @@ export const authController = {
       success: true,
       message: 'Sesión cerrada exitosamente',
     });
+  }),
+
+  setPassword: asyncHandler(async (req, res) => {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token y contraseña son requeridos' });
+    }
+    const result = await userService.setPasswordWithToken(token, password);
+    res.status(200).json({ success: true, message: result.message });
   }),
 };

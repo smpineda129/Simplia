@@ -52,13 +52,17 @@ const RoleList = () => {
     try {
       if (selectedRole) {
         await roleService.update(selectedRole.id, data);
+        setRoles(prev => prev.map(r =>
+          r.id === selectedRole.id ? { ...r, ...data } : r
+        ));
         showSnackbar('Rol actualizado exitosamente');
       } else {
         await roleService.create(data);
         showSnackbar('Rol creado exitosamente');
+        if (page !== 1) setPage(1);
+        else loadRoles();
       }
       setOpenModal(false);
-      loadRoles();
     } catch (error) {
       console.error('Error saving role:', error);
       showSnackbar(error.response?.data?.error || 'Error al guardar rol', 'error');
@@ -71,8 +75,9 @@ const RoleList = () => {
 
     try {
       await roleService.delete(id);
+      setRoles(prev => prev.filter(r => r.id !== id));
+      setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
       showSnackbar('Rol eliminado exitosamente');
-      loadRoles();
     } catch (error) {
       console.error('Error deleting role:', error);
       showSnackbar(error.response?.data?.error || 'Error al eliminar rol', 'error');
@@ -89,7 +94,7 @@ const RoleList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleSearchChange = (event) => {

@@ -103,8 +103,9 @@ const RetentionList = () => {
     if (window.confirm('¿Estás seguro de eliminar esta tabla de retención?')) {
       try {
         await retentionService.delete(id);
+        setRetentions(prev => prev.filter(r => r.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Tabla de retención eliminada exitosamente', 'success');
-        loadRetentions();
       } catch (error) {
         showSnackbar('Error al eliminar tabla de retención', 'error');
       }
@@ -115,13 +116,17 @@ const RetentionList = () => {
     try {
       if (selectedRetention) {
         await retentionService.update(selectedRetention.id, data);
+        setRetentions(prev => prev.map(r =>
+          r.id === selectedRetention.id ? { ...r, ...data } : r
+        ));
         showSnackbar('Tabla de retención actualizada exitosamente', 'success');
       } else {
         await retentionService.create(data);
         showSnackbar('Tabla de retención creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadRetentions();
       }
       setOpenModal(false);
-      loadRetentions();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar tabla de retención', 'error');
       throw error;
@@ -133,7 +138,7 @@ const RetentionList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (

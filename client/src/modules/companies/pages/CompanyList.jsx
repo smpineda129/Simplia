@@ -57,8 +57,9 @@ const CompanyList = () => {
     if (window.confirm('¿Estás seguro de eliminar esta empresa?')) {
       try {
         await companyService.delete(id);
+        setCompanies(prev => prev.filter(c => c.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Empresa eliminada exitosamente', 'success');
-        loadCompanies();
       } catch (error) {
         showSnackbar('Error al eliminar empresa', 'error');
       }
@@ -69,13 +70,17 @@ const CompanyList = () => {
     try {
       if (selectedCompany) {
         await companyService.update(selectedCompany.id, data);
+        setCompanies(prev => prev.map(c =>
+          c.id === selectedCompany.id ? { ...c, ...data } : c
+        ));
         showSnackbar('Empresa actualizada exitosamente', 'success');
       } else {
         await companyService.create(data);
         showSnackbar('Empresa creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadCompanies();
       }
       setOpenModal(false);
-      loadCompanies();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar empresa', 'error');
       throw error;
@@ -87,7 +92,7 @@ const CompanyList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleSearchChange = (e) => {

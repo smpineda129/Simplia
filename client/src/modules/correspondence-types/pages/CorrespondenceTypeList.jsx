@@ -100,8 +100,9 @@ const CorrespondenceTypeList = () => {
     if (window.confirm('¿Estás seguro de eliminar este tipo de correspondencia?')) {
       try {
         await correspondenceTypeService.delete(id);
+        setTypes(prev => prev.filter(t => t.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Tipo de correspondencia eliminado exitosamente', 'success');
-        loadTypes();
       } catch (error) {
         showSnackbar('Error al eliminar tipo de correspondencia', 'error');
       }
@@ -112,13 +113,17 @@ const CorrespondenceTypeList = () => {
     try {
       if (selectedType) {
         await correspondenceTypeService.update(selectedType.id, data);
+        setTypes(prev => prev.map(t =>
+          t.id === selectedType.id ? { ...t, ...data } : t
+        ));
         showSnackbar('Tipo de correspondencia actualizado exitosamente', 'success');
       } else {
         await correspondenceTypeService.create(data);
         showSnackbar('Tipo de correspondencia creado exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadTypes();
       }
       setOpenModal(false);
-      loadTypes();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar tipo de correspondencia', 'error');
       throw error;
@@ -130,7 +135,7 @@ const CorrespondenceTypeList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (

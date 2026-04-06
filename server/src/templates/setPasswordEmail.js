@@ -1,10 +1,9 @@
-export const proceedingSharedEmailTemplate = ({
+export const setPasswordEmailTemplate = ({
   userName,
-  proceedingName,
-  proceedingCode,
-  proceedingUrl,
+  setPasswordUrl,
   companyName = 'Simplia',
   logoUrl = '',
+  expiresInHours = 48,
 }) => {
   const date = new Date().toLocaleDateString('es-CO', {
     year: 'numeric',
@@ -18,7 +17,7 @@ export const proceedingSharedEmailTemplate = ({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Expediente Compartido</title>
+  <title>Establece tu contraseña</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
 
@@ -51,7 +50,7 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-radius: 20px; padding: 6px 16px;">
                     <p style="margin: 0; color: #4F46E5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
-                      &#128193;&nbsp;&nbsp;Expediente Compartido
+                      &#128274;&nbsp;&nbsp;Configura tu acceso
                     </p>
                   </td>
                 </tr>
@@ -59,7 +58,7 @@ export const proceedingSharedEmailTemplate = ({
 
               <!-- Title + date -->
               <h1 style="margin: 0 0 8px; color: #1E293B; font-size: 22px; font-weight: 700; text-align: center; line-height: 1.3;">
-                Tienes acceso a un expediente
+                Bienvenido/a a ${companyName}
               </h1>
               <p style="margin: 0 0 32px; color: #94A3B8; font-size: 13px; text-align: center;">
                 ${date}
@@ -70,60 +69,38 @@ export const proceedingSharedEmailTemplate = ({
                 Hola <strong style="color: #1E293B;">${userName}</strong>,
               </p>
               <p style="margin: 0 0 28px; color: #334155; font-size: 15px; line-height: 1.7;">
-                Se te ha concedido acceso al siguiente expediente. Ya puedes consultar su información, documentos y actividad relacionada.
+                Tu cuenta ha sido creada en el Sistema de Gestión Documental de <strong>${companyName}</strong>. Para activar tu acceso, haz clic en el botón de abajo y establece tu contraseña personal.
               </p>
-
-              <!-- Info card -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="background-color: #F8FAFC; border-radius: 10px; border-left: 4px solid #2563EB; margin-bottom: 28px;">
-                <tr>
-                  <td style="padding: 20px 24px;">
-                    <p style="margin: 0 0 6px; color: #2563EB; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                      Expediente
-                    </p>
-                    <p style="margin: 0 0 14px; color: #1E293B; font-size: 16px; font-weight: 700; line-height: 1.4;">
-                      ${proceedingName}
-                    </p>
-                    <!-- Divider -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 0;">
-                      <tr><td style="border-top: 1px solid #E2E8F0; height: 1px; font-size: 0; line-height: 0;">&nbsp;</td></tr>
-                    </table>
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14px;">
-                      <tr>
-                        <td>
-                          <p style="margin: 0; color: #64748B; font-size: 13px;">
-                            <strong style="color: #475569;">Código:</strong>&nbsp;&nbsp;<span style="background-color: #DBEAFE; color: #1D4ED8; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${proceedingCode}</span>
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
 
               <!-- CTA Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 28px;">
                 <tr>
                   <td align="center" style="border-radius: 8px; background: linear-gradient(135deg, #2563EB 0%, #6366F1 100%);">
-                    <a href="${proceedingUrl}"
-                       style="display: block; padding: 13px 40px; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; white-space: nowrap; letter-spacing: 0.2px;">
-                      Ver Expediente &rarr;
+                    <a href="${setPasswordUrl}"
+                       style="display: block; padding: 14px 44px; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 15px; white-space: nowrap; letter-spacing: 0.2px;">
+                      Establecer mi contraseña &rarr;
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <!-- Note -->
+              <!-- Expiry note -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="background-color: #EFF6FF; border-radius: 8px; border: 1px solid #BFDBFE;">
+                     style="background-color: #FFF7ED; border-radius: 8px; border: 1px solid #FED7AA; margin-bottom: 20px;">
                 <tr>
                   <td style="padding: 14px 18px;">
-                    <p style="margin: 0; color: #1E40AF; font-size: 13px; line-height: 1.6;">
-                      Si no esperabas este acceso o crees que es un error, comunícate con el administrador del sistema.
+                    <p style="margin: 0; color: #9A3412; font-size: 13px; line-height: 1.6;">
+                      <strong>&#9888; Enlace temporal:</strong> Este enlace es válido por <strong>${expiresInHours} horas</strong>. Si no lo usas a tiempo, pide al administrador que envíe un nuevo enlace.
                     </p>
                   </td>
                 </tr>
               </table>
+
+              <!-- Fallback URL -->
+              <p style="margin: 0; color: #94A3B8; font-size: 12px; line-height: 1.6; text-align: center;">
+                ¿El botón no funciona? Copia y pega este enlace en tu navegador:<br/>
+                <span style="color: #2563EB; word-break: break-all;">${setPasswordUrl}</span>
+              </p>
 
             </td>
           </tr>

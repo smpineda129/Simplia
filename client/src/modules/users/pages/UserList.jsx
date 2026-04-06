@@ -57,7 +57,7 @@ const UserList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleOpenModal = (user = null) => {
@@ -79,16 +79,37 @@ const UserList = () => {
           delete updateData.password;
         }
         await userService.update(selectedUser.id, updateData);
+        setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, ...updateData } : u));
         showSnackbar('Usuario actualizado exitosamente');
       } else {
         // Crear
-        await userService.create(values);
-        showSnackbar('Usuario creado exitosamente');
+        const { sendSetPasswordEmail, ...payload } = values;
+        const created = await userService.create(payload);
+        if (sendSetPasswordEmail && created?.data?.id) {
+          try {
+            await userService.sendSetPasswordEmail(created.data.id);
+            showSnackbar('Usuario creado y email de invitación enviado');
+          } catch {
+            showSnackbar('Usuario creado (error al enviar email de invitación)', 'warning');
+          }
+        } else {
+          showSnackbar('Usuario creado exitosamente');
+        }
+        if (page !== 1) setPage(1);
+        else loadUsers();
       }
-      loadUsers();
       handleCloseModal();
     } catch (error) {
       throw error;
+    }
+  };
+
+  const handleSendSetPasswordEmail = async (userId) => {
+    try {
+      await userService.sendSetPasswordEmail(userId);
+      showSnackbar('Email de invitación enviado exitosamente');
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al enviar email', 'error');
     }
   };
 
@@ -99,8 +120,9 @@ const UserList = () => {
 
     try {
       await userService.delete(id);
+      setUsers(prev => prev.filter(u => u.id !== id));
+      setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
       showSnackbar('Usuario eliminado exitosamente');
-      loadUsers();
     } catch (error) {
       showSnackbar(
         error.response?.data?.message || 'Error al eliminar usuario',
@@ -138,6 +160,7 @@ const UserList = () => {
         users={users}
         onEdit={handleOpenModal}
         onDelete={handleDelete}
+        onSendSetPasswordEmail={handleSendSetPasswordEmail}
         loading={loading}
         canEdit={hasPermission('user.update')}
         canDelete={hasPermission('user.delete')}

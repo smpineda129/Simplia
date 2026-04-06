@@ -38,7 +38,7 @@ const PermissionList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleSearchChange = (event) => {

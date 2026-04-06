@@ -82,4 +82,9 @@ export const userController = {
     const url = await presignValue(key);
     res.json({ success: true, data: { url } });
   }),
+
+  sendSetPasswordEmail: asyncHandler(async (req, res) => {
+    const result = await userService.sendSetPasswordEmail(req.params.id);
+    res.json({ success: true, message: result.message });
+  }),
 };

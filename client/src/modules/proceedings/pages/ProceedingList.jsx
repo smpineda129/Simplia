@@ -102,8 +102,9 @@ const ProceedingList = () => {
     if (window.confirm('¿Estás seguro de eliminar este expediente?')) {
       try {
         await proceedingService.delete(id);
+        setProceedings(prev => prev.filter(p => p.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Expediente eliminado exitosamente', 'success');
-        loadProceedings();
       } catch (error) {
         showSnackbar('Error al eliminar expediente', 'error');
       }
@@ -114,13 +115,17 @@ const ProceedingList = () => {
     try {
       if (selectedProceeding) {
         await proceedingService.update(selectedProceeding.id, data);
+        setProceedings(prev => prev.map(p =>
+          p.id === selectedProceeding.id ? { ...p, ...data } : p
+        ));
         showSnackbar('Expediente actualizado exitosamente', 'success');
       } else {
         await proceedingService.create(data);
         showSnackbar('Expediente creado exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadProceedings();
       }
       setOpenModal(false);
-      loadProceedings();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar expediente', 'error');
       throw error;
@@ -132,7 +137,7 @@ const ProceedingList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (

@@ -19,7 +19,7 @@ import {
   InputLabel,
   InputAdornment,
 } from '@mui/material';
-import { Edit, Delete, Visibility, Face, Search } from '@mui/icons-material';
+import { Edit, Delete, Visibility, Face, Search, MarkEmailUnread } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useAuth } from '../../../hooks/useAuth';
@@ -34,7 +34,7 @@ const ROLE_OPTIONS = [
 ];
 
 const UserTable = ({
-  users, onEdit, onDelete, loading, canEdit, canDelete,
+  users, onEdit, onDelete, onSendSetPasswordEmail, loading, canEdit, canDelete,
   search, onSearchChange, roleFilter, onRoleFilterChange,
   pagination, page, onPageChange,
 }) => {
@@ -43,15 +43,12 @@ const UserTable = ({
   const { startImpersonation } = useAuth();
   const [impersonating, setImpersonating] = useState(null);
 
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'ADMIN':
-        return 'error';
-      case 'MANAGER':
-        return 'warning';
-      default:
-        return 'default';
-    }
+  const getRoleColor = (roleName) => {
+    if (!roleName) return 'default';
+    const name = roleName.toLowerCase();
+    if (name.includes('owner') || name.includes('super')) return 'error';
+    if (name.includes('admin')) return 'warning';
+    return 'primary';
   };
 
 
@@ -124,12 +121,24 @@ const UserTable = ({
                 <TableRow key={user.id} hover>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell className='max-w-[10vw]'>
-                    <Chip
-                      label={user.role}
-                      color={getRoleColor(user.role)}
-                      size="small"
-                    />
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {user.roles && user.roles.length > 0 ? (
+                        user.roles.map((r) => {
+                          const roleName = typeof r === 'object' ? r.name : r;
+                          return (
+                            <Chip
+                              key={roleName}
+                              label={roleName}
+                              color={getRoleColor(roleName)}
+                              size="small"
+                            />
+                          );
+                        })
+                      ) : (
+                        <Chip label={user.role || '—'} size="small" />
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     {new Date(user.createdAt).toLocaleDateString('es-ES')}
@@ -158,6 +167,18 @@ const UserTable = ({
                         <Visibility />
                       </IconButton>
                     </Tooltip>
+                    {canEdit && onSendSetPasswordEmail && (
+                      <Tooltip title="Enviar email para establecer contraseña">
+                        <IconButton
+                          aria-label="Enviar email de contraseña"
+                          color="default"
+                          onClick={() => onSendSetPasswordEmail(user.id)}
+                          size="small"
+                        >
+                          <MarkEmailUnread fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     {canEdit && (
                       <Tooltip title="Editar">
                         <IconButton

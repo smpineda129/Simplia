@@ -199,134 +199,136 @@ const UserProfile = () => {
       {tabIndex === 0 && (
         <>
           <Paper sx={{ p: 4, mb: 3 }}>
-            <Grid container spacing={3}>
-              {/* Avatar Section */}
-              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <Box sx={{ position: 'relative' }}>
-                  <Avatar
-                    src={avatarIsUrl ? currentAvatar : undefined}
-                    sx={{
-                      width: 120,
-                      height: 120,
-                      bgcolor: avatarIsUrl ? 'grey.200' : avatarConfig?.color,
-                      fontSize: '3rem',
-                    }}
-                  >
-                    {!avatarIsUrl && AvatarIcon && <AvatarIcon sx={{ fontSize: 64 }} />}
-                  </Avatar>
-                  {/* Upload real photo */}
-                  <input
-                    id="avatar-file-input"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    hidden
-                    onChange={handleAvatarFileUpload}
-                  />
-                  <Button
-                    component="label"
-                    htmlFor="avatar-file-input"
-                    variant="contained"
-                    size="small"
-                    disabled={uploadingAvatar}
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      right: -44,
-                      minWidth: 'auto',
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      p: 0,
-                    }}
-                    title="Subir foto"
-                  >
-                    <CloudUpload sx={{ fontSize: 20 }} />
-                  </Button>
-                  {/* Select icon avatar */}
-                  <Button
-                    variant="contained"
-                    size="small"
-                    color="secondary"
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      right: 0,
-                      minWidth: 'auto',
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      p: 0,
-                    }}
-                    onClick={() => setAvatarDialogOpen(true)}
-                    title="Elegir ícono"
-                  >
-                    <PhotoCamera sx={{ fontSize: 20 }} />
-                  </Button>
-                </Box>
-              </Grid>
+            <Grid container spacing={4}>
+              {/* Left Column: Avatar, Roles, Signature */}
+              <Grid item xs={12} md={4}>
+                <Box sx={{ 
+                  textAlign: 'center',
+                  p: 3,
+                  bgcolor: 'grey.50',
+                  borderRadius: 2,
+                  border: 1,
+                  borderColor: 'divider',
+                  height: '100%'
+                }}>
+                  {/* Avatar */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                    <Box sx={{ position: 'relative' }}>
+                      <Avatar
+                        src={avatarIsUrl ? currentAvatar : undefined}
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          bgcolor: avatarIsUrl ? 'grey.200' : avatarConfig?.color,
+                          fontSize: '3rem',
+                          boxShadow: 3,
+                        }}
+                      >
+                        {!avatarIsUrl && AvatarIcon && <AvatarIcon sx={{ fontSize: 64 }} />}
+                      </Avatar>
+                      {/* Upload real photo */}
+                      <input
+                        id="avatar-file-input"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        hidden
+                        onChange={handleAvatarFileUpload}
+                      />
+                      <Button
+                        component="label"
+                        htmlFor="avatar-file-input"
+                        variant="contained"
+                        size="small"
+                        disabled={uploadingAvatar}
+                        sx={{
+                          position: 'absolute',
+                          bottom: 0,
+                          right: -44,
+                          minWidth: 'auto',
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          p: 0,
+                          boxShadow: 2,
+                        }}
+                        title="Subir foto"
+                      >
+                        <CloudUpload sx={{ fontSize: 20 }} />
+                      </Button>
+                      {/* Select icon avatar */}
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="secondary"
+                        sx={{
+                          position: 'absolute',
+                          bottom: 0,
+                          right: 0,
+                          minWidth: 'auto',
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          p: 0,
+                          boxShadow: 2,
+                        }}
+                        onClick={() => setAvatarDialogOpen(true)}
+                        title="Elegir ícono"
+                      >
+                        <PhotoCamera sx={{ fontSize: 20 }} />
+                      </Button>
+                    </Box>
+                  </Box>
 
-              {/* User Info */}
-              <Grid item xs={12}>
-                <Typography variant="h5" align="center" gutterBottom>
-                  {user.name}
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-                  {(user.roles && user.roles.length > 0) ? (
-                    user.roles.map((role) => {
-                      const roleName = typeof role === 'object' ? role.name : role;
-                      return (
-                        <Chip
-                          key={roleName}
-                          label={roleName}
-                          size="small"
-                          color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
-                          variant="outlined"
-                        />
-                      );
-                    })
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Rol: {user.role || 'Usuario'}
-                    </Typography>
-                  )}
-                </Box>
-                <Typography variant="body2" color="text.secondary" align="center" gutterBottom>
-                  {user.email}
-                </Typography>
-                {user.company && (
-                  <Typography variant="body2" color="text.secondary" align="center">
-                    Empresa: {user.company.name}
+                  {/* User Name */}
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                    {user.name}
                   </Typography>
-                )}
-              </Grid>
+                  
+                  {/* Roles */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    {(user.roles && user.roles.length > 0) ? (
+                      user.roles.map((role) => {
+                        const roleName = typeof role === 'object' ? role.name : role;
+                        return (
+                          <Chip
+                            key={roleName}
+                            label={roleName}
+                            size="small"
+                            color={roleName === 'Owner' || roleName === 'SUPER_ADMIN' ? 'error' : roleName === 'ADMIN' ? 'warning' : 'primary'}
+                          />
+                        );
+                      })
+                    ) : (
+                      <Chip 
+                        label={user.role || 'Usuario'} 
+                        size="small" 
+                        color="primary"
+                      />
+                    )}
+                  </Box>
+                  
+                  {/* Email */}
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {user.email}
+                  </Typography>
+                  
+                  {/* Company */}
+                  {user.company && (
+                    <Chip 
+                      label={`${user.company.name}`} 
+                      size="small" 
+                      variant="outlined"
+                      sx={{ mt: 1, mb: 3 }}
+                    />
+                  )}
 
-              {/* User Details (Not Editing) */}
-              {!editing && (
-                <>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Teléfono
-                    </Typography>
-                    <Typography variant="body1">
-                      {user.phone || 'No especificado'}
-                    </Typography>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Idioma
-                    </Typography>
-                    <Typography variant="body1">
-                      {user.locale === 'es' ? 'Español' : user.locale === 'en' ? 'English' : 'No especificado'}
-                    </Typography>
-                  </Grid>
-
-                  {user.signature && (
-                    <Grid item xs={12}>
-                      <Typography variant="caption" color="text.secondary">
+                  {/* Signature */}
+                  {!editing && user.signature && (
+                    <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider', textAlign: 'left' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 1.5 }}>
                         Firma
                       </Typography>
-                      <Paper sx={{ p: 2, bgcolor: 'grey.50', mt: 1 }}>
+                      <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: 1, borderColor: 'divider' }}>
                         {isAvatarUrl(user.signature) ? (
                           <Box
                             component="img"
@@ -339,43 +341,79 @@ const UserProfile = () => {
                             {user.signature}
                           </Typography>
                         )}
-                      </Paper>
-                    </Grid>
+                      </Box>
+                    </Box>
                   )}
+                </Box>
+              </Grid>
 
+              {/* Right Column: Information Fields */}
+              <Grid item xs={12} md={8}>
+                <Grid container spacing={3}>
+
+              {/* User Details (Not Editing) */}
+              {!editing && (
+                <>
                   <Grid item xs={12} md={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Miembro desde
-                    </Typography>
-                    <Typography variant="body2">
-                      {new Date(user.createdAt).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </Typography>
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 1, border: 1, borderColor: 'divider', height: '100%' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                        Teléfono
+                      </Typography>
+                      <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
+                        {user.phone || 'No especificado'}
+                      </Typography>
+                    </Box>
                   </Grid>
 
-                  {user.updatedAt && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="caption" color="text.secondary">
-                        Última actualización
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 1, border: 1, borderColor: 'divider', height: '100%' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                        Idioma
                       </Typography>
-                      <Typography variant="body2">
-                        {new Date(user.updatedAt).toLocaleDateString('es-ES', {
+                      <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
+                        {user.locale === 'es' ? 'Español' : user.locale === 'en' ? 'English' : 'No especificado'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 1, border: 1, borderColor: 'divider', height: '100%' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                        Miembro desde
+                      </Typography>
+                      <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
+                        {new Date(user.createdAt).toLocaleDateString('es-ES', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                         })}
                       </Typography>
+                    </Box>
+                  </Grid>
+
+                  {user.updatedAt && (
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 1, border: 1, borderColor: 'divider', height: '100%' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                          Última actualización
+                        </Typography>
+                        <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
+                          {new Date(user.updatedAt).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </Typography>
+                      </Box>
                     </Grid>
                   )}
 
-                  <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                     <Button
-                      variant="outlined"
+                      variant="contained"
                       startIcon={<Edit />}
                       onClick={() => setEditing(true)}
+                      size="large"
                     >
                       Editar Perfil
                     </Button>
@@ -560,6 +598,8 @@ const UserProfile = () => {
                   </Grid>
                 </>
               )}
+                </Grid>
+              </Grid>
             </Grid>
           </Paper>
 

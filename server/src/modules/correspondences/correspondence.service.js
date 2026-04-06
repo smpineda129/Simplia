@@ -1,6 +1,7 @@
 import { prisma } from '../../db/prisma.js';
 import notificationService from '../notifications/notification.service.js';
 import emailService from '../../utils/emailService.js';
+import { correspondenceAssignedEmailTemplate } from '../../templates/correspondenceAssignedEmail.js';
 
 class CorrespondenceService {
   // Generar radicado automático
@@ -295,6 +296,39 @@ class CorrespondenceService {
       } catch (notifError) {
         console.error('Error al crear notificación:', notifError);
       }
+
+      // Send email notification
+      try {
+        const assignedUser = await prisma.user.findUnique({
+          where: { id: BigInt(data.assignedUserId) },
+          select: { id: true, name: true, email: true },
+        });
+
+        if (assignedUser?.email) {
+          const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+          const correspondenceUrl = `${clientUrl}/correspondences/${correspondence.id}`;
+
+          const emailHtml = correspondenceAssignedEmailTemplate({
+            userName: assignedUser.name,
+            correspondenceTitle: correspondence.title,
+            correspondenceRadicado: correspondence.in_settled,
+            correspondenceUrl,
+            assignedBy: 'Sistema',
+            companyName: correspondence.company?.name || 'Simplia',
+            logoUrl: `${clientUrl}/Horizontal_Logo.jpeg`,
+          });
+
+          await emailService.send({
+            to: assignedUser.email,
+            subject: `📋 Nueva correspondencia asignada: ${correspondence.title}`,
+            html: emailHtml,
+          });
+          
+          console.log(`[CorrespondenceService] ✅ Email sent to ${assignedUser.email}`);
+        }
+      } catch (emailError) {
+        console.error('[CorrespondenceService] ❌ Error sending email:', emailError);
+      }
     }
 
     return correspondence;
@@ -339,6 +373,39 @@ class CorrespondenceService {
         );
       } catch (notifError) {
         console.error('Error al crear notificación:', notifError);
+      }
+
+      // Send email notification
+      try {
+        const assignedUser = await prisma.user.findUnique({
+          where: { id: BigInt(data.assignedUserId) },
+          select: { id: true, name: true, email: true },
+        });
+
+        if (assignedUser?.email) {
+          const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+          const correspondenceUrl = `${clientUrl}/correspondences/${updated.id}`;
+
+          const emailHtml = correspondenceAssignedEmailTemplate({
+            userName: assignedUser.name,
+            correspondenceTitle: updated.title,
+            correspondenceRadicado: updated.in_settled,
+            correspondenceUrl,
+            assignedBy: 'Sistema',
+            companyName: updated.company?.name || 'Simplia',
+            logoUrl: `${clientUrl}/Horizontal_Logo.jpeg`,
+          });
+
+          await emailService.send({
+            to: assignedUser.email,
+            subject: `📋 Nueva correspondencia asignada: ${updated.title}`,
+            html: emailHtml,
+          });
+          
+          console.log(`[CorrespondenceService] ✅ Email sent to ${assignedUser.email}`);
+        }
+      } catch (emailError) {
+        console.error('[CorrespondenceService] ❌ Error sending email:', emailError);
       }
     }
 
@@ -523,22 +590,71 @@ class CorrespondenceService {
     // Send email to original sender if email is available
     try {
       let recipientEmail = null;
+      let corrUser = correspondence.correspondenceUser;
+
       if (correspondence.user_type === 'external' && correspondence.comments) {
         const parsed = typeof correspondence.comments === 'string'
           ? JSON.parse(correspondence.comments)
           : correspondence.comments;
         recipientEmail = parsed?.senderEmail;
-      } else if (correspondence.correspondenceUser?.email) {
-        recipientEmail = correspondence.correspondenceUser.email;
+      } else if (corrUser?.email) {
+        recipientEmail = corrUser.email;
       }
 
       if (recipientEmail) {
         const ccAddresses = Array.isArray(data.cc) ? data.cc : [];
+
+        let emailHtml;
+        if (data.templateId) {
+          // Fetch template and substitute all variables
+          const template = await prisma.template.findFirst({
+            where: { id: parseInt(data.templateId), deletedAt: null },
+            select: { content: true, title: true },
+          });
+
+          if (template?.content) {
+            const responder = await prisma.user.findUnique({
+              where: { id: BigInt(userId) },
+              select: { name: true, email: true, signature: true },
+            });
+
+            const today = new Date();
+            const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+            emailHtml = template.content
+              // Date variables
+              .replace(/\{fecha\}/g, today.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }))
+              .replace(/\{dia\}/g, today.getDate())
+              .replace(/\{mes\}/g, today.toLocaleString('es-ES', { month: 'long' }))
+              .replace(/\{ano\}/g, today.getFullYear())
+              // Radicado variables
+              .replace(/\{radicado_entrada\}/g, correspondence.in_settled || '')
+              .replace(/\{radicado_salida\}/g, updated.out_settled || '')
+              // Correspondent (remitente) variables
+              .replace(/\{nombre\}/g, corrUser?.name || '')
+              .replace(/\{apellido\}/g, corrUser?.lastName || '')
+              .replace(/\{dni\}/g, corrUser?.dni || corrUser?.documentNumber || '')
+              .replace(/\{correo\}/g, corrUser?.email || recipientEmail || '')
+              // Responding user variables
+              .replace(/\{mi_nombre\}/g, responder?.name || '')
+              .replace(/\{mi_correo\}/g, responder?.email || '')
+              .replace(/\{mi_cargo\}/g, '')
+              // Signature: replace with image if available, else empty
+              .replace(/\{firma\}/g, responder?.signature
+                ? `<img src="${responder.signature}" alt="Firma" style="max-height:80px;max-width:200px;" />`
+                : '');
+          }
+        }
+
+        if (!emailHtml) {
+          emailHtml = `<p>${data.response.replace(/\n/g, '<br>')}</p>`;
+        }
+
         await emailService.send({
           to: recipientEmail,
           cc: ccAddresses.length > 0 ? ccAddresses : undefined,
           subject: `Re: ${correspondence.title} [${updated.out_settled}]`,
-          html: `<p>${data.response.replace(/\n/g, '<br>')}</p>`,
+          html: emailHtml,
           text: data.response,
         });
       }

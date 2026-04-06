@@ -1,8 +1,12 @@
 import { prisma } from '../../db/prisma.js';
 import { ApiError } from '../../utils/ApiError.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import userRoleService from './userRole.service.js';
 import { presignUser } from '../../utils/s3Presign.js';
+import { config } from '../../config/env.js';
+import emailService from '../../utils/emailService.js';
+import { setPasswordEmailTemplate } from '../../templates/setPasswordEmail.js';
 
 export const userService = {
   getAll: async (filters = {}) => {
@@ -232,5 +236,68 @@ export const userService = {
     });
 
     return { message: 'Usuario eliminado exitosamente' };
+  },
+
+  sendSetPasswordEmail: async (userId) => {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { id: true, name: true, email: true, company: { select: { name: true } } },
+    });
+
+    if (!user) throw new ApiError(404, 'Usuario no encontrado');
+    if (!user.email) throw new ApiError(400, 'El usuario no tiene email registrado');
+
+    const token = jwt.sign(
+      { userId: user.id.toString(), purpose: 'set-password' },
+      config.jwt.secret,
+      { expiresIn: '48h' }
+    );
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const setPasswordUrl = `${clientUrl}/set-password?token=${token}`;
+    const companyName = user.company?.name || 'Simplia';
+
+    const emailHtml = setPasswordEmailTemplate({
+      userName: user.name,
+      setPasswordUrl,
+      companyName,
+      logoUrl: `${clientUrl}/Horizontal_Logo.jpeg`,
+      expiresInHours: 48,
+    });
+
+    await emailService.send({
+      to: user.email,
+      subject: `Establece tu contraseña — ${companyName}`,
+      html: emailHtml,
+    });
+
+    return { message: 'Email enviado exitosamente' };
+  },
+
+  setPasswordWithToken: async (token, newPassword) => {
+    let payload;
+    try {
+      payload = jwt.verify(token, config.jwt.secret);
+    } catch {
+      throw new ApiError(400, 'El enlace es inválido o ha expirado');
+    }
+
+    if (payload.purpose !== 'set-password') {
+      throw new ApiError(400, 'Token inválido');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(payload.userId) },
+    });
+
+    if (!user) throw new ApiError(404, 'Usuario no encontrado');
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: parseInt(payload.userId) },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Contraseña establecida exitosamente' };
   },
 };

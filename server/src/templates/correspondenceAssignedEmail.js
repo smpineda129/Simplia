@@ -1,8 +1,9 @@
-export const proceedingSharedEmailTemplate = ({
+export const correspondenceAssignedEmailTemplate = ({
   userName,
-  proceedingName,
-  proceedingCode,
-  proceedingUrl,
+  correspondenceTitle,
+  correspondenceRadicado,
+  correspondenceUrl,
+  assignedBy = 'Sistema',
   companyName = 'Simplia',
   logoUrl = '',
 }) => {
@@ -18,7 +19,7 @@ export const proceedingSharedEmailTemplate = ({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Expediente Compartido</title>
+  <title>Correspondencia Asignada</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
 
@@ -51,7 +52,7 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-radius: 20px; padding: 6px 16px;">
                     <p style="margin: 0; color: #4F46E5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
-                      &#128193;&nbsp;&nbsp;Expediente Compartido
+                      &#9993;&nbsp;&nbsp;Nueva Asignación
                     </p>
                   </td>
                 </tr>
@@ -59,7 +60,7 @@ export const proceedingSharedEmailTemplate = ({
 
               <!-- Title + date -->
               <h1 style="margin: 0 0 8px; color: #1E293B; font-size: 22px; font-weight: 700; text-align: center; line-height: 1.3;">
-                Tienes acceso a un expediente
+                Correspondencia Asignada
               </h1>
               <p style="margin: 0 0 32px; color: #94A3B8; font-size: 13px; text-align: center;">
                 ${date}
@@ -70,7 +71,7 @@ export const proceedingSharedEmailTemplate = ({
                 Hola <strong style="color: #1E293B;">${userName}</strong>,
               </p>
               <p style="margin: 0 0 28px; color: #334155; font-size: 15px; line-height: 1.7;">
-                Se te ha concedido acceso al siguiente expediente. Ya puedes consultar su información, documentos y actividad relacionada.
+                Se te ha asignado una nueva correspondencia que requiere tu atención. Por favor, revísala y toma las acciones necesarias.
               </p>
 
               <!-- Info card -->
@@ -79,20 +80,28 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="padding: 20px 24px;">
                     <p style="margin: 0 0 6px; color: #2563EB; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                      Expediente
+                      Correspondencia
                     </p>
-                    <p style="margin: 0 0 14px; color: #1E293B; font-size: 16px; font-weight: 700; line-height: 1.4;">
-                      ${proceedingName}
+                    <p style="margin: 0 0 16px; color: #1E293B; font-size: 16px; font-weight: 700; line-height: 1.4;">
+                      ${correspondenceTitle}
                     </p>
                     <!-- Divider -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 14px;">
                       <tr><td style="border-top: 1px solid #E2E8F0; height: 1px; font-size: 0; line-height: 0;">&nbsp;</td></tr>
                     </table>
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14px;">
+                    <!-- Radicado row -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td style="padding-bottom: 8px;">
+                          <p style="margin: 0; color: #64748B; font-size: 13px;">
+                            <strong style="color: #475569;">Radicado:</strong>&nbsp;&nbsp;<span style="background-color: #DBEAFE; color: #1D4ED8; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${correspondenceRadicado}</span>
+                          </p>
+                        </td>
+                      </tr>
                       <tr>
                         <td>
                           <p style="margin: 0; color: #64748B; font-size: 13px;">
-                            <strong style="color: #475569;">Código:</strong>&nbsp;&nbsp;<span style="background-color: #DBEAFE; color: #1D4ED8; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${proceedingCode}</span>
+                            <strong style="color: #475569;">Asignado por:</strong>&nbsp;&nbsp;${assignedBy}
                           </p>
                         </td>
                       </tr>
@@ -105,9 +114,9 @@ export const proceedingSharedEmailTemplate = ({
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 28px;">
                 <tr>
                   <td align="center" style="border-radius: 8px; background: linear-gradient(135deg, #2563EB 0%, #6366F1 100%);">
-                    <a href="${proceedingUrl}"
+                    <a href="${correspondenceUrl}"
                        style="display: block; padding: 13px 40px; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; white-space: nowrap; letter-spacing: 0.2px;">
-                      Ver Expediente &rarr;
+                      Ver Correspondencia &rarr;
                     </a>
                   </td>
                 </tr>
@@ -119,7 +128,7 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="padding: 14px 18px;">
                     <p style="margin: 0; color: #1E40AF; font-size: 13px; line-height: 1.6;">
-                      Si no esperabas este acceso o crees que es un error, comunícate con el administrador del sistema.
+                      Si tienes dudas sobre esta asignación, comunícate con tu supervisor o con el administrador del sistema.
                     </p>
                   </td>
                 </tr>

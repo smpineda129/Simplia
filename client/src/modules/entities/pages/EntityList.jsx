@@ -71,7 +71,7 @@ const EntityList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const [selectedEntity, setSelectedEntity] = useState(null);
@@ -90,8 +90,8 @@ const EntityList = () => {
     if (!window.confirm('¿Está seguro de eliminar este usuario externo?')) return;
     try {
       await entityService.delete(entityId);
+      setEntities(prev => prev.filter(e => e.id !== entityId));
       showSnackbar('Entidad eliminada exitosamente', 'success');
-      loadEntities();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al eliminar entidad', 'error');
     }
@@ -101,13 +101,17 @@ const EntityList = () => {
     try {
       if (selectedEntity) {
         await entityService.update(selectedEntity.id, data);
+        setEntities(prev => prev.map(e =>
+          e.id === selectedEntity.id ? { ...e, ...data } : e
+        ));
         showSnackbar('Entidad actualizada exitosamente', 'success');
       } else {
         await entityService.create(data);
         showSnackbar('Entidad creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadEntities();
       }
       setOpenModal(false);
-      loadEntities();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar entidad', 'error');
       throw error;

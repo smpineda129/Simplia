@@ -89,13 +89,15 @@ const DocumentList = () => {
     try {
       if (selectedDocument) {
         await documentService.update(selectedDocument.id, data);
+        setDocuments(prev => prev.map(d => d.id === selectedDocument.id ? { ...d, ...data } : d));
         showSnackbar('Documento actualizado exitosamente', 'success');
       } else {
         await documentService.create(data);
         showSnackbar('Documento creado exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadDocuments();
       }
       setOpenModal(false);
-      loadDocuments();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar documento', 'error');
       throw error;
@@ -107,7 +109,7 @@ const DocumentList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const formatFileSize = (bytes) => {

@@ -86,6 +86,11 @@ const userService = {
     });
     return response.data;
   },
+
+  sendSetPasswordEmail: async (id) => {
+    const response = await axiosInstance.post(`/users/${id}/send-set-password`);
+    return response.data;
+  },
 };
 
 export default userService;

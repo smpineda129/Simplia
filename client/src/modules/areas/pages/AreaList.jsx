@@ -80,8 +80,9 @@ const AreaList = () => {
     if (window.confirm('¿Estás seguro de eliminar esta área?')) {
       try {
         await areaService.delete(id);
+        setAreas(prev => prev.filter(a => a.id !== id));
+        setPagination(prev => prev ? { ...prev, total: (prev.total || 1) - 1 } : prev);
         showSnackbar('Área eliminada exitosamente', 'success');
-        loadAreas();
       } catch (error) {
         showSnackbar('Error al eliminar área', 'error');
       }
@@ -92,13 +93,17 @@ const AreaList = () => {
     try {
       if (selectedArea) {
         await areaService.update(selectedArea.id, data);
+        setAreas(prev => prev.map(a =>
+          a.id === selectedArea.id ? { ...a, ...data } : a
+        ));
         showSnackbar('Área actualizada exitosamente', 'success');
       } else {
         await areaService.create(data);
         showSnackbar('Área creada exitosamente', 'success');
+        if (page !== 1) setPage(1);
+        else loadAreas();
       }
       setOpenModal(false);
-      loadAreas();
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al guardar área', 'error');
       throw error;
@@ -110,7 +115,7 @@ const AreaList = () => {
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleSearchChange = (e) => {

@@ -139,4 +139,13 @@ router.post('/logout', authenticate, authController.logout);
 import { impersonateController } from '../users/impersonate.controller.js';
 router.post('/leave-impersonation', authenticate, impersonateController.leaveImpersonation);
 
+/**
+ * @swagger
+ * /api/auth/set-password:
+ *   post:
+ *     summary: Establecer contraseña mediante token de invitación
+ *     tags: [Auth]
+ */
+router.post('/set-password', authController.setPassword);
+
 export default router;

@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
 import LoginPage from './modules/auth/pages/LoginPage';
 import ForbiddenPage from './modules/auth/pages/ForbiddenPage';
+import SetPassword from './modules/auth/pages/SetPassword';
 import DashboardPage from './modules/dashboard/pages/DashboardPage';
 import { UserList, UserProfile, UserProfileView } from './modules/users';
 import { CompanyList } from './modules/companies';
@@ -83,6 +84,9 @@ function App() {
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/403" element={<ForbiddenPage />} />
         </Route>
+
+        {/* Establecer contraseña (pública, sin layout) */}
+        <Route path="/set-password" element={<SetPassword />} />
 
         {/* Rutas protegidas */}
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>

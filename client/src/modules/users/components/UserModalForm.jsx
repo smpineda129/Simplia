@@ -12,8 +12,12 @@ import {
   MenuItem,
   InputAdornment,
   IconButton,
+  FormControlLabel,
+  Checkbox,
+  Divider,
+  Typography,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Email } from '@mui/icons-material';
 import { userSchema } from '../schemas/userSchema';
 import { useAuth } from '../../../hooks/useAuth';
 import companyService from '../../companies/services/companyService';
@@ -22,6 +26,7 @@ import roleService from '../../roles/services/roleService';
 const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [sendInvite, setSendInvite] = useState(false);
   const { user, isOwner } = useAuth();
   const [companies, setCompanies] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -72,16 +77,18 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       setError('');
-      // Convert empty string companyId back to null for API
       const payload = { ...values };
-      if (payload.companyId === '') {
-        payload.companyId = null;
-      }
-      
-      // Convert role to roleId for backend
+      if (payload.companyId === '') payload.companyId = null;
+
       if (payload.role) {
         payload.roleId = parseInt(payload.role);
-        delete payload.role; // Remove role field, backend uses roleId
+        delete payload.role;
+      }
+
+      // If send invite: set random password, flag for post-create email
+      if (!isEditing && sendInvite) {
+        payload.password = Math.random().toString(36).slice(-10) + 'A1!';
+        payload.sendSetPasswordEmail = true;
       }
 
       await onSubmit(payload);
@@ -130,28 +137,50 @@ const UserModalForm = ({ open, onClose, onSubmit, initialValues, isEditing }) =>
                   helperText={touched.email && errors.email}
                 />
 
-                <Field
-                  as={TextField}
-                  name="password"
-                  label={isEditing ? 'Nueva Contraseña (opcional)' : 'Contraseña'}
-                  type={showPassword ? 'text' : 'password'}
-                  fullWidth
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                {!isEditing && (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={sendInvite}
+                        onChange={(e) => setSendInvite(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Email fontSize="small" color="primary" />
+                        <Typography variant="body2">
+                          Enviar email para que el usuario establezca su contraseña
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                )}
+
+                {(!sendInvite || isEditing) && (
+                  <Field
+                    as={TextField}
+                    name="password"
+                    label={isEditing ? 'Nueva Contraseña (opcional)' : 'Contraseña'}
+                    type={showPassword ? 'text' : 'password'}
+                    fullWidth
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
 
                 <Field
                   as={TextField}

@@ -107,7 +107,7 @@ const NotificationPanel = () => {
   return (
     <>
       <Tooltip title="Notificaciones">
-        <IconButton color="inherit" onClick={handleOpen}>
+        <IconButton onClick={handleOpen} sx={{ color: 'text.secondary' }}>
           <Badge badgeContent={unreadCount} color="error" max={99}>
             <NotificationsIcon />
           </Badge>

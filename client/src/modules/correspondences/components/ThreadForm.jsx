@@ -53,9 +53,8 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
 
   const loadTemplates = async () => {
     try {
-      const params = companyId ? { companyId } : {};
-      const response = await templateService.getAll(params);
-      setTemplates(response.data || []);
+      const response = await templateService.getAll({ limit: 100 });
+      setTemplates(response.templates || response.data || []);
     } catch (err) {
       console.error('Error loading templates:', err);
     }
@@ -69,17 +68,11 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
     }
     try {
       const response = await templateService.getById(templateId);
-      const raw = response.data?.content || '';
+      const raw = response.data?.content || response.template?.content || '';
 
-      const today = new Date();
-      const withDates = raw
-        .replace(/\{fecha\}/g, today.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }))
-        .replace(/\{dia\}/g, today.getDate())
-        .replace(/\{mes\}/g, today.toLocaleString('es-ES', { month: 'long' }))
-        .replace(/\{ano\}/g, today.getFullYear());
-
+      // Show a plain-text preview in the message field (user can edit)
       const div = document.createElement('div');
-      div.innerHTML = withDates
+      div.innerHTML = raw
         .replace(/<img[^>]*>/gi, '')
         .replace(/<\/p>/gi, '\n')
         .replace(/<\/h[1-6]>/gi, '\n')
@@ -109,6 +102,9 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
       if (isReply && cc) {
         payload.cc = cc.split(',').map(e => e.trim()).filter(Boolean);
       }
+      if (isReply && selectedTemplateId) {
+        payload.templateId = selectedTemplateId;
+      }
       await onSave(payload);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al guardar el hilo');
@@ -130,7 +126,7 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
           </Alert>
         )}
 
-        {isReply && templates.length > 0 && (
+        {isReply && (
           <TextField
             select
             label="Usar plantilla (opcional)"
@@ -138,6 +134,8 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
             value={selectedTemplateId}
             onChange={(e) => handleTemplateSelect(e.target.value)}
             sx={{ mb: 2 }}
+            disabled={templates.length === 0}
+            helperText={templates.length === 0 ? 'No hay plantillas disponibles' : ''}
           >
             <MenuItem value="">— Sin plantilla —</MenuItem>
             {templates.map((t) => (

@@ -356,6 +356,8 @@ router.post(
   userController.uploadAvatar
 );
 
+router.post('/:id/send-set-password', hasPermission('user.update'), userController.sendSetPasswordEmail);
+
 router.post(
   '/:id/upload-signature',
   isSelfOrHasPermission('user.update', 'id'),
