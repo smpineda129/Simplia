@@ -7,13 +7,16 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --watchAll=false",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "prisma:migrate": "npx prisma migrate dev",
-    "prisma:generate": "npx prisma generate",
-    "prisma:studio": "npx prisma studio",
-    "prisma:seed": "node prisma/seed.js"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "prisma:migrate": "node_modules/.bin/prisma migrate dev",
+    "prisma:generate": "node_modules/.bin/prisma generate",
+    "prisma:push": "node_modules/.bin/prisma db push --accept-data-loss",
+    "prisma:studio": "node_modules/.bin/prisma studio",
+    "prisma:seed": "node prisma/seed.js",
+    "build": "npm install && npm run prisma:generate && node fix-duplicate-emails.js && npm run prisma:push"
   },
   "keywords": [
     "express",
@@ -29,7 +32,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1014.0",
     "@aws-sdk/s3-request-presigner": "^3.1014.0",
-    "@prisma/client": "^5.12.1",
+    "@prisma/client": "5.12.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -52,7 +55,7 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^3.1.0",
-    "prisma": "^5.12.1",
+    "prisma": "5.12.1",
     "supertest": "^7.0.0"
   }
 }
