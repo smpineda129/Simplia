@@ -7,6 +7,8 @@ const allowedOrigins = [
   'http://localhost:5175',
   'http://localhost:3000',
   process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+  'https://front-simplia.vercel.app',
 ].filter(Boolean);
 
 export const corsOptions = {
@@ -17,6 +19,8 @@ export const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.error(`CORS blocked origin: ${origin}`);
+      console.error(`Allowed origins: ${allowedOrigins.join(', ')}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
