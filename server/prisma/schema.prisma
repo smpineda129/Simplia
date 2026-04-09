@@ -204,6 +204,7 @@ model Correspondence {
   destination_area_id                              BigInt?
   attachments                                      Json?                     @db.Json
   correspondence_document                          correspondence_document[]
+  folders                                          CorrespondenceFolder[]
   threads                                          CorrespondenceThread[]
   company                                          Company                   @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   areas_correspondences_destination_area_idToareas Area?                     @relation("correspondences_destination_area_idToareas", fields: [destination_area_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_correspondences_destination")
@@ -523,6 +524,8 @@ model ExternalUser {
   companyId               BigInt?                  @map("company_id")
   password                String?                  @db.VarChar(255)
   rememberToken           String?                  @map("remember_token") @db.VarChar(100)
+  otpCode                 String?                  @map("otp_code") @db.VarChar(10)
+  otpExpiresAt            DateTime?                @map("otp_expires_at") @db.Timestamp(0)
   externalUserProceedings ExternalUserProceeding[]
   company                 Company?                 @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -777,14 +780,30 @@ model box_warehouse {
 }
 
 model correspondence_document {
-  id                BigInt         @id @default(autoincrement())
+  id                BigInt                  @id @default(autoincrement())
   correspondence_id BigInt
   document_id       BigInt
-  created_at        DateTime?      @db.Timestamp(0)
-  updated_at        DateTime?      @db.Timestamp(0)
-  deleted_at        DateTime?      @db.Timestamp(0)
-  correspondences   Correspondence @relation(fields: [correspondence_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  documents         Document       @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folder_id         BigInt?
+  created_at        DateTime?               @db.Timestamp(0)
+  updated_at        DateTime?               @db.Timestamp(0)
+  deleted_at        DateTime?               @db.Timestamp(0)
+  correspondences   Correspondence          @relation(fields: [correspondence_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents         Document                @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folder            CorrespondenceFolder?   @relation(fields: [folder_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model CorrespondenceFolder {
+  id               BigInt                    @id @default(autoincrement())
+  correspondenceId BigInt                    @map("correspondence_id")
+  name             String                    @db.VarChar(191)
+  s3Prefix         String?                   @map("s3_prefix") @db.VarChar(500)
+  createdAt        DateTime?                 @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime?                 @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt        DateTime?                 @map("deleted_at") @db.Timestamp(0)
+  correspondence   Correspondence            @relation(fields: [correspondenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents        correspondence_document[]
+
+  @@map("correspondence_folders")
 }
 
 model migrations {

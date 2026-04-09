@@ -4,6 +4,7 @@ import { createCompanyValidation, updateCompanyValidation } from './company.vali
 import { validate } from '../../middlewares/validate.js';
 import { authenticate } from '../../middlewares/auth.js';
 import { hasPermission } from '../../middlewares/permission.middleware.js';
+import upload from '../../middlewares/upload.js';
 
 const router = express.Router();
 
@@ -42,6 +43,14 @@ const router = express.Router();
  *       200:
  *         description: Lista de empresas
  */
+router.post('/upload-image', authenticate, hasPermission('company.update'), (req, res, next) => {
+  req.companyShort = 'branding';
+  next();
+}, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'No se recibió archivo' });
+  res.json({ success: true, data: { key: req.file.key, url: req.file.location } });
+});
+
 router.get('/', authenticate, hasPermission('company.view'), companyController.getAll);
 
 /**

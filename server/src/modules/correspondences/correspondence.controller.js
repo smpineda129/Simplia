@@ -165,6 +165,43 @@ class CorrespondenceController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
+
+  async exportExcel(req, res) {
+    try {
+      let { companyId } = req.query;
+      if (req.user.companyId) companyId = req.user.companyId;
+      await correspondenceService.exportExcel({ ...req.query, companyId }, res);
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async createFolder(req, res) {
+    try {
+      const folder = await correspondenceService.createFolder(req.params.id, req.body.name);
+      res.status(201).json({ success: true, data: folder });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  async getFolders(req, res) {
+    try {
+      const folders = await correspondenceService.getFolders(req.params.id);
+      res.json({ success: true, data: folders });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async deleteFolder(req, res) {
+    try {
+      await correspondenceService.deleteFolder(req.params.id, req.params.folderId);
+      res.json({ success: true, message: 'Carpeta eliminada correctamente' });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
 }
 
 export default new CorrespondenceController();

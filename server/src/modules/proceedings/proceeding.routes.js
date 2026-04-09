@@ -16,6 +16,7 @@ const router = express.Router();
  */
 
 router.get('/', authenticate, hasPermission('proceeding.view'), proceedingController.getAll);
+router.get('/export', authenticate, hasPermission('proceeding.view'), proceedingController.exportExcel);
 router.get('/:id', authenticate, hasPermission('proceeding.view'), proceedingController.getById);
 router.post('/', authenticate, hasPermission('proceeding.create'), createProceedingValidation, validate, proceedingController.create);
 router.put('/:id', authenticate, hasPermission('proceeding.update'), updateProceedingValidation, validate, proceedingController.update);

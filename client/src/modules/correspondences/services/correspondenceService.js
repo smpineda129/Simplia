@@ -73,6 +73,45 @@ const correspondenceService = {
     });
     return response.data;
   },
+
+  exportExcel: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.startDate) query.set('startDate', params.startDate);
+    if (params.endDate) query.set('endDate', params.endDate);
+    if (params.companyId) query.set('companyId', params.companyId);
+    if (params.search) query.set('search', params.search);
+    if (params.status) query.set('status', params.status);
+    const token = localStorage.getItem('accessToken');
+    const base = axiosInstance.defaults.baseURL || '/api';
+    const url = `${base}/correspondences/export?${query.toString()}`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.setAttribute('download', `Correspondencias_${Date.now()}.xlsx`);
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      });
+  },
+
+  // ─── Folders ─────────────────────────────────────────────────────────────
+
+  createFolder: async (correspondenceId, name) => {
+    const response = await axiosInstance.post(`/correspondences/${correspondenceId}/folders`, { name });
+    return response.data;
+  },
+
+  getFolders: async (correspondenceId) => {
+    const response = await axiosInstance.get(`/correspondences/${correspondenceId}/folders`);
+    return response.data;
+  },
+
+  deleteFolder: async (correspondenceId, folderId) => {
+    const response = await axiosInstance.delete(`/correspondences/${correspondenceId}/folders/${folderId}`);
+    return response.data;
+  },
 };
 
 export default correspondenceService;

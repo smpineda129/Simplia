@@ -1,6 +1,7 @@
 import { prisma } from '../../db/prisma.js';
 import emailService from '../../utils/emailService.js';
 import { proceedingSharedEmailTemplate } from '../../templates/proceedingSharedEmail.js';
+import ExcelJS from 'exceljs';
 
 class ProceedingService {
   async getAll(filters = {}) {
@@ -486,6 +487,94 @@ class ProceedingService {
       where: { id: record.id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  // ─── Export Excel ──────────────────────────────────────────────────────────
+
+  async exportExcel(filters = {}, res) {
+    const { startDate, endDate, companyId, search } = filters;
+
+    const where = {
+      deletedAt: null,
+      ...(companyId && { companyId: parseInt(companyId) }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { code: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
+      ...(startDate && endDate && {
+        startDate: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      }),
+    };
+
+    const proceedings = await prisma.proceeding.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 5000,
+      include: {
+        company: { select: { name: true } },
+        retentionLine: {
+          select: {
+            code: true,
+            series: true,
+            subseries: true,
+            retention: { select: { name: true } },
+          },
+        },
+        documentProceedings: {
+          where: { deletedAt: null },
+          include: {
+            document: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Inventario Expedientes');
+
+    worksheet.columns = [
+      { header: 'Código Expediente', key: 'code', width: 20 },
+      { header: 'Nombre Expediente', key: 'name', width: 40 },
+      { header: 'Código Serie', key: 'retentionCode', width: 18 },
+      { header: 'Documentos', key: 'documents', width: 50 },
+      { header: 'Fecha Inicio', key: 'startDate', width: 15 },
+      { header: 'Fecha Fin', key: 'endDate', width: 15 },
+      { header: 'Estado Préstamo', key: 'loan', width: 18 },
+      { header: 'Empresa', key: 'company', width: 25 },
+    ];
+
+    proceedings.forEach(p => {
+      const docNames = p.documentProceedings.map(dp => dp.document?.name || '').filter(Boolean).join(', ');
+      worksheet.addRow({
+        code: p.code,
+        name: p.name,
+        retentionCode: p.retentionLine?.code || '',
+        documents: docNames,
+        startDate: p.startDate ? new Date(p.startDate).toLocaleDateString('es-ES') : '',
+        endDate: p.endDate ? new Date(p.endDate).toLocaleDateString('es-ES') : '',
+        loan: p.loan || 'custody',
+        company: p.company?.name || '',
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Expedientes_${Date.now()}.xlsx"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    await workbook.xlsx.write(res);
+    res.end();
   }
 }
 

@@ -85,7 +85,7 @@ export async function seedPermissions() {
     const permissionsConfig = [
         { model: 'role', actions: ['view', 'create', 'update', 'delete', 'attach-user', 'detach-user', 'attach-permission', 'detach-permission'] },
         { model: 'permission', actions: ['view', 'create', 'update', 'delete', 'attach-user', 'detach-user'] },
-        { model: 'document', actions: ['view', 'create', 'update', 'delete', 'show_deleted'] },
+        { model: 'document', actions: ['view', 'create', 'update', 'delete', 'show_deleted', 'dashboard'] },
         { model: 'area', actions: ['view', 'create', 'update', 'delete', 'attach-user', 'detach-user', 'attach-proceeding', 'detach-proceeding', 'add-retention'] },
         { model: 'warehouse', actions: ['view', 'create', 'update', 'delete', 'attach-box', 'detach-box'] },
         { model: 'box', actions: ['view', 'create', 'update', 'delete', 'attach-proceeding', 'detach-proceeding', 'attach-warehouse', 'detach-warehouse'] },

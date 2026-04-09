@@ -82,6 +82,29 @@ const proceedingService = {
     });
     return response.data;
   },
+
+  exportExcel: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.startDate) query.set('startDate', params.startDate);
+    if (params.endDate) query.set('endDate', params.endDate);
+    if (params.companyId) query.set('companyId', params.companyId);
+    if (params.search) query.set('search', params.search);
+    const token = localStorage.getItem('accessToken');
+    const base = axiosInstance.defaults.baseURL || '/api';
+    const url = `${base}/proceedings/export?${query.toString()}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', '');
+    // Attach token via fetch to handle auth
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        a.href = blobUrl;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      });
+  },
 };
 
 export default proceedingService;

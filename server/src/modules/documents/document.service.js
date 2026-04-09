@@ -17,12 +17,13 @@ class DocumentService {
     };
 
     // Filter by correspondenceId via junction table
+    let correspondenceLinks = null;
     if (correspondenceId) {
-      const linked = await prisma.correspondence_document.findMany({
-        where: { correspondence_id: BigInt(correspondenceId) },
-        select: { document_id: true },
+      correspondenceLinks = await prisma.correspondence_document.findMany({
+        where: { correspondence_id: BigInt(correspondenceId), deleted_at: null },
+        select: { document_id: true, folder_id: true },
       });
-      const docIds = linked.map(l => l.document_id);
+      const docIds = correspondenceLinks.map(l => l.document_id);
       where = { ...where, id: { in: docIds } };
     }
 
@@ -58,8 +59,16 @@ class DocumentService {
       prisma.document.count({ where }),
     ]);
 
+    // Attach folderId to each document when querying by correspondenceId
+    const enriched = correspondenceLinks
+      ? documents.map(doc => {
+          const link = correspondenceLinks.find(l => l.document_id === doc.id);
+          return { ...doc, folderId: link?.folder_id ? link.folder_id.toString() : null };
+        })
+      : documents;
+
     return {
-      documents,
+      documents: enriched,
       pagination: {
         total,
         page: parseInt(page),
@@ -127,6 +136,7 @@ class DocumentService {
         data: {
           correspondence_id: parseInt(data.correspondenceId),
           document_id: document.id,
+          ...(data.folderId && { folder_id: BigInt(data.folderId) }),
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -169,6 +179,80 @@ class DocumentService {
     });
 
     return { message: 'Documento eliminado correctamente' };
+  }
+
+  async getDashboard(filters = {}) {
+    const { companyId, startDate, endDate, retentionId } = filters;
+
+    const docWhere = {
+      deletedAt: null,
+      ...(companyId && { companyId: parseInt(companyId) }),
+    };
+
+    if (startDate && endDate) {
+      docWhere.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
+    }
+
+    const proceedingWhere = {
+      deletedAt: null,
+      ...(companyId && { companyId: parseInt(companyId) }),
+      ...(retentionId && { retentionLine: { is: { retentionId: parseInt(retentionId) } } }),
+    };
+
+    if (startDate && endDate) {
+      proceedingWhere.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
+    }
+
+    const [totalDocuments, totalProceedings, retentionGroups] = await Promise.all([
+      prisma.document.count({ where: docWhere }),
+      prisma.proceeding.count({ where: proceedingWhere }),
+      prisma.proceeding.groupBy({
+        by: ['retentionLineId'],
+        where: { deletedAt: null, ...(companyId && { companyId: parseInt(companyId) }) },
+        _count: { id: true },
+      }),
+    ]);
+
+    // Growth % if date range provided
+    let docGrowth = null;
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const periodMs = end - start;
+      const prevStart = new Date(start - periodMs);
+      const prevEnd = new Date(start);
+
+      const prevCount = await prisma.document.count({
+        where: {
+          ...docWhere,
+          createdAt: { gte: prevStart, lte: prevEnd },
+        },
+      });
+
+      docGrowth = prevCount === 0 ? null : Math.round(((totalDocuments - prevCount) / prevCount) * 100);
+    }
+
+    // Enrich retention groups
+    const retentionLineIds = retentionGroups
+      .filter(g => g.retentionLineId)
+      .map(g => g.retentionLineId);
+
+    const retentionLines = await prisma.retentionLine.findMany({
+      where: { id: { in: retentionLineIds } },
+      select: { id: true, series: true, code: true, retention: { select: { name: true } } },
+    });
+
+    const byRetention = retentionGroups.map(g => {
+      const line = retentionLines.find(r => r.id === g.retentionLineId);
+      return {
+        retentionLineId: g.retentionLineId,
+        name: line ? `${line.code} – ${line.series}` : 'Sin retención',
+        retentionName: line?.retention?.name || '',
+        count: g._count.id,
+      };
+    }).sort((a, b) => b.count - a.count);
+
+    return { totalDocuments, totalProceedings, docGrowth, byRetention };
   }
 }
 

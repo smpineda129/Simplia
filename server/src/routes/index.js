@@ -17,6 +17,7 @@ import notificationRoutes from '../modules/notifications/notification.routes.js'
 import auditRoutes from '../modules/audit/audit.routes.js';
 import ticketRoutes from '../modules/support-tickets/ticket.routes.js';
 import surveyRoutes from '../modules/surveys/survey.routes.js';
+import externalRoutes from '../modules/entities/external.routes.js';
 import publicRoutes from './public.routes.js';
 import { authenticate } from '../middlewares/auth.js';
 import { hasPermission } from '../middlewares/permission.middleware.js';
@@ -42,6 +43,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/audit', auditRoutes);
 router.use('/tickets', ticketRoutes);
 router.use('/surveys', surveyRoutes);
+router.use('/external', externalRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

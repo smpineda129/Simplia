@@ -123,7 +123,13 @@ const CorrespondenceDetail = () => {
 
   const handleReply = async (data) => {
     try {
-      await correspondenceService.respond(id, { response: data.message, cc: data.cc, templateId: data.templateId });
+      await correspondenceService.respond(id, {
+        response: data.message,
+        cc: data.cc,
+        templateId: data.templateId,
+        documentKey: data.documentKey,
+        documentName: data.documentName,
+      });
       showSnackbar('Respuesta enviada exitosamente');
       setOpenReplyModal(false);
       loadCorrespondence();

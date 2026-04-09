@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Formik, Form, Field } from 'formik';
 import {
   Dialog,
@@ -10,11 +10,36 @@ import {
   Grid,
   Box,
   Alert,
+  CircularProgress,
+  Typography,
 } from '@mui/material';
+import { CloudUpload } from '@mui/icons-material';
+import axiosInstance from '../../../api/axiosConfig';
 import { companySchema } from '../schemas/companySchema';
 
 const CompanyModalForm = ({ open, onClose, onSave, company }) => {
   const [error, setError] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingWatermark, setUploadingWatermark] = useState(false);
+  const logoInputRef = useRef(null);
+  const watermarkInputRef = useRef(null);
+
+  const uploadImage = async (file, fieldName, setValues, values) => {
+    const setter = fieldName === 'imageUrl' ? setUploadingLogo : setUploadingWatermark;
+    setter(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await axiosInstance.post('/companies/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setValues({ ...values, [fieldName]: res.data.data.key });
+    } catch (err) {
+      console.error('Error uploading image:', err);
+    } finally {
+      setter(false);
+    }
+  };
 
   const initialValues = {
     name: company?.name || '',
@@ -61,7 +86,7 @@ const CompanyModalForm = ({ open, onClose, onSave, company }) => {
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({ errors, touched, isSubmitting }) => (
+        {({ errors, touched, isSubmitting, values, setValues }) => (
           <Form>
             <DialogContent>
               {error && (
@@ -162,28 +187,62 @@ const CompanyModalForm = ({ open, onClose, onSave, company }) => {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
-                  <Field
-                    as={TextField}
-                    name="imageUrl"
-                    label="URL del Logo"
-                    fullWidth
-                    placeholder="https://ejemplo.com/logo.png"
-                    error={touched.imageUrl && Boolean(errors.imageUrl)}
-                    helperText={touched.imageUrl && errors.imageUrl}
-                  />
+                <Grid item xs={12} md={6}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>Logo</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        startIcon={uploadingLogo ? <CircularProgress size={16} /> : <CloudUpload />}
+                        disabled={uploadingLogo}
+                        onClick={() => logoInputRef.current?.click()}
+                        size="small"
+                      >
+                        Subir Logo
+                      </Button>
+                      {values.imageUrl && (
+                        <Typography variant="caption" color="success.main" noWrap sx={{ maxWidth: 180 }}>
+                          ✓ {values.imageUrl.split('/').pop()}
+                        </Typography>
+                      )}
+                    </Box>
+                    <input
+                      type="file"
+                      ref={logoInputRef}
+                      style={{ display: 'none' }}
+                      accept="image/*"
+                      onChange={(e) => e.target.files[0] && uploadImage(e.target.files[0], 'imageUrl', setValues, values)}
+                    />
+                  </Box>
                 </Grid>
 
-                <Grid item xs={12}>
-                  <Field
-                    as={TextField}
-                    name="watermarkUrl"
-                    label="URL de Marca de Agua"
-                    fullWidth
-                    placeholder="https://ejemplo.com/watermark.png"
-                    error={touched.watermarkUrl && Boolean(errors.watermarkUrl)}
-                    helperText={touched.watermarkUrl && errors.watermarkUrl}
-                  />
+                <Grid item xs={12} md={6}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>Marca de Agua</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        startIcon={uploadingWatermark ? <CircularProgress size={16} /> : <CloudUpload />}
+                        disabled={uploadingWatermark}
+                        onClick={() => watermarkInputRef.current?.click()}
+                        size="small"
+                      >
+                        Subir Marca de Agua
+                      </Button>
+                      {values.watermarkUrl && (
+                        <Typography variant="caption" color="success.main" noWrap sx={{ maxWidth: 180 }}>
+                          ✓ {values.watermarkUrl.split('/').pop()}
+                        </Typography>
+                      )}
+                    </Box>
+                    <input
+                      type="file"
+                      ref={watermarkInputRef}
+                      style={{ display: 'none' }}
+                      accept="image/*"
+                      onChange={(e) => e.target.files[0] && uploadImage(e.target.files[0], 'watermarkUrl', setValues, values)}
+                    />
+                  </Box>
                 </Grid>
               </Grid>
             </DialogContent>

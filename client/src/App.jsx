@@ -23,6 +23,8 @@ import { WarehouseList } from './modules/warehouses';
 import { RoleList } from './modules/roles';
 import { PermissionList } from './modules/permissions';
 import NotificationsPage from './modules/notifications/pages/NotificationsPage';
+import DocumentDashboard from './modules/documents/pages/DocumentDashboard';
+import ExternalPortal from './modules/entities/pages/ExternalPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/public/LandingPage';
 import PQRSPage from './pages/public/PQRSPage';
@@ -242,7 +244,20 @@ function App() {
           <Route path="/support/tickets/:id" element={<TicketDetailPage />} />
           <Route path="/support/admin" element={<AdminTicketsPage />} />
           <Route path="/support/admin/tickets/:id" element={<TicketDetailPage />} />
+
+          {/* Documents Dashboard */}
+          <Route
+            path="/documents/dashboard"
+            element={
+              <ProtectedRoute requiredPermission="document.dashboard">
+                <DocumentDashboard />
+              </ProtectedRoute>
+            }
+          />
         </Route>
+
+        {/* External Portal (public) */}
+        <Route path="/external/portal" element={<ExternalPortal />} />
 
         {/* Ruta por defecto */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -115,6 +115,17 @@ class DocumentController {
       });
     }
   }
+
+  async getDashboard(req, res) {
+    try {
+      let { companyId } = req.query;
+      if (req.user.companyId) companyId = req.user.companyId;
+      const data = await documentService.getDashboard({ ...req.query, companyId });
+      res.json({ success: true, data });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
 }
 
 export default new DocumentController();

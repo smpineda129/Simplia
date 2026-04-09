@@ -2,6 +2,11 @@ import { prisma } from '../../db/prisma.js';
 import notificationService from '../notifications/notification.service.js';
 import emailService from '../../utils/emailService.js';
 import { correspondenceAssignedEmailTemplate } from '../../templates/correspondenceAssignedEmail.js';
+import { correspondenceResponseEmailTemplate } from '../../templates/correspondenceResponseEmail.js';
+import ExcelJS from 'exceljs';
+import s3, { BUCKET } from '../../config/storage.js';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { presignValue } from '../../utils/s3Presign.js';
 
 class CorrespondenceService {
   // Generar radicado automático
@@ -451,6 +456,7 @@ class CorrespondenceService {
         to_id: data.to_id ? BigInt(data.to_id) : null,
         message: data.message,
         tagged_users: taggedUserIds.length > 0 ? taggedUserIds : null,
+        createdAt: new Date(),
       },
       include: {
         users_correspondence_threads_from_idTousers: {
@@ -458,6 +464,21 @@ class CorrespondenceService {
         },
       },
     });
+
+    // Auto-reassign correspondence to first tagged user
+    if (taggedUserIds.length > 0) {
+      try {
+        await prisma.correspondence.update({
+          where: { id: parseInt(correspondenceId) },
+          data: {
+            recipient_id: BigInt(taggedUserIds[0]),
+            status: 'assigned',
+          },
+        });
+      } catch (reassignError) {
+        console.error('Error al reasignar correspondencia:', reassignError);
+      }
+    }
 
     // Notificar al destinatario del thread si existe
     if (data.to_id && data.to_id !== threadUserId) {
@@ -590,6 +611,7 @@ class CorrespondenceService {
     // Send email to original sender if email is available
     try {
       let recipientEmail = null;
+      let recipientName = '';
       let corrUser = correspondence.correspondenceUser;
 
       if (correspondence.user_type === 'external' && correspondence.comments) {
@@ -597,57 +619,107 @@ class CorrespondenceService {
           ? JSON.parse(correspondence.comments)
           : correspondence.comments;
         recipientEmail = parsed?.senderEmail;
+        recipientName = parsed?.senderName || '';
       } else if (corrUser?.email) {
         recipientEmail = corrUser.email;
+        recipientName = corrUser.name || '';
       }
 
       if (recipientEmail) {
         const ccAddresses = Array.isArray(data.cc) ? data.cc : [];
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+        // Fetch responder details (used in both paths)
+        const responderRaw = await prisma.user.findUnique({
+          where: { id: BigInt(userId) },
+          select: { name: true, email: true, signature: true },
+        });
+
+        // Presign signature and company logo
+        const [signatureUrl, logoUrl] = await Promise.all([
+          presignValue(responderRaw?.signature),
+          presignValue(updated.company?.imageUrl),
+        ]);
+
+        const responder = { ...responderRaw, signature: signatureUrl };
 
         let emailHtml;
+        let emailAttachments = [];
+
         if (data.templateId) {
-          // Fetch template and substitute all variables
+          // ── Case 1: Template ──────────────────────────────────────────────
           const template = await prisma.template.findFirst({
             where: { id: parseInt(data.templateId), deletedAt: null },
             select: { content: true, title: true },
           });
 
           if (template?.content) {
-            const responder = await prisma.user.findUnique({
-              where: { id: BigInt(userId) },
-              select: { name: true, email: true, signature: true },
-            });
-
             const today = new Date();
-            const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-
             emailHtml = template.content
-              // Date variables
               .replace(/\{fecha\}/g, today.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }))
               .replace(/\{dia\}/g, today.getDate())
               .replace(/\{mes\}/g, today.toLocaleString('es-ES', { month: 'long' }))
               .replace(/\{ano\}/g, today.getFullYear())
-              // Radicado variables
               .replace(/\{radicado_entrada\}/g, correspondence.in_settled || '')
               .replace(/\{radicado_salida\}/g, updated.out_settled || '')
-              // Correspondent (remitente) variables
               .replace(/\{nombre\}/g, corrUser?.name || '')
               .replace(/\{apellido\}/g, corrUser?.lastName || '')
               .replace(/\{dni\}/g, corrUser?.dni || corrUser?.documentNumber || '')
               .replace(/\{correo\}/g, corrUser?.email || recipientEmail || '')
-              // Responding user variables
               .replace(/\{mi_nombre\}/g, responder?.name || '')
               .replace(/\{mi_correo\}/g, responder?.email || '')
               .replace(/\{mi_cargo\}/g, '')
-              // Signature: replace with image if available, else empty
               .replace(/\{firma\}/g, responder?.signature
                 ? `<img src="${responder.signature}" alt="Firma" style="max-height:80px;max-width:200px;" />`
                 : '');
           }
+        } else {
+          // ── Case 2: Plain message (+ optional document attachment) ────────
+          // Fetch file from S3 and attach if provided
+          if (data.documentKey) {
+            try {
+              const s3Obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: data.documentKey }));
+              const chunks = [];
+              for await (const chunk of s3Obj.Body) {
+                chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+              }
+              const fileBuffer = Buffer.concat(chunks);
+              emailAttachments.push({
+                filename: data.documentName || data.documentKey.split('/').pop(),
+                content: fileBuffer,
+              });
+            } catch (s3Err) {
+              console.error('[CorrespondenceService] Could not fetch S3 attachment:', s3Err.message);
+            }
+          }
+
+          emailHtml = correspondenceResponseEmailTemplate({
+            recipientName,
+            correspondenceTitle: correspondence.title,
+            inSettled: correspondence.in_settled,
+            outSettled: updated.out_settled,
+            message: data.response,
+            responderName: responder?.name || '',
+            responderSignature: signatureUrl || '',
+            companyName: updated.company?.name || process.env.MAIL_FROM_NAME || 'Simplia',
+            logoUrl: logoUrl || `${clientUrl}/Horizontal_Logo.jpeg`,
+            hasAttachment: emailAttachments.length > 0,
+            attachmentName: emailAttachments[0]?.filename || '',
+          });
         }
 
         if (!emailHtml) {
-          emailHtml = `<p>${data.response.replace(/\n/g, '<br>')}</p>`;
+          emailHtml = correspondenceResponseEmailTemplate({
+            recipientName,
+            correspondenceTitle: correspondence.title,
+            inSettled: correspondence.in_settled,
+            outSettled: updated.out_settled,
+            message: data.response,
+            responderName: responder?.name || '',
+            responderSignature: signatureUrl || '',
+            companyName: updated.company?.name || process.env.MAIL_FROM_NAME || 'Simplia',
+            logoUrl: logoUrl || `${clientUrl}/Horizontal_Logo.jpeg`,
+          });
         }
 
         await emailService.send({
@@ -656,6 +728,7 @@ class CorrespondenceService {
           subject: `Re: ${correspondence.title} [${updated.out_settled}]`,
           html: emailHtml,
           text: data.response,
+          attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
         });
       }
     } catch (emailErr) {
@@ -678,7 +751,68 @@ class CorrespondenceService {
       }
     }
 
+    // Auto-save response document to "respuesta" folder
+    try {
+      if (data.documentKey || data.templateId) {
+        const folder = await this.getOrCreateResponseFolder(id);
+
+        let docName = null;
+        let docFile = null;
+
+        if (data.documentKey) {
+          docName = data.documentName || 'Respuesta';
+          docFile = data.documentKey;
+        } else if (data.templateId) {
+          const template = await prisma.template.findFirst({
+            where: { id: parseInt(data.templateId), deletedAt: null },
+            select: { title: true },
+          });
+          docName = template ? `Respuesta - ${template.title}` : 'Respuesta (plantilla)';
+        }
+
+        if (docName) {
+          const doc = await prisma.document.create({
+            data: {
+              name: docName,
+              file: docFile || null,
+              file_original_name: docName,
+              medium: 'digital',
+              companyId: correspondence.companyId ? parseInt(correspondence.companyId) : null,
+              documentDate: new Date(),
+              createdAt: new Date(),
+            },
+          });
+          await prisma.correspondence_document.create({
+            data: {
+              correspondence_id: BigInt(id),
+              document_id: doc.id,
+              folder_id: folder.id,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+        }
+      }
+    } catch (docError) {
+      console.error('Error al guardar documento de respuesta:', docError);
+    }
+
     return updated;
+  }
+
+  async getOrCreateResponseFolder(correspondenceId) {
+    const existing = await prisma.correspondenceFolder.findFirst({
+      where: { correspondenceId: parseInt(correspondenceId), name: 'respuesta', deletedAt: null },
+    });
+    if (existing) return existing;
+    return prisma.correspondenceFolder.create({
+      data: {
+        correspondenceId: parseInt(correspondenceId),
+        name: 'respuesta',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
   }
 
   async markAsDelivered(id) {
@@ -704,6 +838,129 @@ class CorrespondenceService {
     ]);
 
     return { total, registered, assigned, closed };
+  }
+
+  // ─── Document Folders ─────────────────────────────────────────────────────
+
+  async createFolder(correspondenceId, name) {
+    const folder = await prisma.correspondenceFolder.create({
+      data: {
+        correspondenceId: parseInt(correspondenceId),
+        name,
+        createdAt: new Date(),
+      },
+    });
+    return folder;
+  }
+
+  async getFolders(correspondenceId) {
+    return prisma.correspondenceFolder.findMany({
+      where: { correspondenceId: parseInt(correspondenceId), deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async deleteFolder(correspondenceId, folderId) {
+    const folder = await prisma.correspondenceFolder.findFirst({
+      where: { id: parseInt(folderId), correspondenceId: parseInt(correspondenceId), deletedAt: null },
+    });
+    if (!folder) throw new Error('Carpeta no encontrada');
+
+    await prisma.correspondenceFolder.update({
+      where: { id: parseInt(folderId) },
+      data: { deletedAt: new Date() },
+    });
+
+    return { message: 'Carpeta eliminada correctamente' };
+  }
+
+  // ─── Export Excel ──────────────────────────────────────────────────────────
+
+  async exportExcel(filters = {}, res) {
+    const { startDate, endDate, companyId, search, status } = filters;
+
+    const where = {
+      deletedAt: null,
+      ...(companyId && { companyId: parseInt(companyId) }),
+      ...(status && { status }),
+      ...(search && {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { in_settled: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
+      ...(startDate && endDate && {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      }),
+    };
+
+    const correspondences = await prisma.correspondence.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 5000,
+      include: {
+        company: { select: { name: true } },
+        users_correspondences_sender_idTousers: { select: { name: true } },
+        users_correspondences_recipient_idTousers: { select: { name: true } },
+      },
+    });
+
+    // Fetch types
+    const typeIds = [...new Set(correspondences.map(c => c.correspondenceTypeId).filter(Boolean))];
+    let typesMap = {};
+    if (typeIds.length > 0) {
+      const types = await prisma.correspondenceType.findMany({
+        where: { id: { in: typeIds } },
+        select: { id: true, name: true },
+      });
+      typesMap = Object.fromEntries(types.map(t => [Number(t.id), t.name]));
+    }
+
+    const statusLabel = (s) => ({ registered: 'Registrada', assigned: 'Asignada', closed: 'Cerrada' }[s] || s || '');
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Correspondencias');
+
+    worksheet.columns = [
+      { header: 'Radicado', key: 'settled', width: 22 },
+      { header: 'Título', key: 'title', width: 40 },
+      { header: 'Estado', key: 'status', width: 14 },
+      { header: 'Tipo', key: 'type', width: 25 },
+      { header: 'Remitente', key: 'sender', width: 28 },
+      { header: 'Asignado a', key: 'recipient', width: 28 },
+      { header: 'Empresa', key: 'company', width: 25 },
+      { header: 'Fecha Creación', key: 'createdAt', width: 18 },
+    ];
+
+    correspondences.forEach(c => {
+      worksheet.addRow({
+        settled: c.in_settled || '',
+        title: c.title || '',
+        status: statusLabel(c.status),
+        type: typesMap[c.correspondenceTypeId] || '',
+        sender: c.users_correspondences_sender_idTousers?.name || '',
+        recipient: c.users_correspondences_recipient_idTousers?.name || '',
+        company: c.company?.name || '',
+        createdAt: c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-ES') : '',
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Correspondencias_${Date.now()}.xlsx"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    await workbook.xlsx.write(res);
+    res.end();
   }
 }
 

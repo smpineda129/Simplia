@@ -107,6 +107,7 @@ const MainLayout = () => {
         { text: 'Correspondencia', icon: <Send sx={{ fontSize: 18 }} />, path: '/correspondences', permission: 'correspondence.view' },
         { text: 'Plantillas', icon: <Article sx={{ fontSize: 18 }} />, path: '/templates', permission: 'template.view' },
         { text: 'Expedientes', icon: <Folder sx={{ fontSize: 18 }} />, path: '/proceedings', permission: 'proceeding.view' },
+        { text: 'Dashboard Doc.', icon: <InsertDriveFile sx={{ fontSize: 18 }} />, path: '/documents/dashboard', permission: 'document.dashboard' },
         { text: 'Retención', icon: <Description sx={{ fontSize: 18 }} />, path: '/retentions', permission: 'retention.view' },
         { text: 'Externos', icon: <Group sx={{ fontSize: 18 }} />, path: '/entities', permission: 'entity.view' },
         { text: 'Almacenes', icon: <Warehouse sx={{ fontSize: 18 }} />, path: '/warehouses', permission: 'warehouse.view' },

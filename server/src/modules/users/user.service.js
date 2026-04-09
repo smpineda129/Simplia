@@ -163,6 +163,7 @@ export const userService = {
         name,
         role: role || 'USER',
         companyId: companyId ? BigInt(companyId) : null,
+        createdAt: new Date(),
       },
       select: {
         id: true,

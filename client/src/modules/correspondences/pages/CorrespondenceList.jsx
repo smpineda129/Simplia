@@ -16,7 +16,7 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { Add, Search, TrendingUp, Assignment, CheckCircle, HourglassEmpty } from '@mui/icons-material';
+import { Add, Search, TrendingUp, Assignment, CheckCircle, HourglassEmpty, Download } from '@mui/icons-material';
 import CorrespondenceTable from '../components/CorrespondenceTable';
 import CorrespondenceModalForm from '../components/CorrespondenceModalForm';
 import LoadingLogo from '../../../components/LoadingLogo';
@@ -38,6 +38,8 @@ const CorrespondenceList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedCorrespondence, setSelectedCorrespondence] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [exportStart, setExportStart] = useState('');
+  const [exportEnd, setExportEnd] = useState('');
   const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
@@ -163,13 +165,46 @@ const CorrespondenceList = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Correspondencia</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
-        >
-          Nueva Correspondencia
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <TextField
+            label="Desde"
+            type="date"
+            size="small"
+            value={exportStart}
+            onChange={(e) => setExportStart(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 150 }}
+          />
+          <TextField
+            label="Hasta"
+            type="date"
+            size="small"
+            value={exportEnd}
+            onChange={(e) => setExportEnd(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 150 }}
+          />
+          <Button
+            variant="outlined"
+            startIcon={<Download />}
+            onClick={() => correspondenceService.exportExcel({
+              startDate: exportStart,
+              endDate: exportEnd,
+              companyId: selectedCompany,
+              search: debouncedSearch,
+              status: selectedStatus,
+            })}
+          >
+            Exportar Excel
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleCreate}
+          >
+            Nueva Correspondencia
+          </Button>
+        </Box>
       </Box>
 
       {/* Estadísticas */}

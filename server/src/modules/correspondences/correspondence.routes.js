@@ -19,6 +19,7 @@ const router = express.Router();
  *   description: Gestión de correspondencia con radicados automáticos
  */
 
+router.get('/export', authenticate, hasPermission('correspondence.view'), correspondenceController.exportExcel);
 router.get('/stats', authenticate, hasPermission('correspondence.view'), correspondenceController.getStats);
 router.get('/area-users', authenticate, hasPermission('correspondence.view'), correspondenceController.getAreaUsers);
 router.get('/company-users', authenticate, hasPermission('correspondence.view'), correspondenceController.getCompanyUsers);
@@ -34,5 +35,10 @@ router.delete('/:id/threads/:threadId', authenticate, hasPermission('corresponde
 
 router.post('/:id/respond', authenticate, hasPermission('correspondence.create'), respondValidation, validate, correspondenceController.respond);
 router.post('/:id/mark-delivered', authenticate, hasPermission('correspondence.update'), correspondenceController.markAsDelivered);
+
+// ─── Document Folders ──────────────────────────────────────────────────────
+router.post('/:id/folders', authenticate, hasPermission('correspondence.update'), correspondenceController.createFolder);
+router.get('/:id/folders', authenticate, hasPermission('correspondence.view'), correspondenceController.getFolders);
+router.delete('/:id/folders/:folderId', authenticate, hasPermission('correspondence.update'), correspondenceController.deleteFolder);
 
 export default router;

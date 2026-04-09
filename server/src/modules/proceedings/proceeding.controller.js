@@ -160,6 +160,16 @@ class ProceedingController {
       res.status(400).json({ success: false, message: error.message });
     }
   }
+
+  async exportExcel(req, res) {
+    try {
+      let { companyId } = req.query;
+      if (req.user.companyId) companyId = req.user.companyId;
+      await proceedingService.exportExcel({ ...req.query, companyId }, res);
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
 }
 
 export default new ProceedingController();

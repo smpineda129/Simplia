@@ -13,7 +13,7 @@ import {
   InputLabel,
   Grid,
 } from '@mui/material';
-import { Add, Search } from '@mui/icons-material';
+import { Add, Search, Download } from '@mui/icons-material';
 import ProceedingTable from '../components/ProceedingTable';
 import ProceedingModalForm from '../components/ProceedingModalForm';
 import LoadingLogo from '../../../components/LoadingLogo';
@@ -144,15 +144,24 @@ const ProceedingList = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Expedientes</Typography>
-        {hasPermission('proceeding.create') && (
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={handleCreate}
+            variant="outlined"
+            startIcon={<Download />}
+            onClick={() => proceedingService.exportExcel({ search, companyId: selectedCompany })}
           >
-            Nuevo Expediente
+            Exportar Excel
           </Button>
-        )}
+          {hasPermission('proceeding.create') && (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={handleCreate}
+            >
+              Nuevo Expediente
+            </Button>
+          )}
+        </Box>
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>

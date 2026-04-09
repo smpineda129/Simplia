@@ -26,8 +26,9 @@ const emailService = {
    * @param {string|string[]} [options.cc] - CC recipients
    * @param {string|string[]} [options.bcc] - BCC recipients
    * @param {string} [options.replyTo] - Reply-to address
+   * @param {Array<{filename: string, content: Buffer|string}>} [options.attachments] - File attachments
    */
-  async send({ to, subject, html, text, cc, bcc, replyTo } = {}) {
+  async send({ to, subject, html, text, cc, bcc, replyTo, attachments } = {}) {
     const client = getResendClient();
     if (!client) {
       console.warn('[EmailService] Resend not configured, skipping email send.');
@@ -47,6 +48,7 @@ const emailService = {
         ...(cc && { cc: Array.isArray(cc) ? cc : [cc] }),
         ...(bcc && { bcc: Array.isArray(bcc) ? bcc : [bcc] }),
         ...(replyTo && { reply_to: replyTo }),
+        ...(attachments && attachments.length > 0 && { attachments }),
       };
 
       const data = await client.emails.send(emailData);

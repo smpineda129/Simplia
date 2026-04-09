@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,9 @@ import {
   Box,
   Typography,
   MenuItem,
+  CircularProgress,
 } from '@mui/material';
+import { AttachFile, CheckCircle } from '@mui/icons-material';
 import correspondenceService from '../services/correspondenceService';
 import templateService from '../../templates/services/templateService';
 
@@ -26,6 +28,9 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
   const [cc, setCc] = useState('');
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [responseFile, setResponseFile] = useState(null); // { key, originalName }
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -34,6 +39,7 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
       setError('');
       setCc('');
       setSelectedTemplateId('');
+      setResponseFile(null);
       loadUsers();
       if (isReply) loadTemplates();
     }
@@ -86,6 +92,21 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
     }
   };
 
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingFile(true);
+      const res = await correspondenceService.uploadDocument(file);
+      setResponseFile({ key: res.data.key, originalName: res.data.originalName || file.name });
+    } catch (err) {
+      setError('Error al subir el archivo');
+    } finally {
+      setUploadingFile(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSubmit = async () => {
     if (!message.trim()) {
       setError('El mensaje es requerido');
@@ -104,6 +125,10 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
       }
       if (isReply && selectedTemplateId) {
         payload.templateId = selectedTemplateId;
+      }
+      if (isReply && responseFile) {
+        payload.documentKey = responseFile.key;
+        payload.documentName = responseFile.originalName;
       }
       await onSave(payload);
     } catch (err) {
@@ -164,6 +189,41 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
             placeholder="email1@example.com, email2@example.com"
             sx={{ mb: 2 }}
           />
+        )}
+
+        {isReply && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Documento adjunto (se guardará en carpeta "respuesta")
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={uploadingFile ? <CircularProgress size={14} /> : <AttachFile />}
+                disabled={uploadingFile}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploadingFile ? 'Subiendo...' : 'Adjuntar documento'}
+              </Button>
+              {responseFile && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <CheckCircle fontSize="small" color="success" />
+                  <Typography variant="caption" color="success.main" noWrap sx={{ maxWidth: 220 }}>
+                    {responseFile.originalName}
+                  </Typography>
+                  <Button size="small" onClick={() => setResponseFile(null)} sx={{ minWidth: 0, p: 0.5, color: 'text.secondary' }}>✕</Button>
+                </Box>
+              )}
+            </Box>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+              onChange={handleFileSelect}
+            />
+          </Box>
         )}
 
         {!isReply && (

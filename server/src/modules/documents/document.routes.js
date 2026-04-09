@@ -86,6 +86,8 @@ const injectCompanyShort = async (req, res, next) => {
 
 router.post('/upload', authenticate, hasPermission('document.create'), injectCompanyShort, upload.single('file'), documentController.upload);
 
+router.get('/dashboard', authenticate, hasPermission('document.dashboard'), documentController.getDashboard);
+
 router.get('/', authenticate, hasPermission('document.view'), documentController.getAll);
 
 /**
