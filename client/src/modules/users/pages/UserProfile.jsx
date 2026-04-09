@@ -34,6 +34,8 @@ const UserProfile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [signatureImagePreview, setSignatureImagePreview] = useState(null);
+  // Presigned display URLs (separate from formData which stores S3 keys)
+  const [displayUrls, setDisplayUrls] = useState({ avatar: null, signature: null });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -92,9 +94,11 @@ const UserProfile = () => {
     try {
       setUploadingAvatar(true);
       const res = await userService.uploadAvatar(user.userId || user.id, file);
-      const url = res.data.url;
-      if (updateUser) updateUser({ avatar: url });
-      setFormData((prev) => ({ ...prev, avatar: url }));
+      const { key, url } = res.data;
+      // Store key in auth context and formData, presigned URL only for display
+      if (updateUser) updateUser({ avatar: key });
+      setFormData((prev) => ({ ...prev, avatar: key }));
+      setDisplayUrls((prev) => ({ ...prev, avatar: url }));
       showSnackbar('Foto de perfil actualizada', 'success');
     } catch (error) {
       showSnackbar(error.response?.data?.message || 'Error al subir la foto', 'error');
@@ -115,9 +119,11 @@ const UserProfile = () => {
     try {
       setUploadingSignature(true);
       const res = await userService.uploadSignature(user.userId || user.id, signatureImagePreview.file);
-      const url = res.data.url;
-      if (updateUser) updateUser({ signature: url });
-      setFormData((prev) => ({ ...prev, signature: url }));
+      const { key, url } = res.data;
+      // Store key in auth context and formData, presigned URL only for display
+      if (updateUser) updateUser({ signature: key });
+      setFormData((prev) => ({ ...prev, signature: key }));
+      setDisplayUrls((prev) => ({ ...prev, signature: url }));
       setSignatureImagePreview(null);
       showSnackbar('Firma actualizada', 'success');
     } catch (error) {
@@ -160,7 +166,8 @@ const UserProfile = () => {
 
   const currentUserId = user.userId || user.id;
 
-  const currentAvatar = user.avatar || formData.avatar || 'person';
+  // Use the fresh presigned display URL if available, otherwise fall back to user.avatar
+  const currentAvatar = displayUrls.avatar || user.avatar || formData.avatar || 'person';
   const avatarIsUrl = isAvatarUrl(currentAvatar);
   const avatarConfig = avatarIsUrl ? null : getAvatarConfig(currentAvatar);
   const AvatarIcon = avatarConfig?.icon;
@@ -329,10 +336,10 @@ const UserProfile = () => {
                         Firma
                       </Typography>
                       <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: 1, borderColor: 'divider' }}>
-                        {isAvatarUrl(user.signature) ? (
+                        {isAvatarUrl(displayUrls.signature || user.signature) ? (
                           <Box
                             component="img"
-                            src={user.signature}
+                            src={displayUrls.signature || user.signature}
                             alt="Firma"
                             sx={{ maxHeight: 100, maxWidth: '100%', objectFit: 'contain' }}
                           />
@@ -491,11 +498,11 @@ const UserProfile = () => {
                     <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
                       Firma como imagen
                     </Typography>
-                    {isAvatarUrl(formData.signature) && (
+                    {isAvatarUrl(displayUrls.signature || formData.signature) && (
                       <Box sx={{ mb: 1 }}>
                         <Box
                           component="img"
-                          src={formData.signature}
+                          src={displayUrls.signature || formData.signature}
                           alt="Firma actual"
                           sx={{ maxHeight: 80, maxWidth: '100%', objectFit: 'contain', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}
                         />

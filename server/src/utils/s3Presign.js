@@ -18,12 +18,14 @@ export const presignKey = (key) => {
  * Soporta path-style y virtual-hosted.
  */
 const extractKey = (url) => {
+  // Strip query params (handles already-presigned URLs stored in DB)
+  const base = url.split('?')[0];
   // path-style: https://s3.region.amazonaws.com/bucket/key
-  const pathMatch = url.match(/^https?:\/\/s3\.[^/]+\.amazonaws\.com\/[^/]+\/(.+)$/);
-  if (pathMatch) return pathMatch[1];
+  const pathMatch = base.match(/^https?:\/\/s3\.[^/]+\.amazonaws\.com\/[^/]+\/(.+)$/);
+  if (pathMatch) return decodeURIComponent(pathMatch[1]);
   // virtual-hosted: https://bucket.s3.region.amazonaws.com/key
-  const vhMatch = url.match(/^https?:\/\/[^/]+\.s3\.[^/]+\.amazonaws\.com\/(.+)$/);
-  if (vhMatch) return vhMatch[1];
+  const vhMatch = base.match(/^https?:\/\/[^/]+\.s3\.[^/]+\.amazonaws\.com\/(.+)$/);
+  if (vhMatch) return decodeURIComponent(vhMatch[1]);
   return null;
 };
 

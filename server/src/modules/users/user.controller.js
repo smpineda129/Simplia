@@ -69,7 +69,7 @@ export const userController = {
     const key = req.file.key;
     await userService.update(req.params.id, { avatar: key });
     const url = await presignValue(key);
-    res.json({ success: true, data: { url } });
+    res.json({ success: true, data: { key, url } });
   }),
 
   uploadSignature: asyncHandler(async (req, res) => {
@@ -80,7 +80,7 @@ export const userController = {
     const key = req.file.key;
     await userService.update(req.params.id, { signature: key });
     const url = await presignValue(key);
-    res.json({ success: true, data: { url } });
+    res.json({ success: true, data: { key, url } });
   }),
 
   sendSetPasswordEmail: asyncHandler(async (req, res) => {
