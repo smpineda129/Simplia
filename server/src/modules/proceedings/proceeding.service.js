@@ -100,7 +100,19 @@ class ProceedingService {
           where: { deletedAt: null },
           include: {
             document: {
-              select: { id: true, name: true, file: true, createdAt: true, file_original_name: true },
+              select: { 
+                id: true, 
+                name: true, 
+                file: true, 
+                createdAt: true, 
+                file_original_name: true,
+                documentDate: true,
+                medium: true,
+                notes: true,
+                meta: true,
+                companyId: true,
+                fileSize: true,
+              },
             },
           },
         },
@@ -154,14 +166,38 @@ class ProceedingService {
   }
 
   async create(data) {
+    // Generar código automáticamente
+    const companyId = parseInt(data.companyId);
+    
+    // Obtener el último expediente de la empresa para generar el código secuencial
+    const lastProceeding = await prisma.proceeding.findFirst({
+      where: { companyId },
+      orderBy: { id: 'desc' },
+      select: { code: true },
+    });
+
+    // Generar código: formato "EXP-{año}-{secuencial}"
+    const year = new Date().getFullYear();
+    let sequential = 1;
+    
+    if (lastProceeding?.code) {
+      // Extraer el número secuencial del último código
+      const match = lastProceeding.code.match(/EXP-\d{4}-(\d+)/);
+      if (match) {
+        sequential = parseInt(match[1]) + 1;
+      }
+    }
+    
+    const generatedCode = `EXP-${year}-${sequential.toString().padStart(4, '0')}`;
+
     const proceeding = await prisma.proceeding.create({
       data: {
         name: data.name,
-        code: data.code,
+        code: generatedCode,
         startDate: new Date(data.startDate),
         companyOne: data.companyOne,
         companyTwo: data.companyTwo,
-        companyId: parseInt(data.companyId),
+        companyId,
         ...(data.retentionLineId && { retentionLineId: parseInt(data.retentionLineId) }),
       },
       include: {
@@ -267,7 +303,7 @@ class ProceedingService {
 
   // ─── External Users ───────────────────────────────────────────────────────
 
-  async shareWithUser(proceedingId, externalUserId) {
+  async shareWithUser(proceedingId, externalUserId, customMessage = '') {
     const existing = await prisma.externalUserProceeding.findFirst({
       where: { proceedingId: parseInt(proceedingId), externalUserId: BigInt(externalUserId) },
     });
@@ -297,6 +333,7 @@ class ProceedingService {
       email: record.externalUser.email,
       userName: record.externalUser.name,
       proceedingName: record.proceeding.name,
+      hasCustomMessage: !!customMessage,
     });
     
     if (record.externalUser.email) {
@@ -313,6 +350,7 @@ class ProceedingService {
           proceedingUrl,
           companyName: record.proceeding.company?.name || 'Simplia',
           logoUrl: `${clientUrl}/Horizontal_Logo.jpeg`,
+          customMessage: customMessage || '',
         });
 
         console.log('[ProceedingService] Calling emailService.send...');
@@ -450,6 +488,8 @@ class ProceedingService {
         fileSize: file.size,
         companyId: proceeding.companyId,
         medium: 'digital',
+        documentDate: new Date(),
+        createdAt: new Date(),
       },
     });
 

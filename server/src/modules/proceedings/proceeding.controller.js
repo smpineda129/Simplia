@@ -84,14 +84,19 @@ class ProceedingController {
     console.log('[ProceedingController] shareWithUser called', {
       proceedingId: req.params.id,
       externalUserId: req.body.externalUserId,
+      hasCustomMessage: !!req.body.customMessage,
     });
     try {
-      const record = await proceedingService.shareWithUser(req.params.id, req.body.externalUserId);
+      const record = await proceedingService.shareWithUser(
+        req.params.id, 
+        req.body.externalUserId,
+        req.body.customMessage
+      );
       console.log('[ProceedingController] shareWithUser success');
       res.status(201).json({ 
         success: true, 
         data: record,
-        emailSent: record.emailSent || false,
+        message: 'Usuario agregado exitosamente',
         emailError: record.emailError || null
       });
     } catch (error) {

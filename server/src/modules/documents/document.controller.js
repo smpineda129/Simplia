@@ -126,6 +126,44 @@ class DocumentController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
+
+  async merge(req, res) {
+    console.error('========================================');
+    console.error('MERGE CONTROLLER - Petición recibida');
+    console.error('Body:', JSON.stringify(req.body));
+    console.error('========================================');
+    
+    try {
+      const { documentIds, name } = req.body;
+      
+      if (!documentIds || !Array.isArray(documentIds) || documentIds.length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: 'Se requieren al menos 2 documentos para mezclar',
+        });
+      }
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'El nombre del documento es requerido',
+        });
+      }
+
+      const mergedDocument = await documentService.merge(documentIds, name.trim(), req.user);
+
+      res.status(201).json({
+        success: true,
+        message: 'Documentos mezclados exitosamente',
+        data: mergedDocument,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }
 
 export default new DocumentController();

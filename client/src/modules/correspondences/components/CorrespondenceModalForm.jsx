@@ -10,7 +10,16 @@ import {
   Alert,
   MenuItem,
   CircularProgress,
+  Box,
+  Typography,
+  IconButton,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
 } from '@mui/material';
+import { Add, Delete, AttachFile } from '@mui/icons-material';
 import correspondenceService from '../services/correspondenceService';
 import { useAuth } from '../../../hooks/useAuth';
 import axiosInstance from '../../../api/axiosConfig';
@@ -35,6 +44,10 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingAreaUsers, setLoadingAreaUsers] = useState(false);
   const [localTypes, setLocalTypes] = useState([]);
+
+  // Document upload
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   // Determine effective companyId
   const effectiveCompanyId = user?.companyId || companyId;
@@ -100,6 +113,7 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
     setError('');
     setUserOptions([]);
     setAreaUsers([]);
+    setUploadedFiles([]);
   };
 
   const loadUsers = async () => {
@@ -136,6 +150,40 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploadingFile(true);
+    setError('');
+    
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const file of files) {
+      try {
+        const uploadResponse = await correspondenceService.uploadDocument(file);
+        const { key, originalName } = uploadResponse.data;
+        setUploadedFiles(prev => [...prev, { key, originalName, name: file.name }]);
+        successCount++;
+      } catch (err) {
+        console.error('Error uploading file:', file.name, err);
+        errorCount++;
+      }
+    }
+
+    setUploadingFile(false);
+    e.target.value = '';
+
+    if (errorCount > 0) {
+      setError(`${errorCount} archivo(s) no se pudieron subir. ${successCount} archivo(s) subidos correctamente.`);
+    }
+  };
+
+  const handleRemoveFile = (index) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     setError('');
 
@@ -164,6 +212,7 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
       correspondenceTypeId: correspondenceTypeId ? parseInt(correspondenceTypeId) : null,
       assignedUserId: assignedUserId ? parseInt(assignedUserId) : null,
       comments: comments.trim() || null,
+      attachments: uploadedFiles.length > 0 ? uploadedFiles : null,
     };
 
     try {
@@ -250,11 +299,14 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               disabled={loadingUsers || (!effectiveCompanyId)}
+              helperText={loadingUsers ? 'Buscando usuarios...' : ''}
               InputProps={{
-                endAdornment: loadingUsers ? <CircularProgress size={16} /> : null,
+                endAdornment: loadingUsers ? <CircularProgress size={20} /> : null,
               }}
             >
-              <MenuItem value="">Seleccione un usuario</MenuItem>
+              <MenuItem value="">
+                {loadingUsers ? 'Cargando...' : 'Seleccione un usuario'}
+              </MenuItem>
               {userOptions.map((u) => (
                 <MenuItem key={u.id} value={u.id}>
                   {u.name} — {u.email}
@@ -317,6 +369,57 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
               value={comments}
               onChange={(e) => setComments(e.target.value)}
             />
+          </Grid>
+
+          {/* Document Upload */}
+          <Grid item xs={12}>
+            <Box sx={{ border: '1px dashed #ccc', borderRadius: 1, p: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Documentos Adjuntos
+                </Typography>
+                <Button
+                  component="label"
+                  size="small"
+                  startIcon={uploadingFile ? <CircularProgress size={16} /> : <AttachFile />}
+                  disabled={uploadingFile}
+                >
+                  {uploadingFile ? 'Subiendo...' : 'Adjuntar'}
+                  <input
+                    type="file"
+                    hidden
+                    multiple
+                    onChange={handleFileUpload}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                  />
+                </Button>
+              </Box>
+              {uploadedFiles.length > 0 ? (
+                <List dense>
+                  {uploadedFiles.map((file, index) => (
+                    <ListItem key={index}>
+                      <ListItemText
+                        primary={file.originalName || file.name}
+                        secondary={`Archivo ${index + 1}`}
+                      />
+                      <ListItemSecondaryAction>
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          onClick={() => handleRemoveFile(index)}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Typography variant="body2" color="text.secondary" align="center">
+                  No hay documentos adjuntos
+                </Typography>
+              )}
+            </Box>
           </Grid>
         </Grid>
       </DialogContent>

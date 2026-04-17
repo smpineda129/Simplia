@@ -226,6 +226,7 @@ const ProceedingDetail = () => {
             proceedingId={proceeding.id}
             documents={proceeding.documents}
             onUpdate={loadProceeding}
+            isClosed={!!proceeding.endDate}
           />
         )}
 

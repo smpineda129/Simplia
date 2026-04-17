@@ -3,10 +3,13 @@ import notificationService from '../notifications/notification.service.js';
 import emailService from '../../utils/emailService.js';
 import { correspondenceAssignedEmailTemplate } from '../../templates/correspondenceAssignedEmail.js';
 import { correspondenceResponseEmailTemplate } from '../../templates/correspondenceResponseEmail.js';
+import { correspondenceTemplateResponseEmailTemplate } from '../../templates/correspondenceTemplateResponseEmail.js';
 import ExcelJS from 'exceljs';
 import s3, { BUCKET } from '../../config/storage.js';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { presignValue } from '../../utils/s3Presign.js';
+import { generatePdfFromHtml } from '../../utils/htmlToPdf.js';
+import { v4 as uuidv4 } from 'uuid';
 
 class CorrespondenceService {
   // Generar radicado automático
@@ -336,6 +339,41 @@ class CorrespondenceService {
       }
     }
 
+    // Create and associate uploaded documents
+    if (data.attachments && Array.isArray(data.attachments) && data.attachments.length > 0) {
+      try {
+        for (const attachment of data.attachments) {
+          // Create document record
+          const doc = await prisma.document.create({
+            data: {
+              name: attachment.originalName || attachment.name,
+              file: attachment.key,
+              file_original_name: attachment.originalName || attachment.name,
+              medium: 'digital',
+              companyId: parseInt(companyId),
+              documentDate: new Date(),
+              createdAt: new Date(),
+            },
+          });
+
+          // Associate document with correspondence
+          await prisma.correspondence_document.create({
+            data: {
+              correspondence_id: BigInt(correspondence.id),
+              document_id: doc.id,
+              folder_id: null, // No folder for initial attachments
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+        }
+        console.log(`[CorrespondenceService] ✅ ${data.attachments.length} document(s) attached to correspondence ${correspondence.id}`);
+      } catch (docError) {
+        console.error('[CorrespondenceService] ❌ Error attaching documents:', docError);
+        // Don't fail the correspondence creation if document attachment fails
+      }
+    }
+
     return correspondence;
   }
 
@@ -608,6 +646,9 @@ class CorrespondenceService {
 
     await this.createThread(id, { message: data.response }, userId);
 
+    // Variable para almacenar el PDF generado (usado tanto para email como para guardar en carpeta)
+    let pdfBuffer = null;
+
     // Send email to original sender if email is available
     try {
       let recipientEmail = null;
@@ -655,7 +696,8 @@ class CorrespondenceService {
 
           if (template?.content) {
             const today = new Date();
-            emailHtml = template.content
+            // Procesar el HTML de la plantilla con los placeholders
+            const processedTemplateHtml = template.content
               .replace(/\{fecha\}/g, today.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }))
               .replace(/\{dia\}/g, today.getDate())
               .replace(/\{mes\}/g, today.toLocaleString('es-ES', { month: 'long' }))
@@ -672,6 +714,30 @@ class CorrespondenceService {
               .replace(/\{firma\}/g, responder?.signature
                 ? `<img src="${responder.signature}" alt="Firma" style="max-height:80px;max-width:200px;" />`
                 : '');
+            
+            // Generar PDF desde el HTML procesado de la plantilla
+            try {
+              pdfBuffer = await generatePdfFromHtml(processedTemplateHtml);
+              emailAttachments.push({
+                filename: `Respuesta-${template.title || 'Correspondencia'}.pdf`,
+                content: pdfBuffer,
+              });
+              console.log(`[CorrespondenceService] ✅ PDF generado para adjuntar al email`);
+            } catch (pdfErr) {
+              console.error('[CorrespondenceService] ❌ Error generando PDF para adjuntar al email:', pdfErr);
+            }
+
+            // Usar template profesional de email para el cuerpo del correo
+            emailHtml = correspondenceTemplateResponseEmailTemplate({
+              recipientName,
+              correspondenceTitle: correspondence.title,
+              inSettled: correspondence.in_settled,
+              outSettled: updated.out_settled,
+              companyName: updated.company?.name || process.env.MAIL_FROM_NAME || 'Simplia',
+              logoUrl: logoUrl || `${clientUrl}/Horizontal_Logo.jpeg`,
+              responderName: responder?.name || '',
+              responderSignature: signatureUrl || '',
+            });
           }
         } else {
           // ── Case 2: Plain message (+ optional document attachment) ────────
@@ -753,29 +819,47 @@ class CorrespondenceService {
 
     // Auto-save response document to "respuesta" folder
     try {
-      if (data.documentKey || data.templateId) {
+      if (data.documentKey || (data.templateId && pdfBuffer)) {
         const folder = await this.getOrCreateResponseFolder(id);
 
         let docName = null;
         let docFile = null;
+        let fileSize = null;
 
         if (data.documentKey) {
           docName = data.documentName || 'Respuesta';
           docFile = data.documentKey;
-        } else if (data.templateId) {
+        } else if (data.templateId && pdfBuffer) {
+          // Usar el PDF ya generado anteriormente
           const template = await prisma.template.findFirst({
             where: { id: parseInt(data.templateId), deletedAt: null },
             select: { title: true },
           });
-          docName = template ? `Respuesta - ${template.title}` : 'Respuesta (plantilla)';
+          docName = template ? `Respuesta - ${template.title}.pdf` : 'Respuesta.pdf';
+          fileSize = pdfBuffer.length;
+          
+          // Subir PDF a S3
+          const companyShort = updated.company?.short || 'general';
+          const fileKey = `${companyShort}/correspondences/${id}/respuesta-${uuidv4()}.pdf`;
+          
+          await s3.send(new PutObjectCommand({
+            Bucket: BUCKET,
+            Key: fileKey,
+            Body: pdfBuffer,
+            ContentType: 'application/pdf',
+          }));
+          
+          docFile = fileKey;
+          console.log(`[CorrespondenceService] ✅ PDF de respuesta guardado en S3: ${fileKey}`);
         }
 
-        if (docName) {
+        if (docName && docFile) {
           const doc = await prisma.document.create({
             data: {
               name: docName,
-              file: docFile || null,
+              file: docFile,
               file_original_name: docName,
+              fileSize: fileSize,
               medium: 'digital',
               companyId: correspondence.companyId ? parseInt(correspondence.companyId) : null,
               documentDate: new Date(),
@@ -791,10 +875,12 @@ class CorrespondenceService {
               updated_at: new Date(),
             },
           });
+          console.log(`[CorrespondenceService] ✅ Documento guardado en carpeta 'respuesta' - Doc ID: ${doc.id}`);
         }
       }
     } catch (docError) {
-      console.error('Error al guardar documento de respuesta:', docError);
+      console.error('[CorrespondenceService] ❌ Error al guardar documento de respuesta:', docError);
+      console.error('[CorrespondenceService] Error stack:', docError.stack);
     }
 
     return updated;

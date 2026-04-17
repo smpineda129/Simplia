@@ -14,10 +14,10 @@ class RetentionLineController {
   async getById(req, res) {
     try {
       const line = await retentionLineService.getById(req.params.id);
-      res.json(line);
+      res.json({ success: true, data: line });
     } catch (error) {
       console.error('Error fetching retention line:', error);
-      res.status(404).json({ error: error.message });
+      res.status(404).json({ success: false, error: error.message });
     }
   }
 
@@ -49,6 +49,16 @@ class RetentionLineController {
     } catch (error) {
       console.error('Error deleting retention line:', error);
       res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getProceedings(req, res) {
+    try {
+      const proceedings = await retentionLineService.getProceedings(req.params.id);
+      res.json({ success: true, data: proceedings });
+    } catch (error) {
+      console.error('Error fetching proceedings for retention line:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 }

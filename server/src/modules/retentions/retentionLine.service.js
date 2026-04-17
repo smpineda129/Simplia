@@ -104,6 +104,26 @@ class RetentionLineService {
 
     return { message: 'Línea de retención eliminada correctamente' };
   }
+
+  async getProceedings(lineId) {
+    const proceedings = await prisma.proceeding.findMany({
+      where: {
+        retentionLineId: parseInt(lineId),
+        deletedAt: null,
+      },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return proceedings;
+  }
 }
 
 export default new RetentionLineService();

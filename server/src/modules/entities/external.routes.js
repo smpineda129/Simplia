@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../../config/env.js';
 import emailService from '../../utils/emailService.js';
 import { presignKey } from '../../utils/s3Presign.js';
+import { otpCodeEmailTemplate } from '../../templates/otpCodeEmail.js';
 
 const router = express.Router();
 
@@ -54,10 +55,18 @@ router.post('/request-otp', async (req, res) => {
       data: { otpCode: hashedOtp, otpExpiresAt: expiresAt },
     });
 
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const emailHtml = otpCodeEmailTemplate({
+      userName: externalUser.name || 'Usuario',
+      otpCode: otp,
+      companyName: 'Simplia',
+      logoUrl: `${clientUrl}/Horizontal_Logo.jpeg`,
+    });
+
     await emailService.send({
       to: email,
-      subject: 'Tu código de acceso',
-      html: `<p>Tu código de acceso es: <strong>${otp}</strong></p><p>Expira en 10 minutos.</p>`,
+      subject: '🔐 Tu código de acceso al Portal de Expedientes',
+      html: emailHtml,
     });
 
     res.json({ success: true, message: 'Código enviado a tu correo' });

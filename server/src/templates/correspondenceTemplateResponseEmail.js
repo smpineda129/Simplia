@@ -1,11 +1,12 @@
-export const proceedingSharedEmailTemplate = ({
-  userName,
-  proceedingName,
-  proceedingCode,
-  proceedingUrl,
+export const correspondenceTemplateResponseEmailTemplate = ({
+  recipientName,
+  correspondenceTitle,
+  inSettled,
+  outSettled,
   companyName = 'Simplia',
   logoUrl = '',
-  customMessage = '',
+  responderName = '',
+  responderSignature = '',
 }) => {
   const date = new Date().toLocaleDateString('es-CO', {
     year: 'numeric',
@@ -19,7 +20,7 @@ export const proceedingSharedEmailTemplate = ({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Expediente Compartido</title>
+  <title>Respuesta a Correspondencia</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
 
@@ -52,7 +53,7 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-radius: 20px; padding: 6px 16px;">
                     <p style="margin: 0; color: #4F46E5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
-                      &#128193;&nbsp;&nbsp;Expediente Compartido
+                      &#128231;&nbsp;&nbsp;Respuesta a Correspondencia
                     </p>
                   </td>
                 </tr>
@@ -60,7 +61,7 @@ export const proceedingSharedEmailTemplate = ({
 
               <!-- Title + date -->
               <h1 style="margin: 0 0 8px; color: #1E293B; font-size: 22px; font-weight: 700; text-align: center; line-height: 1.3;">
-                Tienes acceso a un expediente
+                Respuesta a tu correspondencia
               </h1>
               <p style="margin: 0 0 32px; color: #94A3B8; font-size: 13px; text-align: center;">
                 ${date}
@@ -68,28 +69,11 @@ export const proceedingSharedEmailTemplate = ({
 
               <!-- Greeting -->
               <p style="margin: 0 0 12px; color: #334155; font-size: 15px; line-height: 1.6;">
-                Hola <strong style="color: #1E293B;">${userName}</strong>,
+                Hola <strong style="color: #1E293B;">${recipientName}</strong>,
               </p>
               <p style="margin: 0 0 28px; color: #334155; font-size: 15px; line-height: 1.7;">
-                Se te ha concedido acceso al siguiente expediente. Ya puedes consultar su información, documentos y actividad relacionada.
+                Hemos procesado tu correspondencia y adjuntamos la respuesta oficial en formato PDF. A continuación encontrarás los detalles:
               </p>
-
-              ${customMessage ? `
-              <!-- Custom Message -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="background-color: #FFFBEB; border-radius: 8px; border-left: 3px solid #F59E0B; margin-bottom: 28px;">
-                <tr>
-                  <td style="padding: 16px 20px;">
-                    <p style="margin: 0 0 8px; color: #92400E; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
-                      Mensaje del remitente
-                    </p>
-                    <div style="margin: 0; color: #78350F; font-size: 14px; line-height: 1.6;">
-                      ${customMessage}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
 
               <!-- Info card -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -97,20 +81,27 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="padding: 20px 24px;">
                     <p style="margin: 0 0 6px; color: #2563EB; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                      Expediente
+                      Correspondencia
                     </p>
                     <p style="margin: 0 0 14px; color: #1E293B; font-size: 16px; font-weight: 700; line-height: 1.4;">
-                      ${proceedingName}
+                      ${correspondenceTitle}
                     </p>
                     <!-- Divider -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 0;">
                       <tr><td style="border-top: 1px solid #E2E8F0; height: 1px; font-size: 0; line-height: 0;">&nbsp;</td></tr>
                     </table>
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14px; width: 100%;">
+                      <tr>
+                        <td style="padding-bottom: 8px;">
+                          <p style="margin: 0; color: #64748B; font-size: 13px;">
+                            <strong style="color: #475569;">Radicado Entrada:</strong>&nbsp;&nbsp;<span style="background-color: #DBEAFE; color: #1D4ED8; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${inSettled}</span>
+                          </p>
+                        </td>
+                      </tr>
                       <tr>
                         <td>
                           <p style="margin: 0; color: #64748B; font-size: 13px;">
-                            <strong style="color: #475569;">Código:</strong>&nbsp;&nbsp;<span style="background-color: #DBEAFE; color: #1D4ED8; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${proceedingCode}</span>
+                            <strong style="color: #475569;">Radicado Salida:</strong>&nbsp;&nbsp;<span style="background-color: #D1FAE5; color: #065F46; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${outSettled}</span>
                           </p>
                         </td>
                       </tr>
@@ -119,25 +110,45 @@ export const proceedingSharedEmailTemplate = ({
                 </tr>
               </table>
 
-              <!-- CTA Button -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 28px;">
+              <!-- Attachment notice -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color: #FEF3C7; border-radius: 8px; border-left: 3px solid #F59E0B; margin-bottom: 28px;">
                 <tr>
-                  <td align="center" style="border-radius: 8px; background: linear-gradient(135deg, #2563EB 0%, #6366F1 100%);">
-                    <a href="${proceedingUrl}"
-                       style="display: block; padding: 13px 40px; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; white-space: nowrap; letter-spacing: 0.2px;">
-                      Ver Expediente &rarr;
-                    </a>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0 0 6px; color: #92400E; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
+                      📎 Documento Adjunto
+                    </p>
+                    <p style="margin: 0; color: #78350F; font-size: 14px; line-height: 1.6;">
+                      La respuesta oficial se encuentra adjunta a este correo en formato PDF. Por favor descárgala y consérvala para tus registros.
+                    </p>
                   </td>
                 </tr>
               </table>
 
+              ${responderSignature ? `
+              <!-- Responder signature -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #E2E8F0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; color: #64748B; font-size: 13px;">
+                      Atentamente,
+                    </p>
+                    <p style="margin: 0 0 12px; color: #1E293B; font-size: 15px; font-weight: 600;">
+                      ${responderName}
+                    </p>
+                    <img src="${responderSignature}" alt="Firma" style="max-height: 60px; max-width: 180px; display: block;" />
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
               <!-- Note -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="background-color: #EFF6FF; border-radius: 8px; border: 1px solid #BFDBFE;">
+                     style="background-color: #EFF6FF; border-radius: 8px; border: 1px solid #BFDBFE; margin-top: 28px;">
                 <tr>
                   <td style="padding: 14px 18px;">
                     <p style="margin: 0; color: #1E40AF; font-size: 13px; line-height: 1.6;">
-                      Si no esperabas este acceso o crees que es un error, comunícate con el administrador del sistema.
+                      Si tienes alguna pregunta o necesitas información adicional, no dudes en contactarnos.
                     </p>
                   </td>
                 </tr>

@@ -17,6 +17,7 @@ import {
 import { AttachFile, CheckCircle } from '@mui/icons-material';
 import correspondenceService from '../services/correspondenceService';
 import templateService from '../../templates/services/templateService';
+import RichTextEditor from '../../../components/RichTextEditor';
 
 const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, companyId }) => {
   const [error, setError] = useState('');
@@ -75,18 +76,8 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
     try {
       const response = await templateService.getById(templateId);
       const raw = response.data?.content || response.template?.content || '';
-
-      // Show a plain-text preview in the message field (user can edit)
-      const div = document.createElement('div');
-      div.innerHTML = raw
-        .replace(/<img[^>]*>/gi, '')
-        .replace(/<\/p>/gi, '\n')
-        .replace(/<\/h[1-6]>/gi, '\n')
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/li>/gi, '\n')
-        .replace(/<\/div>/gi, '\n');
-
-      setMessage(div.textContent.replace(/\n{3,}/g, '\n\n').trim());
+      // Set the HTML content directly
+      setMessage(raw);
     } catch (err) {
       console.error('Error loading template:', err);
     }
@@ -169,16 +160,17 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
           </TextField>
         )}
 
-        <TextField
-          label="Mensaje *"
-          fullWidth
-          multiline
-          rows={6}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Escribe tu mensaje aquí..."
-          sx={{ mb: 2 }}
-        />
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Mensaje *
+          </Typography>
+          <RichTextEditor
+            value={message}
+            onChange={setMessage}
+            placeholder="Escribe tu mensaje aquí..."
+            height="250px"
+          />
+        </Box>
 
         {isReply && (
           <TextField

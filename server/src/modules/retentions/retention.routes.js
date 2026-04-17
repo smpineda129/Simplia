@@ -300,4 +300,24 @@ router.put('/lines/:id', authenticate, hasPermission('retention_line.update'), u
  */
 router.delete('/lines/:id', authenticate, hasPermission('retention_line.delete'), retentionLineController.delete);
 
+/**
+ * @swagger
+ * /api/retentions/lines/{id}/proceedings:
+ *   get:
+ *     summary: Obtener expedientes asociados a una línea de retención
+ *     tags: [Retentions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de expedientes asociados
+ */
+router.get('/lines/:id/proceedings', authenticate, hasPermission('retention_line.view'), retentionLineController.getProceedings);
+
 export default router;

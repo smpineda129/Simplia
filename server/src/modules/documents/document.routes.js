@@ -199,4 +199,36 @@ router.put('/:id', authenticate, hasPermission('document.update'), updateDocumen
  */
 router.delete('/:id', authenticate, hasPermission('document.delete'), documentController.delete);
 
+/**
+ * @swagger
+ * /api/documents/merge:
+ *   post:
+ *     summary: Mezclar múltiples documentos PDF en uno solo
+ *     tags: [Documents]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - documentIds
+ *               - name
+ *             properties:
+ *               documentIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: IDs de los documentos a mezclar en orden
+ *               name:
+ *                 type: string
+ *                 description: Nombre del documento resultante
+ *     responses:
+ *       201:
+ *         description: Documentos mezclados exitosamente
+ */
+router.post('/merge', authenticate, hasPermission('document.create'), documentController.merge);
+
 export default router;

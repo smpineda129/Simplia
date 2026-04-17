@@ -15,7 +15,7 @@ import {
   Grid,
   Chip,
 } from '@mui/material';
-import { Folder, ArrowBack } from '@mui/icons-material';
+import { Folder, ArrowBack, Email, Lock, Visibility, VisibilityOff, Download, Description } from '@mui/icons-material';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 const externalApi = axios.create({ baseURL: API_URL });
@@ -85,27 +85,86 @@ const ExternalPortal = () => {
   const loanLabel = { custody: 'En custodia', loaned: 'Prestado', returned: 'Devuelto' };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: '#f5f5f5',
-        p: 2,
-      }}
-    >
-      <Paper sx={{ maxWidth: 700, width: '100%', p: 4 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          Portal de Expedientes
-        </Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
+      {/* Header azul decorativo */}
+      <Box
+        sx={{
+          background: 'linear-gradient(155deg, #0F172A 0%, #1a3054 45%, #1D4ED8 100%)',
+          py: 4,
+          px: 3,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Decorative circles */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -50,
+            right: -50,
+            width: 200,
+            height: 200,
+            borderRadius: '50%',
+            bgcolor: 'rgba(255,255,255,0.05)',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: -30,
+            left: -30,
+            width: 150,
+            height: 150,
+            borderRadius: '50%',
+            bgcolor: 'rgba(255,255,255,0.03)',
+          }}
+        />
+        
+        <Box sx={{ maxWidth: 900, mx: 'auto', position: 'relative', zIndex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Folder sx={{ fontSize: 32, color: '#fff' }} />
+            </Box>
+            <Box>
+              <Typography variant="h4" fontWeight={700} sx={{ color: '#fff', letterSpacing: '-0.02em' }}>
+                Portal de Expedientes
+              </Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9375rem' }}>
+                Acceso seguro a tus documentos
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Content */}
+      <Box sx={{ maxWidth: 900, mx: 'auto', px: 3, py: 4 }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 4,
+            borderRadius: 2,
+            background: '#ffffff',
+            border: '1px solid #E2E8F0',
+          }}
+        >
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
         {/* Step 1: Email */}
         {step === 'email' && (
           <Box>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
+            <Typography sx={{ color: '#64748B', fontSize: '0.9375rem', mb: 3 }}>
               Ingresa tu correo electrónico para recibir un código de acceso.
             </Typography>
             <TextField
@@ -120,10 +179,12 @@ const ExternalPortal = () => {
             <Button
               variant="contained"
               fullWidth
+              size="large"
               onClick={requestOtp}
               disabled={loading || !email}
+              sx={{ py: 1.5, fontWeight: 600 }}
             >
-              {loading ? <CircularProgress size={22} /> : 'Enviar código'}
+              {loading ? <CircularProgress size={22} color="inherit" /> : 'Enviar código'}
             </Button>
           </Box>
         )}
@@ -131,8 +192,11 @@ const ExternalPortal = () => {
         {/* Step 2: OTP */}
         {step === 'otp' && (
           <Box>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Ingresa el código de 6 dígitos enviado a <strong>{email}</strong>.
+            <Typography sx={{ color: '#64748B', fontSize: '0.9375rem', mb: 1 }}>
+              Ingresa el código de 6 dígitos enviado a
+            </Typography>
+            <Typography sx={{ mb: 3, fontWeight: 600, color: '#0F172A' }}>
+              {email}
             </Typography>
             <TextField
               label="Código de acceso"
@@ -140,13 +204,23 @@ const ExternalPortal = () => {
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && verifyOtp()}
-              inputProps={{ maxLength: 6 }}
+              inputProps={{ 
+                maxLength: 6,
+                style: { textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', fontWeight: 600 }
+              }}
               sx={{ mb: 2 }}
             />
-            <Button variant="contained" fullWidth onClick={verifyOtp} disabled={loading || otp.length < 6}>
-              {loading ? <CircularProgress size={22} /> : 'Verificar'}
+            <Button 
+              variant="contained" 
+              fullWidth 
+              size="large"
+              onClick={verifyOtp} 
+              disabled={loading || otp.length < 6}
+              sx={{ py: 1.5, fontWeight: 600, mb: 1 }}
+            >
+              {loading ? <CircularProgress size={22} color="inherit" /> : 'Verificar'}
             </Button>
-            <Button fullWidth sx={{ mt: 1 }} onClick={() => { setStep('email'); setError(''); }}>
+            <Button fullWidth onClick={() => { setStep('email'); setError(''); }}>
               Volver
             </Button>
           </Box>
@@ -155,31 +229,70 @@ const ExternalPortal = () => {
         {/* Step 3: Proceedings list */}
         {step === 'list' && (
           <Box>
-            <Typography variant="h6" gutterBottom>
-              Expedientes compartidos contigo
+            <Typography variant="h6" fontWeight={700} sx={{ color: '#0F172A', mb: 0.5 }}>
+              Expedientes compartidos
+            </Typography>
+            <Typography sx={{ color: '#64748B', fontSize: '0.9375rem', mb: 3 }}>
+              Selecciona un expediente para ver sus documentos
             </Typography>
             {proceedings.length === 0 ? (
-              <Typography color="text.secondary">No tienes expedientes compartidos.</Typography>
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Folder sx={{ fontSize: 64, color: '#CBD5E1', mb: 2 }} />
+                <Typography sx={{ color: '#64748B', fontSize: '1rem' }}>No tienes expedientes compartidos.</Typography>
+              </Box>
             ) : (
               <Grid container spacing={2}>
                 {proceedings.map((p) => (
                   <Grid item xs={12} sm={6} key={p.id}>
-                    <Card variant="outlined">
-                      <CardActionArea onClick={() => loadDetail(p.id)}>
+                    <Card 
+                      variant="outlined"
+                      sx={{
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        height: '100%',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          bgcolor: '#F8FAFC',
+                          transform: 'translateY(-2px)',
+                          boxShadow: 1,
+                        },
+                      }}
+                    >
+                      <CardActionArea onClick={() => loadDetail(p.id)} sx={{ height: '100%' }}>
                         <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Folder color="primary" />
-                            <Typography fontWeight={600} noWrap>{p.name}</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
+                            <Box
+                              sx={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 2,
+                                bgcolor: '#EEF2FF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Folder sx={{ fontSize: 24, color: '#6366F1' }} />
+                            </Box>
+                            <Box flex={1} sx={{ minWidth: 0 }}>
+                              <Typography fontWeight={600} sx={{ color: '#0F172A', fontSize: '1rem', mb: 0.5 }}>
+                                {p.name}
+                              </Typography>
+                              <Typography variant="body2" sx={{ color: '#64748B', mb: 0.5 }}>
+                                {p.code}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                                {p.company?.name}
+                              </Typography>
+                            </Box>
                           </Box>
-                          <Typography variant="body2" color="text.secondary">{p.code}</Typography>
-                          <Typography variant="caption" color="text.secondary">{p.company?.name}</Typography>
-                          <Box sx={{ mt: 1 }}>
-                            <Chip
-                              label={loanLabel[p.loan] || p.loan}
-                              size="small"
-                              color={p.loan === 'loaned' ? 'warning' : 'default'}
-                            />
-                          </Box>
+                          <Chip
+                            label={loanLabel[p.loan] || p.loan}
+                            size="small"
+                            color={p.loan === 'loaned' ? 'warning' : 'default'}
+                            sx={{ fontWeight: 500 }}
+                          />
                         </CardContent>
                       </CardActionArea>
                     </Card>
@@ -196,57 +309,128 @@ const ExternalPortal = () => {
             <Button
               startIcon={<ArrowBack />}
               onClick={() => { setStep('list'); setSelected(null); }}
-              sx={{ mb: 2 }}
+              sx={{ mb: 3 }}
             >
               Volver
             </Button>
-            <Typography variant="h6" gutterBottom>{selected.name}</Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Código: {selected.code} · {selected.company?.name}
-            </Typography>
+            <Box 
+              sx={{ 
+                mb: 3, 
+                p: 3, 
+                borderRadius: 2,
+                bgcolor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    bgcolor: '#EEF2FF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Folder sx={{ fontSize: 24, color: '#6366F1' }} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" fontWeight={700} sx={{ color: '#0F172A', mb: 0.5 }}>
+                    {selected.name}
+                  </Typography>
+                  <Typography sx={{ color: '#64748B', fontSize: '0.9375rem' }}>
+                    {selected.code} · {selected.company?.name}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
             {loading ? (
-              <CircularProgress />
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                <CircularProgress />
+              </Box>
             ) : (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+              <Box>
+                <Typography variant="h6" fontWeight={600} sx={{ color: '#0F172A', mb: 3 }}>
                   Documentos
                 </Typography>
                 {!selected.documents || selected.documents.length === 0 ? (
-                  <Typography color="text.secondary">Sin documentos</Typography>
+                  <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <Description sx={{ fontSize: 64, color: '#CBD5E1', mb: 2 }} />
+                    <Typography sx={{ color: '#64748B', fontSize: '1rem' }}>Sin documentos disponibles</Typography>
+                  </Box>
                 ) : (
-                  selected.documents.map((doc) => (
-                    <Box
-                      key={doc.id}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        p: 1.5,
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <Typography variant="body2">{doc.file_original_name || doc.name}</Typography>
-                      {doc.url && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                  <Grid container spacing={2}>
+                    {selected.documents.map((doc) => (
+                      <Grid item xs={12} key={doc.id}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            p: 2.5,
+                            border: '1px solid #E2E8F0',
+                            borderRadius: 2,
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              borderColor: '#CBD5E1',
+                              bgcolor: '#F8FAFC',
+                              boxShadow: 1,
+                            },
+                          }}
                         >
-                          Descargar
-                        </Button>
-                      )}
-                    </Box>
-                  ))
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+                            <Box
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 1.5,
+                                bgcolor: '#EEF2FF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Description sx={{ color: '#6366F1', fontSize: 20 }} />
+                            </Box>
+                            <Typography 
+                              sx={{ 
+                                color: '#0F172A', 
+                                fontSize: '0.9375rem', 
+                                fontWeight: 500,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {doc.file_original_name || doc.name}
+                            </Typography>
+                          </Box>
+                          {doc.url && (
+                            <Button
+                              variant="contained"
+                              startIcon={<Download />}
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{ flexShrink: 0 }}
+                            >
+                              Descargar
+                            </Button>
+                          )}
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
                 )}
               </Box>
             )}
           </Box>
         )}
-      </Paper>
+        </Paper>
+      </Box>
     </Box>
   );
 };

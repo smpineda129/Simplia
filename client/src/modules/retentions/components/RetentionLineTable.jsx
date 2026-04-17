@@ -11,9 +11,11 @@ import {
   Chip,
   Box,
 } from '@mui/material';
-import { Edit, Delete, CheckCircle, Cancel } from '@mui/icons-material';
+import { Edit, Delete, CheckCircle, Cancel, Visibility } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const RetentionLineTable = ({ lines, onEdit, onDelete }) => {
+  const navigate = useNavigate();
   const getDispositionChips = (line) => {
     const dispositions = [];
     if (line.dispositionCt) dispositions.push({ label: 'CT', tooltip: 'Conservación Total', color: 'success' });
@@ -93,6 +95,15 @@ const RetentionLineTable = ({ lines, onEdit, onDelete }) => {
                     </Box>
                   </TableCell>
                   <TableCell align="right">
+                    <Tooltip title="Ver detalle">
+                      <IconButton
+                        size="small"
+                        color="info"
+                        onClick={() => navigate(`/retentions/lines/${line.id}`)}
+                      >
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Editar">
                       <IconButton
                         size="small"

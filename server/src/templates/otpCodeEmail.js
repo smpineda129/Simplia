@@ -1,25 +1,16 @@
-export const proceedingSharedEmailTemplate = ({
-  userName,
-  proceedingName,
-  proceedingCode,
-  proceedingUrl,
+export const otpCodeEmailTemplate = ({
+  userName = 'Usuario',
+  otpCode,
   companyName = 'Simplia',
   logoUrl = '',
-  customMessage = '',
 }) => {
-  const date = new Date().toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Expediente Compartido</title>
+  <title>Código de Acceso</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
 
@@ -52,18 +43,18 @@ export const proceedingSharedEmailTemplate = ({
                 <tr>
                   <td style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-radius: 20px; padding: 6px 16px;">
                     <p style="margin: 0; color: #4F46E5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
-                      &#128193;&nbsp;&nbsp;Expediente Compartido
+                      🔐&nbsp;&nbsp;Código de Acceso
                     </p>
                   </td>
                 </tr>
               </table>
 
-              <!-- Title + date -->
+              <!-- Title -->
               <h1 style="margin: 0 0 8px; color: #1E293B; font-size: 22px; font-weight: 700; text-align: center; line-height: 1.3;">
-                Tienes acceso a un expediente
+                Tu código de acceso
               </h1>
               <p style="margin: 0 0 32px; color: #94A3B8; font-size: 13px; text-align: center;">
-                ${date}
+                Portal de Expedientes
               </p>
 
               <!-- Greeting -->
@@ -71,46 +62,21 @@ export const proceedingSharedEmailTemplate = ({
                 Hola <strong style="color: #1E293B;">${userName}</strong>,
               </p>
               <p style="margin: 0 0 28px; color: #334155; font-size: 15px; line-height: 1.7;">
-                Se te ha concedido acceso al siguiente expediente. Ya puedes consultar su información, documentos y actividad relacionada.
+                Has solicitado acceso al portal de expedientes. Utiliza el siguiente código para continuar:
               </p>
 
-              ${customMessage ? `
-              <!-- Custom Message -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="background-color: #FFFBEB; border-radius: 8px; border-left: 3px solid #F59E0B; margin-bottom: 28px;">
+              <!-- OTP Code Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
                 <tr>
-                  <td style="padding: 16px 20px;">
-                    <p style="margin: 0 0 8px; color: #92400E; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
-                      Mensaje del remitente
-                    </p>
-                    <div style="margin: 0; color: #78350F; font-size: 14px; line-height: 1.6;">
-                      ${customMessage}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-
-              <!-- Info card -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="background-color: #F8FAFC; border-radius: 10px; border-left: 4px solid #2563EB; margin-bottom: 28px;">
-                <tr>
-                  <td style="padding: 20px 24px;">
-                    <p style="margin: 0 0 6px; color: #2563EB; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                      Expediente
-                    </p>
-                    <p style="margin: 0 0 14px; color: #1E293B; font-size: 16px; font-weight: 700; line-height: 1.4;">
-                      ${proceedingName}
-                    </p>
-                    <!-- Divider -->
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 0;">
-                      <tr><td style="border-top: 1px solid #E2E8F0; height: 1px; font-size: 0; line-height: 0;">&nbsp;</td></tr>
-                    </table>
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14px;">
+                  <td align="center">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-radius: 12px; padding: 24px;">
                       <tr>
-                        <td>
-                          <p style="margin: 0; color: #64748B; font-size: 13px;">
-                            <strong style="color: #475569;">Código:</strong>&nbsp;&nbsp;<span style="background-color: #DBEAFE; color: #1D4ED8; padding: 2px 9px; border-radius: 4px; font-weight: 600; font-size: 12px;">${proceedingCode}</span>
+                        <td align="center">
+                          <p style="margin: 0 0 8px; color: #4F46E5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                            Tu Código
+                          </p>
+                          <p style="margin: 0; color: #1E293B; font-size: 42px; font-weight: 700; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                            ${otpCode}
                           </p>
                         </td>
                       </tr>
@@ -119,25 +85,28 @@ export const proceedingSharedEmailTemplate = ({
                 </tr>
               </table>
 
-              <!-- CTA Button -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 28px;">
+              <!-- Expiration notice -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color: #FEF3C7; border-radius: 8px; border-left: 3px solid #F59E0B; margin-bottom: 28px;">
                 <tr>
-                  <td align="center" style="border-radius: 8px; background: linear-gradient(135deg, #2563EB 0%, #6366F1 100%);">
-                    <a href="${proceedingUrl}"
-                       style="display: block; padding: 13px 40px; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; white-space: nowrap; letter-spacing: 0.2px;">
-                      Ver Expediente &rarr;
-                    </a>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0 0 6px; color: #92400E; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">
+                      ⏱️ Importante
+                    </p>
+                    <p style="margin: 0; color: #78350F; font-size: 14px; line-height: 1.6;">
+                      Este código expira en <strong>10 minutos</strong>. Si no lo solicitaste, puedes ignorar este mensaje.
+                    </p>
                   </td>
                 </tr>
               </table>
 
-              <!-- Note -->
+              <!-- Security note -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                      style="background-color: #EFF6FF; border-radius: 8px; border: 1px solid #BFDBFE;">
                 <tr>
                   <td style="padding: 14px 18px;">
                     <p style="margin: 0; color: #1E40AF; font-size: 13px; line-height: 1.6;">
-                      Si no esperabas este acceso o crees que es un error, comunícate con el administrador del sistema.
+                      🛡️ Por tu seguridad, nunca compartas este código con nadie. Nuestro equipo nunca te lo solicitará.
                     </p>
                   </td>
                 </tr>

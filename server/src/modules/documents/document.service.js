@@ -1,7 +1,9 @@
 import { prisma } from '../../db/prisma.js';
 import { presignKey } from '../../utils/s3Presign.js';
-import { HeadObjectCommand } from '@aws-sdk/client-s3';
+import { HeadObjectCommand, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import s3, { BUCKET } from '../../config/storage.js';
+import { PDFDocument } from 'pdf-lib';
+import { v4 as uuidv4 } from 'uuid';
 
 class DocumentService {
   async getAll(filters = {}) {
@@ -173,6 +175,22 @@ class DocumentService {
       throw new Error('Documento no encontrado');
     }
 
+    // Eliminar archivo de S3 si existe
+    if (document.file) {
+      try {
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: BUCKET,
+          Key: document.file,
+        });
+        await s3.send(deleteCommand);
+        console.log(`Archivo eliminado de S3: ${document.file}`);
+      } catch (error) {
+        console.error(`Error al eliminar archivo de S3: ${document.file}`, error);
+        // Continuar con el soft delete aunque falle la eliminación de S3
+      }
+    }
+
+    // Soft delete en la base de datos
     await prisma.document.update({
       where: { id: parseInt(id) },
       data: { deletedAt: new Date() },
@@ -184,14 +202,11 @@ class DocumentService {
   async getDashboard(filters = {}) {
     const { companyId, startDate, endDate, retentionId } = filters;
 
-    const docWhere = {
+    // Base where sin filtro de fechas para contar el total real
+    const baseDocWhere = {
       deletedAt: null,
       ...(companyId && { companyId: parseInt(companyId) }),
     };
-
-    if (startDate && endDate) {
-      docWhere.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
-    }
 
     const proceedingWhere = {
       deletedAt: null,
@@ -203,9 +218,26 @@ class DocumentService {
       proceedingWhere.createdAt = { gte: new Date(startDate), lte: new Date(endDate) };
     }
 
-    const [totalDocuments, totalProceedings, retentionGroups] = await Promise.all([
-      prisma.document.count({ where: docWhere }),
+    // Calcular fecha de hace 7 días
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Contar TODOS los documentos sin filtro de fecha
+    const [totalDocuments, totalProceedings, totalCorrespondences, recentDocsCount, retentionGroups] = await Promise.all([
+      prisma.document.count({ where: baseDocWhere }),
       prisma.proceeding.count({ where: proceedingWhere }),
+      prisma.correspondence.count({ 
+        where: { 
+          deletedAt: null, 
+          ...(companyId && { companyId: parseInt(companyId) }) 
+        } 
+      }),
+      prisma.document.count({ 
+        where: { 
+          ...baseDocWhere,
+          createdAt: { gte: sevenDaysAgo }
+        } 
+      }),
       prisma.proceeding.groupBy({
         by: ['retentionLineId'],
         where: { deletedAt: null, ...(companyId && { companyId: parseInt(companyId) }) },
@@ -215,22 +247,26 @@ class DocumentService {
 
     // Growth % if date range provided
     let docGrowth = null;
+    let docsInRange = 0;
     if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const periodMs = end - start;
-      const prevStart = new Date(start - periodMs);
-      const prevEnd = new Date(start);
-
-      const prevCount = await prisma.document.count({
+      // Contar documentos en el rango de fechas
+      docsInRange = await prisma.document.count({
         where: {
-          ...docWhere,
-          createdAt: { gte: prevStart, lte: prevEnd },
+          ...baseDocWhere,
+          createdAt: { gte: new Date(startDate), lte: new Date(endDate) },
         },
       });
 
-      docGrowth = prevCount === 0 ? null : Math.round(((totalDocuments - prevCount) / prevCount) * 100);
+      // Calcular porcentaje: documentos en rango vs total
+      // Ejemplo: 20 de 64 = (20/64) * 100 = 31%
+      docGrowth = totalDocuments > 0 ? Math.round((docsInRange / totalDocuments) * 100) : 0;
     }
+
+    // Where para obtener documentos (puede incluir filtro de fechas para la lista)
+    const docWhere = {
+      ...baseDocWhere,
+      ...(startDate && endDate && { createdAt: { gte: new Date(startDate), lte: new Date(endDate) } }),
+    };
 
     // Enrich retention groups
     const retentionLineIds = retentionGroups
@@ -252,7 +288,215 @@ class DocumentService {
       };
     }).sort((a, b) => b.count - a.count);
 
-    return { totalDocuments, totalProceedings, docGrowth, byRetention };
+    // Obtener documentos recientes con sus asociaciones
+    const recentDocuments = await prisma.document.findMany({
+      where: docWhere,
+      take: 50,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        company: { select: { id: true, name: true } },
+        documentProceedings: {
+          where: { deletedAt: null },
+          take: 1,
+          include: {
+            proceeding: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                retentionLineId: true,
+                retentionLine: {
+                  select: {
+                    id: true,
+                    series: true,
+                    subseries: true,
+                    code: true,
+                    retentionId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        correspondence_document: {
+          where: { deleted_at: null },
+          take: 1,
+          include: {
+            correspondences: {
+              select: {
+                id: true,
+                title: true,
+                code: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Formatear documentos con información de asociación
+    const documents = recentDocuments.map(doc => {
+      const proceeding = doc.documentProceedings[0]?.proceeding;
+      const correspondence = doc.correspondence_document[0]?.correspondences;
+      
+      return {
+        id: doc.id,
+        name: doc.name || doc.file_original_name,
+        fileSize: doc.fileSize,
+        createdAt: doc.createdAt,
+        company: doc.company,
+        associationType: proceeding ? 'proceeding' : correspondence ? 'correspondence' : null,
+        association: proceeding ? {
+          id: proceeding.id,
+          name: proceeding.name,
+          code: proceeding.code,
+          retentionLineId: proceeding.retentionLineId,
+          retentionLine: proceeding.retentionLine,
+        } : correspondence ? {
+          id: correspondence.id,
+          title: correspondence.title,
+          code: correspondence.code,
+        } : null,
+      };
+    });
+
+    return { totalDocuments, totalProceedings, totalCorrespondences, recentDocsCount, docGrowth, byRetention, documents };
+  }
+
+  async merge(documentIds, name, user) {
+    console.log('=== INICIANDO MEZCLA DE DOCUMENTOS ===');
+    console.log('IDs de documentos a mezclar:', documentIds);
+    console.log('Nombre del documento resultante:', name);
+    
+    // Validar que todos los documentos existan y sean PDFs
+    const documents = await prisma.document.findMany({
+      where: {
+        id: { in: documentIds.map(id => parseInt(id)) },
+        deletedAt: null,
+      },
+      include: {
+        company: { select: { short: true } },
+      },
+    });
+
+    console.log(`Documentos encontrados: ${documents.length}`);
+    documents.forEach(doc => {
+      console.log(`- ID: ${doc.id}, Archivo: ${doc.file}, Nombre: ${doc.file_original_name}`);
+    });
+
+    if (documents.length !== documentIds.length) {
+      throw new Error('Uno o más documentos no fueron encontrados');
+    }
+
+    // Verificar que todos sean PDFs
+    const nonPdfDocs = documents.filter(doc => {
+      const fileName = doc.file_original_name || doc.file || '';
+      return !fileName.toLowerCase().endsWith('.pdf');
+    });
+
+    if (nonPdfDocs.length > 0) {
+      throw new Error('Solo se pueden mezclar documentos PDF');
+    }
+
+    // Crear un nuevo PDF mezclado
+    console.log('Creando nuevo PDF vacío...');
+    const mergedPdf = await PDFDocument.create();
+    console.log('PDF vacío creado exitosamente');
+
+    // Descargar y mezclar cada PDF en el orden especificado
+    for (const docId of documentIds) {
+      // Comparar IDs como strings porque Prisma devuelve BigInt como string
+      const doc = documents.find(d => d.id.toString() === docId.toString());
+      if (!doc || !doc.file) {
+        console.error(`Documento ${docId} no encontrado o sin archivo`);
+        console.error(`Documentos disponibles:`, documents.map(d => ({ id: d.id, file: d.file })));
+        continue;
+      }
+
+      try {
+        console.log(`Procesando documento ${doc.id}: ${doc.file}`);
+        console.log(`Bucket: ${BUCKET}, Key: ${doc.file}`);
+        
+        // Descargar el PDF desde S3
+        const getCommand = new GetObjectCommand({
+          Bucket: BUCKET,
+          Key: doc.file,
+        });
+        const response = await s3.send(getCommand);
+        
+        // Convertir el stream a buffer usando el método más simple
+        const streamToBuffer = async (stream) => {
+          const chunks = [];
+          for await (const chunk of stream) {
+            chunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
+          }
+          return Buffer.concat(chunks);
+        };
+        
+        const pdfBuffer = await streamToBuffer(response.Body);
+        console.log(`PDF descargado, tamaño: ${pdfBuffer.length} bytes`);
+
+        if (pdfBuffer.length === 0) {
+          throw new Error(`El archivo ${doc.file_original_name} está vacío`);
+        }
+
+        // Cargar el PDF
+        const pdfDoc = await PDFDocument.load(pdfBuffer);
+        const pageCount = pdfDoc.getPageCount();
+        console.log(`PDF cargado, páginas: ${pageCount}`);
+        
+        if (pageCount === 0) {
+          throw new Error(`El PDF ${doc.file_original_name} no tiene páginas`);
+        }
+        
+        // Copiar todas las páginas al PDF mezclado
+        const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+        copiedPages.forEach(page => mergedPdf.addPage(page));
+        console.log(`${pageCount} páginas agregadas al PDF mezclado`);
+      } catch (error) {
+        console.error(`Error al procesar documento ${doc.id}:`, error);
+        console.error('Stack trace:', error.stack);
+        throw new Error(`Error al procesar el documento: ${doc.file_original_name} - ${error.message}`);
+      }
+    }
+    
+    console.log(`Total de páginas en PDF mezclado: ${mergedPdf.getPageCount()}`);
+
+    // Guardar el PDF mezclado
+    const mergedPdfBytes = await mergedPdf.save();
+    const mergedBuffer = Buffer.from(mergedPdfBytes);
+
+    // Subir a S3
+    const companyShort = documents[0].company?.short || 'general';
+    const fileName = name.endsWith('.pdf') ? name : `${name}.pdf`;
+    const s3Key = `${companyShort}/documents/${uuidv4()}-${fileName}`;
+
+    const putCommand = new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: s3Key,
+      Body: mergedBuffer,
+      ContentType: 'application/pdf',
+    });
+
+    await s3.send(putCommand);
+
+    // Crear el nuevo documento en la base de datos
+    const mergedDocument = await prisma.document.create({
+      data: {
+        name: fileName,
+        file: s3Key,
+        file_original_name: fileName,
+        fileSize: mergedBuffer.length,
+        filePages: mergedPdf.getPageCount(),
+        medium: 'digital',
+        companyId: documents[0].companyId,
+        documentDate: new Date(),
+        notes: `Documento creado al mezclar ${documents.length} PDFs`,
+        createdAt: new Date(),
+      },
+    });
+
+    return mergedDocument;
   }
 }
 

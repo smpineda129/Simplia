@@ -25,6 +25,11 @@ const documentService = {
     const response = await axiosInstance.delete(`/documents/${id}`);
     return response.data;
   },
+
+  merge: async (documentIds, name) => {
+    const response = await axiosInstance.post('/documents/merge', { documentIds, name });
+    return response.data;
+  },
 };
 
 export default documentService;

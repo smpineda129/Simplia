@@ -46,6 +46,16 @@ const retentionService = {
     const response = await axiosInstance.delete(`/retentions/lines/${lineId}`);
     return response.data;
   },
+
+  getLineById: async (lineId) => {
+    const response = await axiosInstance.get(`/retentions/lines/${lineId}`);
+    return response.data;
+  },
+
+  getLineProceedings: async (lineId, params = {}) => {
+    const response = await axiosInstance.get(`/retentions/lines/${lineId}/proceedings`, { params });
+    return response.data;
+  },
 };
 
 export default retentionService;

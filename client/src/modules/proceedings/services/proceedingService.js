@@ -40,8 +40,11 @@ const proceedingService = {
 
   // ─── External Users ───────────────────────────────────────────────────────
 
-  shareWithUser: async (proceedingId, externalUserId) => {
-    const response = await axiosInstance.post(`/proceedings/${proceedingId}/external-users`, { externalUserId });
+  shareWithUser: async (proceedingId, externalUserId, customMessage = '') => {
+    const response = await axiosInstance.post(`/proceedings/${proceedingId}/external-users`, { 
+      externalUserId,
+      customMessage 
+    });
     return response.data;
   },
 
@@ -80,6 +83,23 @@ const proceedingService = {
     const response = await axiosInstance.post(`/proceedings/${proceedingId}/upload-document`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return response.data;
+  },
+
+  // ─── Folders ──────────────────────────────────────────────────────────────
+
+  getFolders: async (proceedingId) => {
+    const response = await axiosInstance.get(`/proceedings/${proceedingId}/folders`);
+    return response.data;
+  },
+
+  createFolder: async (proceedingId, name) => {
+    const response = await axiosInstance.post(`/proceedings/${proceedingId}/folders`, { name });
+    return response.data;
+  },
+
+  deleteFolder: async (proceedingId, folderId) => {
+    const response = await axiosInstance.delete(`/proceedings/${proceedingId}/folders/${folderId}`);
     return response.data;
   },
 

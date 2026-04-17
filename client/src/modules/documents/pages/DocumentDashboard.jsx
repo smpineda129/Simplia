@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -16,19 +17,42 @@ import {
   TableHead,
   TableRow,
   Paper,
+  IconButton,
+  Tooltip,
+  Button,
+  InputAdornment,
+  TablePagination,
+  Divider,
 } from '@mui/material';
-import { Description, Folder, TrendingUp, TrendingDown } from '@mui/icons-material';
+import { 
+  Description, 
+  Folder, 
+  TrendingUp, 
+  TrendingDown,
+  Visibility,
+  Article,
+  FolderOpen,
+  TableChart,
+  Search,
+  FilterAltOff,
+  Email,
+  Schedule,
+} from '@mui/icons-material';
 import axiosInstance from '../../../api/axiosConfig';
 import { useAuth } from '../../../hooks/useAuth';
 
 const DocumentDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [retentions, setRetentions] = useState([]);
   const [retentionId, setRetentionId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     loadRetentions();
@@ -64,6 +88,64 @@ const DocumentDashboard = () => {
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '—';
+    const mb = bytes / (1024 * 1024);
+    return mb < 1 ? `${(bytes / 1024).toFixed(1)} KB` : `${mb.toFixed(2)} MB`;
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('es-ES');
+  };
+
+  const handleNavigateToAssociation = (doc) => {
+    if (doc.associationType === 'proceeding') {
+      navigate(`/proceedings/${doc.association.id}`);
+    } else if (doc.associationType === 'correspondence') {
+      navigate(`/correspondences/${doc.association.id}`);
+    }
+  };
+
+  const handleNavigateToRetentionLine = (retentionLineId) => {
+    if (retentionLineId) {
+      navigate(`/retentions/lines/${retentionLineId}`);
+    }
+  };
+
+  const handleResetFilters = () => {
+    setStartDate('');
+    setEndDate('');
+    setRetentionId('');
+    setSearchTerm('');
+    setPage(0);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredDocuments = data?.documents?.filter(doc => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      doc.name?.toLowerCase().includes(search) ||
+      doc.association?.code?.toLowerCase().includes(search) ||
+      doc.association?.name?.toLowerCase().includes(search) ||
+      doc.association?.title?.toLowerCase().includes(search)
+    );
+  }) || [];
+
+  const paginatedDocuments = filteredDocuments.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   const kpiCards = data
     ? [
         {
@@ -71,11 +153,18 @@ const DocumentDashboard = () => {
           value: data.totalDocuments,
           icon: <Description sx={{ fontSize: 40, color: 'primary.main' }} />,
           growth: data.docGrowth,
+          subtitle: startDate && endDate ? `${data.docGrowth}% en el rango seleccionado` : null,
         },
         {
           title: 'Total Expedientes',
           value: data.totalProceedings,
           icon: <Folder sx={{ fontSize: 40, color: 'secondary.main' }} />,
+          growth: null,
+        },
+        {
+          title: 'Total Correspondencias',
+          value: data.totalCorrespondences,
+          icon: <Email sx={{ fontSize: 40, color: 'info.main' }} />,
           growth: null,
         },
       ]
@@ -88,44 +177,74 @@ const DocumentDashboard = () => {
       </Typography>
 
       {/* Filters */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <TextField
-            label="Fecha Inicio"
-            type="date"
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <TextField
-            label="Fecha Fin"
-            type="date"
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <TextField
-            label="Retención"
-            select
-            fullWidth
-            value={retentionId}
-            onChange={(e) => setRetentionId(e.target.value)}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">Filtros</Typography>
+          <Button
+            startIcon={<FilterAltOff />}
+            onClick={handleResetFilters}
+            variant="outlined"
+            size="small"
           >
-            <MenuItem value="">Todas</MenuItem>
-            {retentions.map((r) => (
-              <MenuItem key={r.id} value={r.id}>
-                {r.name}
-              </MenuItem>
-            ))}
-          </TextField>
+            Limpiar Filtros
+          </Button>
+        </Box>
+        <Divider sx={{ mb: 2 }} />
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Fecha Inicio"
+              type="date"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Fecha Fin"
+              type="date"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Retención"
+              select
+              fullWidth
+              value={retentionId}
+              onChange={(e) => setRetentionId(e.target.value)}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {retentions.map((r) => (
+                <MenuItem key={r.id} value={r.id}>
+                  {r.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Buscar documentos"
+              fullWidth
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="Nombre, código..."
+            />
+          </Grid>
         </Grid>
-      </Grid>
+      </Paper>
 
       {loading ? (
         <Box display="flex" justifyContent="center" p={4}>
@@ -148,13 +267,19 @@ const DocumentDashboard = () => {
                           {kpi.value?.toLocaleString()}
                         </Typography>
                         {kpi.growth !== null && kpi.growth !== undefined && (
-                          <Chip
-                            icon={kpi.growth >= 0 ? <TrendingUp /> : <TrendingDown />}
-                            label={`${kpi.growth >= 0 ? '+' : ''}${kpi.growth}% vs período anterior`}
-                            color={kpi.growth >= 0 ? 'success' : 'error'}
-                            size="small"
-                            sx={{ mt: 1 }}
-                          />
+                          <Box sx={{ mt: 1 }}>
+                            <Chip
+                              icon={<TrendingUp />}
+                              label={`${kpi.growth}%`}
+                              color="info"
+                              size="small"
+                            />
+                            {kpi.subtitle && (
+                              <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                                {kpi.subtitle}
+                              </Typography>
+                            )}
+                          </Box>
                         )}
                       </Box>
                       {kpi.icon}
@@ -165,36 +290,109 @@ const DocumentDashboard = () => {
             ))}
           </Grid>
 
-          {/* By Retention Table */}
-          {data.byRetention?.length > 0 && (
-            <Paper>
-              <Box sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Expedientes por Retención
+          {/* Documents Table */}
+          {filteredDocuments.length > 0 && (
+            <Paper sx={{ mb: 3 }}>
+              <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6">
+                  Documentos ({filteredDocuments.length})
                 </Typography>
               </Box>
               <TableContainer>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Serie / Código</TableCell>
-                      <TableCell>Retención</TableCell>
-                      <TableCell align="right">Expedientes</TableCell>
+                      <TableCell>Nombre</TableCell>
+                      <TableCell>Tamaño</TableCell>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Asociado a</TableCell>
+                      <TableCell>Línea de Retención</TableCell>
+                      <TableCell align="right">Acciones</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {data.byRetention.map((row, i) => (
-                      <TableRow key={i} hover>
-                        <TableCell>{row.name}</TableCell>
-                        <TableCell>{row.retentionName}</TableCell>
-                        <TableCell align="right">{row.count}</TableCell>
+                    {paginatedDocuments.map((doc) => (
+                      <TableRow key={doc.id} hover>
+                        <TableCell>{doc.name}</TableCell>
+                        <TableCell>{formatFileSize(doc.fileSize)}</TableCell>
+                        <TableCell>{formatDate(doc.createdAt)}</TableCell>
+                        <TableCell>
+                          {doc.associationType === 'proceeding' ? (
+                            <Chip
+                              icon={<FolderOpen fontSize="small" />}
+                              label={`Exp: ${doc.association.code}`}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                            />
+                          ) : doc.associationType === 'correspondence' ? (
+                            <Chip
+                              icon={<Article fontSize="small" />}
+                              label={`Corr: ${doc.association.code || doc.association.title}`}
+                              size="small"
+                              color="secondary"
+                              variant="outlined"
+                            />
+                          ) : (
+                            <Chip label="Sin asociar" size="small" variant="outlined" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {doc.association?.retentionLine ? (
+                            <Chip
+                              icon={<TableChart fontSize="small" />}
+                              label={`${doc.association.retentionLine.series} - ${doc.association.retentionLine.code}`}
+                              size="small"
+                              color="info"
+                              variant="outlined"
+                            />
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                        <TableCell align="right">
+                          {doc.associationType && (
+                            <Tooltip title={doc.associationType === 'proceeding' ? 'Ver Expediente' : 'Ver Correspondencia'}>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleNavigateToAssociation(doc)}
+                              >
+                                <Visibility fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {doc.association?.retentionLineId && (
+                            <Tooltip title="Ver Línea de Retención">
+                              <IconButton
+                                size="small"
+                                color="info"
+                                onClick={() => handleNavigateToRetentionLine(doc.association.retentionLineId)}
+                              >
+                                <TableChart fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
+              <TablePagination
+                component="div"
+                count={filteredDocuments.length}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                labelRowsPerPage="Filas por página:"
+                labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+              />
             </Paper>
           )}
+
         </>
       ) : null}
     </Box>

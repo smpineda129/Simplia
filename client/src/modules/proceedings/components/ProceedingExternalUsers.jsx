@@ -25,6 +25,7 @@ import {
 import { usePermissions } from '../../../hooks/usePermissions';
 import proceedingService from '../services/proceedingService';
 import entityService from '../../entities/services/entityService';
+import RichTextEditor from '../../../components/RichTextEditor';
 
 const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
   const { hasPermission } = usePermissions();
@@ -32,6 +33,8 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [customMessage, setCustomMessage] = useState('');
 
   const handleSearch = async () => {
     if (!searchTerm) return;
@@ -46,17 +49,30 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
     }
   };
 
-  const handleAttach = async (user) => {
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    setCustomMessage('');
+  };
+
+  const handleConfirmShare = async () => {
+    if (!selectedUser) return;
     try {
-      await proceedingService.shareWithUser(proceedingId, user.id);
+      await proceedingService.shareWithUser(proceedingId, selectedUser.id, customMessage);
       setOpenSearch(false);
       setSearchTerm('');
       setSearchResults([]);
+      setSelectedUser(null);
+      setCustomMessage('');
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error sharing with user:', error);
       alert(error.response?.data?.message || 'Error al compartir con usuario.');
     }
+  };
+
+  const handleCancelShare = () => {
+    setSelectedUser(null);
+    setCustomMessage('');
   };
 
   const handleDetach = async (userId) => {
@@ -133,45 +149,75 @@ const ProceedingExternalUsers = ({ proceedingId, users = [], onUpdate }) => {
         )}
       </List>
 
-      <Dialog open={openSearch} onClose={() => setOpenSearch(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Buscar Usuario Externo</DialogTitle>
+      <Dialog open={openSearch} onClose={() => setOpenSearch(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {selectedUser ? 'Mensaje personalizado (opcional)' : 'Buscar Usuario Externo'}
+        </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 1 }}>
-            <TextField
-              fullWidth
-              placeholder="Nombre, email, DNI..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button variant="contained" onClick={handleSearch} disabled={searching}>
-              Buscar
-            </Button>
-          </Box>
-          <List>
-            {searchResults.map((user) => (
-              <ListItem key={user.id}>
-                <ListItemIcon>
-                  <Share />
-                </ListItemIcon>
-                <ListItemText
-                  primary={`${user.name}${user.lastName ? ` ${user.lastName}` : ''}`}
-                  secondary={user.email}
+          {!selectedUser ? (
+            <>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 1 }}>
+                <TextField
+                  fullWidth
+                  placeholder="Nombre, email, DNI..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <Button size="small" variant="outlined" onClick={() => handleAttach(user)}>
-                  Compartir
+                <Button variant="contained" onClick={handleSearch} disabled={searching}>
+                  Buscar
                 </Button>
-              </ListItem>
-            ))}
-            {searchResults.length === 0 && searchTerm && !searching && (
-              <Typography align="center" color="text.secondary">
-                No se encontraron resultados
+              </Box>
+              <List>
+                {searchResults.map((user) => (
+                  <ListItem key={user.id}>
+                    <ListItemIcon>
+                      <Share />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`${user.name}${user.lastName ? ` ${user.lastName}` : ''}`}
+                      secondary={user.email}
+                    />
+                    <Button size="small" variant="outlined" onClick={() => handleSelectUser(user)}>
+                      Seleccionar
+                    </Button>
+                  </ListItem>
+                ))}
+                {searchResults.length === 0 && searchTerm && !searching && (
+                  <Typography align="center" color="text.secondary">
+                    No se encontraron resultados
+                  </Typography>
+                )}
+              </List>
+            </>
+          ) : (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Compartiendo con: <strong>{selectedUser.name}{selectedUser.lastName ? ` ${selectedUser.lastName}` : ''}</strong> ({selectedUser.email})
               </Typography>
-            )}
-          </List>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Mensaje personalizado (opcional)
+              </Typography>
+              <RichTextEditor
+                value={customMessage}
+                onChange={setCustomMessage}
+                placeholder="Escribe un mensaje personalizado para incluir en el email de notificación..."
+                height="200px"
+              />
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenSearch(false)}>Cerrar</Button>
+          {selectedUser ? (
+            <>
+              <Button onClick={handleCancelShare}>Atrás</Button>
+              <Button variant="contained" onClick={handleConfirmShare}>
+                Compartir
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => setOpenSearch(false)}>Cerrar</Button>
+          )}
         </DialogActions>
       </Dialog>
     </Paper>

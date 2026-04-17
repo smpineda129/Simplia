@@ -21,7 +21,6 @@ const ProceedingModalForm = ({ open, onClose, onSave, proceeding, companies, ret
 
   const initialValues = {
     name: proceeding?.name || '',
-    code: proceeding?.code || '',
     startDate: proceeding?.startDate ? proceeding.startDate.split('T')[0] : '',
     companyId: proceeding?.companyId || '',
     retentionId: proceeding?.retentionLine?.retentionId || '',
@@ -163,7 +162,7 @@ const ProceedingModalForm = ({ open, onClose, onSave, proceeding, companies, ret
                   </Field>
                 </Grid>
 
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12}>
                   <Field
                     as={TextField}
                     name="name"
@@ -171,17 +170,6 @@ const ProceedingModalForm = ({ open, onClose, onSave, proceeding, companies, ret
                     fullWidth
                     error={touched.name && Boolean(errors.name)}
                     helperText={touched.name && errors.name}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <Field
-                    as={TextField}
-                    name="code"
-                    label="Código *"
-                    fullWidth
-                    error={touched.code && Boolean(errors.code)}
-                    helperText={touched.code && errors.code}
                   />
                 </Grid>
 

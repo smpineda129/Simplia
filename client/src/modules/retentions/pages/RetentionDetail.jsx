@@ -23,6 +23,8 @@ import retentionService from '../services/retentionService';
 import RetentionLineTable from '../components/RetentionLineTable';
 import RetentionLineForm from '../components/RetentionLineForm';
 import proceedingService from '../../proceedings/services/proceedingService';
+import ProceedingModalForm from '../../proceedings/components/ProceedingModalForm';
+import companyService from '../../companies/services/companyService';
 
 const RetentionDetail = () => {
   const { id } = useParams();
@@ -34,11 +36,15 @@ const RetentionDetail = () => {
   const [selectedLine, setSelectedLine] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [proceedings, setProceedings] = useState([]);
+  const [openProceedingModal, setOpenProceedingModal] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [retentions, setRetentions] = useState([]);
 
   useEffect(() => {
     loadRetention();
     loadRetentionLines();
     loadProceedings();
+    loadCompanies();
   }, [id]);
 
   const loadProceedings = async () => {
@@ -47,6 +53,41 @@ const RetentionDetail = () => {
       setProceedings(result.data || []);
     } catch (error) {
       console.error('Error loading proceedings:', error);
+    }
+  };
+
+  const loadCompanies = async () => {
+    try {
+      const result = await companyService.getAll({ limit: 100 });
+      setCompanies(result.data || []);
+    } catch (error) {
+      console.error('Error loading companies:', error);
+    }
+  };
+
+  const loadRetentionsForCompany = async (companyId) => {
+    try {
+      const result = await retentionService.getAll({ companyId, limit: 100 });
+      setRetentions(result.data || []);
+    } catch (error) {
+      console.error('Error loading retentions:', error);
+      setRetentions([]);
+    }
+  };
+
+  const handleCreateProceeding = () => {
+    setOpenProceedingModal(true);
+  };
+
+  const handleSaveProceeding = async (data) => {
+    try {
+      await proceedingService.create(data);
+      showSnackbar('Expediente creado exitosamente');
+      setOpenProceedingModal(false);
+      loadProceedings();
+    } catch (error) {
+      console.error('Error creating proceeding:', error);
+      throw error;
     }
   };
 
@@ -244,10 +285,19 @@ const RetentionDetail = () => {
       <Divider sx={{ my: 3 }} />
 
       {/* Expedientes Asociados */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" component="h2">
           Expedientes Asociados
         </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleCreateProceeding}
+        >
+          Crear Expediente
+        </Button>
+      </Box>
+      <Box sx={{ mb: 3 }}>
         {proceedings.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             No hay expedientes asociados a esta tabla de retención.
@@ -293,6 +343,16 @@ const RetentionDetail = () => {
         onClose={() => setOpenModal(false)}
         onSave={handleSaveLine}
         line={selectedLine}
+      />
+
+      <ProceedingModalForm
+        open={openProceedingModal}
+        onClose={() => setOpenProceedingModal(false)}
+        onSave={handleSaveProceeding}
+        proceeding={null}
+        companies={companies}
+        retentions={retentions}
+        onCompanyChange={loadRetentionsForCompany}
       />
 
       <Snackbar

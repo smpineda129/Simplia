@@ -524,7 +524,7 @@ model ExternalUser {
   companyId               BigInt?                  @map("company_id")
   password                String?                  @db.VarChar(255)
   rememberToken           String?                  @map("remember_token") @db.VarChar(100)
-  otpCode                 String?                  @map("otp_code") @db.VarChar(10)
+  otpCode                 String?                  @map("otp_code") @db.VarChar(255)
   otpExpiresAt            DateTime?                @map("otp_expires_at") @db.Timestamp(0)
   externalUserProceedings ExternalUserProceeding[]
   company                 Company?                 @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)

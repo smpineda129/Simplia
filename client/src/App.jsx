@@ -12,6 +12,7 @@ import { CompanyList } from './modules/companies';
 import CompanyDetail from './modules/companies/pages/CompanyDetail';
 import { AreaList } from './modules/areas';
 import { RetentionList, RetentionDetail } from './modules/retentions';
+import RetentionLineDetail from './modules/retentions/pages/RetentionLineDetail';
 import { CorrespondenceTypeList } from './modules/correspondence-types';
 import { TemplateList } from './modules/templates';
 import { ProceedingList, ProceedingDetail } from './modules/proceedings';
@@ -130,6 +131,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="retention.view">
                 <RetentionDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/retentions/lines/:lineId"
+            element={
+              <ProtectedRoute requiredPermission="retention.view">
+                <RetentionLineDetail />
               </ProtectedRoute>
             }
           />

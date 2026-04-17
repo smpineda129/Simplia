@@ -20,13 +20,19 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
 } from '@mui/material';
-import { Add, Delete, InsertDriveFile, Download, Visibility, Close, OpenInNew, CreateNewFolder, Search, FolderOpen, Folder, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Add, Delete, InsertDriveFile, Download, Visibility, Close, OpenInNew, CreateNewFolder, Search, FolderOpen, Folder, ExpandMore, ExpandLess, MergeType, ArrowUpward, ArrowDownward, Edit } from '@mui/icons-material';
 import TextField from '@mui/material/TextField';
 import Collapse from '@mui/material/Collapse';
 import { documentService } from '../../documents';
 import correspondenceService from '../services/correspondenceService';
 import { useAuth } from '../../../hooks/useAuth';
+import DocumentEditForm from '../../documents/components/DocumentEditForm';
 
 const PREVIEWABLE_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -103,8 +109,13 @@ const PreviewModal = ({ doc, url, open, onClose, onDownload }) => {
 };
 
 // ── Main Component ───────────────────────────────────────────────────────────
-const DocumentSection = ({ correspondenceId }) => {
+const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
   const { user } = useAuth();
+  const companyId = propCompanyId || user?.companyId;
+  console.log('Usuario en DocumentSection:', user);
+  console.log('CompanyId del usuario:', user?.companyId);
+  console.log('CompanyId de la prop:', propCompanyId);
+  console.log('CompanyId final a usar:', companyId);
   const [documents, setDocuments] = useState([]);
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,13 +125,24 @@ const DocumentSection = ({ correspondenceId }) => {
   const [search, setSearch] = useState('');
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  // Track expanded/collapsed folders — all expanded by default
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
   // Preview state
   const [previewDoc, setPreviewDoc] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Merge state
+  const [selectedDocs, setSelectedDocs] = useState([]);
+  const [mergeMode, setMergeMode] = useState(false);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [mergeOrder, setMergeOrder] = useState([]);
+  const [mergeName, setMergeName] = useState('');
+  const [merging, setMerging] = useState(false);
+
+  // Edit state
+  const [editDoc, setEditDoc] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -227,11 +249,20 @@ const DocumentSection = ({ correspondenceId }) => {
   const uploadSingleFile = async (file, folderId) => {
     const uploadResponse = await correspondenceService.uploadDocument(file);
     const { key, originalName } = uploadResponse.data;
+    
+    const companyIdToUse = parseInt(companyId);
+    console.log('CompanyId en uploadSingleFile:', companyId);
+    console.log('CompanyId parseado:', companyIdToUse);
+    
+    if (!companyIdToUse || isNaN(companyIdToUse)) {
+      throw new Error('CompanyId inválido o no disponible');
+    }
+    
     await documentService.create({
       name: originalName || file.name,
       file: key,
       medium: 'digital',
-      companyId: user?.companyId,
+      companyId: companyIdToUse,
       correspondenceId: parseInt(correspondenceId),
       ...(folderId && { folderId }),
     });
@@ -240,6 +271,11 @@ const DocumentSection = ({ correspondenceId }) => {
   const handleFileSelect = async (e, folderId = null) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+
+    if (!companyId) {
+      showSnackbar('Error: No se pudo obtener la empresa del usuario', 'error');
+      return;
+    }
 
     if (folderId) {
       setUploadingFolderIds(prev => new Set(prev).add(folderId.toString()));
@@ -296,6 +332,27 @@ const DocumentSection = ({ correspondenceId }) => {
     }
   };
 
+  const handleEdit = (doc) => {
+    console.log('Documento original:', doc);
+    console.log('CompanyId a usar:', companyId);
+    const docWithCompany = { ...doc, companyId: companyId || doc.companyId };
+    console.log('Documento con companyId:', docWithCompany);
+    setEditDoc(docWithCompany);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async (data) => {
+    try {
+      await documentService.update(editDoc.id, data);
+      showSnackbar('Documento actualizado exitosamente');
+      setEditDialogOpen(false);
+      setEditDoc(null);
+      loadDocuments();
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const getMediumLabel = (medium) => {
     if (!medium) return 'digital';
     const num = Number(medium);
@@ -305,6 +362,82 @@ const DocumentSection = ({ correspondenceId }) => {
 
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
+  };
+
+  const isPDF = (doc) => {
+    const name = doc.file_original_name || doc.name || '';
+    return getFileExt(name) === 'pdf';
+  };
+
+  const handleToggleSelectDoc = (doc) => {
+    if (!isPDF(doc)) {
+      showSnackbar('Solo se pueden mezclar documentos PDF', 'warning');
+      return;
+    }
+    setSelectedDocs(prev => {
+      const exists = prev.find(d => d.id === doc.id);
+      if (exists) {
+        return prev.filter(d => d.id !== doc.id);
+      } else {
+        return [...prev, doc];
+      }
+    });
+  };
+
+  const handleStartMerge = () => {
+    if (selectedDocs.length < 2) {
+      showSnackbar('Selecciona al menos 2 documentos PDF para mezclar', 'warning');
+      return;
+    }
+    setMergeOrder(selectedDocs.map(d => d.id));
+    setMergeName('Documento_Mezclado.pdf');
+    setMergeDialogOpen(true);
+  };
+
+  const handleCancelMerge = () => {
+    setMergeMode(false);
+    setSelectedDocs([]);
+  };
+
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
+    const newOrder = [...mergeOrder];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    setMergeOrder(newOrder);
+  };
+
+  const handleMoveDown = (index) => {
+    if (index === mergeOrder.length - 1) return;
+    const newOrder = [...mergeOrder];
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    setMergeOrder(newOrder);
+  };
+
+  const handleConfirmMerge = async () => {
+    if (!mergeName.trim()) {
+      showSnackbar('Ingresa un nombre para el documento mezclado', 'warning');
+      return;
+    }
+    try {
+      setMerging(true);
+      const response = await documentService.merge(mergeOrder, mergeName.trim());
+      const mergedDoc = response.data;
+      
+      // Vincular el documento mezclado a la correspondencia
+      await correspondenceService.attachDocument(correspondenceId, mergedDoc.id);
+      
+      showSnackbar('Documentos mezclados exitosamente');
+      setMergeDialogOpen(false);
+      setMergeMode(false);
+      setSelectedDocs([]);
+      setMergeOrder([]);
+      setMergeName('');
+      loadDocuments();
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al mezclar documentos', 'error');
+    } finally {
+      setMerging(false);
+    }
   };
 
   if (loading) {
@@ -332,6 +465,7 @@ const DocumentSection = ({ correspondenceId }) => {
       <Table size="small">
         <TableHead>
           <TableRow sx={{ bgcolor: '#fafafa' }}>
+            {mergeMode && <TableCell sx={{ width: 50 }}>SELECCIONAR</TableCell>}
             <TableCell>NOMBRE</TableCell>
             <TableCell sx={{ width: 90 }}>MEDIO</TableCell>
             <TableCell sx={{ width: 110 }}>FECHA</TableCell>
@@ -341,52 +475,75 @@ const DocumentSection = ({ correspondenceId }) => {
         <TableBody>
           {docs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} align="center" sx={{ color: 'text.secondary', py: 2 }}>
+              <TableCell colSpan={mergeMode ? 5 : 4} align="center" sx={{ color: 'text.secondary', py: 2 }}>
                 {emptyMsg}
               </TableCell>
             </TableRow>
           ) : (
-            docs.map((doc) => (
-              <TableRow key={doc.id} hover>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <InsertDriveFile color="primary" fontSize="small" />
-                    <Typography variant="body2" fontWeight={500}>
-                      {doc.file_original_name || doc.name}
+            docs.map((doc) => {
+              const isSelected = selectedDocs.find(d => d.id === doc.id);
+              const canSelect = isPDF(doc);
+              return (
+                <TableRow key={doc.id} hover selected={!!isSelected}>
+                  {mergeMode && (
+                    <TableCell>
+                      <Checkbox
+                        checked={!!isSelected}
+                        onChange={() => handleToggleSelectDoc(doc)}
+                        disabled={!canSelect}
+                        size="small"
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <InsertDriveFile color="primary" fontSize="small" />
+                      <Typography variant="body2" fontWeight={500}>
+                        {doc.file_original_name || doc.name}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={getMediumLabel(doc.medium)} size="small" />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('es-ES') : '—'}
                     </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip label={getMediumLabel(doc.medium)} size="small" />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('es-ES') : '—'}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  {doc.file && isPreviewable(doc) && (
-                    <Tooltip title="Vista previa">
-                      <IconButton size="small" color="info" onClick={() => handlePreview(doc)} disabled={previewLoading}>
-                        {previewLoading ? <CircularProgress size={16} /> : <Visibility fontSize="small" />}
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {doc.file && (
-                    <Tooltip title="Descargar">
-                      <IconButton size="small" color="primary" onClick={() => handleDownload(doc.id)}>
-                        <Download fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  <Tooltip title="Eliminar">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(doc.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))
+                  </TableCell>
+                  <TableCell align="right">
+                    {!mergeMode && (
+                      <>
+                        {doc.file && isPreviewable(doc) && (
+                          <Tooltip title="Vista previa">
+                            <IconButton size="small" color="info" onClick={() => handlePreview(doc)} disabled={previewLoading}>
+                              {previewLoading ? <CircularProgress size={16} /> : <Visibility fontSize="small" />}
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {doc.file && (
+                          <Tooltip title="Descargar">
+                            <IconButton size="small" color="primary" onClick={() => handleDownload(doc.id)}>
+                              <Download fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title="Editar">
+                          <IconButton size="small" color="secondary" onClick={() => handleEdit(doc)}>
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton size="small" color="error" onClick={() => handleDelete(doc.id)}>
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
@@ -401,31 +558,70 @@ const DocumentSection = ({ correspondenceId }) => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5" component="h2">
           Documentos de la Correspondencia
+          {mergeMode && (
+            <Chip
+              label={`${selectedDocs.length} seleccionados`}
+              size="small"
+              color="primary"
+              sx={{ ml: 2 }}
+            />
+          )}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<CreateNewFolder />}
-            onClick={() => setNewFolderOpen(true)}
-            size="small"
-          >
-            Nueva Carpeta
-          </Button>
-          <Button
-            component="label"
-            variant="contained"
-            startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <Add />}
-            disabled={uploading}
-          >
-            {uploading ? 'Subiendo...' : 'Agregar Documento'}
-            <input
-              type="file"
-              hidden
-              multiple
-              onChange={(e) => handleFileSelect(e)}
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-            />
-          </Button>
+          {mergeMode ? (
+            <>
+              <Button
+                variant="outlined"
+                onClick={handleCancelMerge}
+                size="small"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<MergeType />}
+                onClick={handleStartMerge}
+                disabled={selectedDocs.length < 2}
+                size="small"
+              >
+                Mezclar ({selectedDocs.length})
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outlined"
+                startIcon={<MergeType />}
+                onClick={() => setMergeMode(true)}
+                size="small"
+              >
+                Mezclar PDFs
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<CreateNewFolder />}
+                onClick={() => setNewFolderOpen(true)}
+                size="small"
+              >
+                Nueva Carpeta
+              </Button>
+              <Button
+                component="label"
+                variant="contained"
+                startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <Add />}
+                disabled={uploading}
+              >
+                {uploading ? 'Subiendo...' : 'Agregar Documento'}
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  onChange={(e) => handleFileSelect(e)}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                />
+              </Button>
+            </>
+          )}
         </Box>
       </Box>
 
@@ -559,6 +755,94 @@ const DocumentSection = ({ correspondenceId }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Merge Dialog */}
+      <Dialog open={mergeDialogOpen} onClose={() => setMergeDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Mezclar Documentos PDF</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Nombre del documento mezclado"
+            fullWidth
+            value={mergeName}
+            onChange={(e) => setMergeName(e.target.value)}
+            sx={{ mt: 2, mb: 3 }}
+            placeholder="Documento_Mezclado.pdf"
+          />
+          <Typography variant="subtitle2" gutterBottom>
+            Orden de mezcla (arrastra para reordenar):
+          </Typography>
+          <List dense>
+            {mergeOrder.map((docId, index) => {
+              const doc = documents.find(d => d.id === docId);
+              if (!doc) return null;
+              return (
+                <ListItem
+                  key={docId}
+                  sx={{
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 1,
+                    mb: 1,
+                    bgcolor: '#fafafa'
+                  }}
+                >
+                  <Chip
+                    label={index + 1}
+                    size="small"
+                    color="primary"
+                    sx={{ mr: 2 }}
+                  />
+                  <ListItemText
+                    primary={doc.file_original_name || doc.name}
+                    primaryTypographyProps={{ variant: 'body2' }}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0}
+                    >
+                      <ArrowUpward fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === mergeOrder.length - 1}
+                    >
+                      <ArrowDownward fontSize="small" />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              );
+            })}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMergeDialogOpen(false)} disabled={merging}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmMerge}
+            disabled={merging || !mergeName.trim()}
+            startIcon={merging ? <CircularProgress size={16} /> : <MergeType />}
+          >
+            {merging ? 'Mezclando...' : 'Mezclar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Document Dialog */}
+      {editDoc && (
+        <DocumentEditForm
+          open={editDialogOpen}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setEditDoc(null);
+          }}
+          document={editDoc}
+          onSave={handleSaveEdit}
+        />
+      )}
 
       <Snackbar
         open={snackbar.open}

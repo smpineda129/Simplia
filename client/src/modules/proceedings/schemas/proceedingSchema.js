@@ -6,11 +6,6 @@ export const proceedingSchema = Yup.object().shape({
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(255, 'El nombre debe tener máximo 255 caracteres'),
 
-  code: Yup.string()
-    .required('El código es requerido')
-    .min(2, 'El código debe tener al menos 2 caracteres')
-    .max(255, 'El código debe tener máximo 255 caracteres'),
-
   startDate: Yup.date()
     .required('La fecha inicial es requerida')
     .typeError('Debe ser una fecha válida'),
