@@ -1,21 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Typography,
+  Paper,
   TextField,
   Button,
-  Paper,
+  Typography,
   Alert,
   CircularProgress,
   Card,
   CardContent,
   CardActionArea,
-  Grid,
   Chip,
+  Grid,
 } from '@mui/material';
 import { Folder, ArrowBack, Email, Lock, Visibility, VisibilityOff, Download, Description } from '@mui/icons-material';
+import PublicNavbar from '../../../components/public/PublicNavbar';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 const externalApi = axios.create({ baseURL: API_URL });
@@ -85,8 +86,10 @@ const ExternalPortal = () => {
   const loanLabel = { custody: 'En custodia', loaned: 'Prestado', returned: 'Devuelto' };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
-      {/* Header azul decorativo */}
+    <>
+      <PublicNavbar />
+      <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
+        {/* Header azul decorativo */}
       <Box
         sx={{
           background: 'linear-gradient(155deg, #0F172A 0%, #1a3054 45%, #1D4ED8 100%)',
@@ -431,7 +434,8 @@ const ExternalPortal = () => {
         )}
         </Paper>
       </Box>
-    </Box>
+      </Box>
+    </>
   );
 };
 

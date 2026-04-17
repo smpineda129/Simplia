@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const publicApi = axios.create({ baseURL: '/api/public' });
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+const publicApi = axios.create({ baseURL: `${API_URL}/public` });
 
 export const getPublicCompany = (id) => publicApi.get(`/companies/${id}`);
 export const getPublicCorrespondenceTypes = (companyId) =>

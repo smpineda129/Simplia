@@ -1,6 +1,6 @@
-import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Typography, useMediaQuery, useTheme, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Description, Lock, BarChart } from '@mui/icons-material';
+import { Description, Lock, BarChart, Folder } from '@mui/icons-material';
 import LoginForm from '../forms/LoginForm';
 
 // Geometric SVG background
@@ -172,6 +172,28 @@ const LoginPage = () => {
 
           {/* Form */}
           <LoginForm />
+
+          {/* External Portal Link */}
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Link
+              href="/external/portal"
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                color: '#2563EB',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              <Folder sx={{ fontSize: 18 }} />
+              Acceder al Portal de Expedientes
+            </Link>
+          </Box>
 
           {/* Trust badges */}
           <Box
