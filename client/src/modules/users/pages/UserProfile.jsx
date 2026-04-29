@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -39,6 +39,8 @@ const UserProfile = () => {
   // Presigned display URLs (separate from formData which stores S3 keys)
   const [displayUrls, setDisplayUrls] = useState({ avatar: null, signature: null });
   const [companies, setCompanies] = useState([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+  const debounceRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -63,15 +65,25 @@ const UserProfile = () => {
     }
   }, [user]);
 
+  const fetchCompanies = (search = '') => {
+    setCompaniesLoading(true);
+    companyService.getAll({ search, limit: 100, page: 1 })
+      .then((res) => {
+        setCompanies(res.data || []);
+      })
+      .catch(() => {})
+      .finally(() => setCompaniesLoading(false));
+  };
+
   useEffect(() => {
     const userIsOwner = user?.roles?.some((r) => (typeof r === 'object' ? r.name : r) === 'Owner') || user?.role === 'Owner';
-    if (userIsOwner) {
-      companyService.getAll().then((res) => {
-        const list = res.data || res;
-        setCompanies(Array.isArray(list) ? list : []);
-      }).catch(() => {});
-    }
+    if (userIsOwner) fetchCompanies();
   }, [user]);
+
+  const handleCompanyInputChange = (_, inputValue) => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchCompanies(inputValue), 300);
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -592,16 +604,14 @@ const UserProfile = () => {
                         onChange={(_, selected) => {
                           setFormData((prev) => ({ ...prev, companyId: selected ? String(selected.id) : '' }));
                         }}
-                        filterOptions={(options, { inputValue }) =>
-                          options.filter((o) =>
-                            o.name.toLowerCase().includes(inputValue.toLowerCase())
-                          )
-                        }
+                        onInputChange={handleCompanyInputChange}
+                        filterOptions={(x) => x}
+                        loading={companiesLoading}
                         renderInput={(params) => (
                           <TextField
                             {...params}
                             label="Empresa"
-                            helperText="Escribe para filtrar empresas"
+                            helperText="Escribe para buscar empresas"
                           />
                         )}
                         noOptionsText="Sin resultados"
