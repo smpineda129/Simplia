@@ -123,14 +123,20 @@ const CorrespondenceDetail = () => {
 
   const handleReply = async (data) => {
     try {
-      await correspondenceService.respond(id, {
+      const result = await correspondenceService.respond(id, {
         response: data.message,
         cc: data.cc,
         templateId: data.templateId,
         documentKey: data.documentKey,
         documentName: data.documentName,
+        sign: data.sign,
       });
-      showSnackbar('Respuesta enviada exitosamente');
+      const signatureToken = result?.signatureToken;
+      showSnackbar(
+        signatureToken
+          ? `Respuesta enviada y firmada electrónicamente (Token: ${signatureToken.slice(0, 8)}…)`
+          : 'Respuesta enviada exitosamente'
+      );
       setOpenReplyModal(false);
       loadCorrespondence();
     } catch (error) {

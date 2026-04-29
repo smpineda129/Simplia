@@ -1,4 +1,5 @@
 import { prisma } from '../../db/prisma.js';
+import crypto from 'crypto';
 import notificationService from '../notifications/notification.service.js';
 import emailService from '../../utils/emailService.js';
 import { correspondenceAssignedEmailTemplate } from '../../templates/correspondenceAssignedEmail.js';
@@ -166,6 +167,9 @@ class CorrespondenceService {
           include: {
             users_correspondence_threads_from_idTousers: {
               select: { id: true, name: true, email: true, avatar: true },
+            },
+            electronicSignature: {
+              select: { id: true, signatureToken: true, signerName: true, signerEmail: true, documentHash: true, createdAt: true },
             },
           },
         },
@@ -620,7 +624,30 @@ class CorrespondenceService {
   }
 
   // Responder correspondencia (genera radicado de salida y cierra)
-  async respond(id, data, userId) {
+  async createElectronicSignature({ correspondenceId, threadId, userId, message, ip, userAgent, metadata }) {
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { name: true, email: true },
+    });
+
+    const documentHash = crypto.createHash('sha256').update(message || '').digest('hex');
+
+    return prisma.electronicSignature.create({
+      data: {
+        correspondenceId: BigInt(correspondenceId),
+        threadId: BigInt(threadId),
+        userId: BigInt(userId),
+        signerName: user?.name || '',
+        signerEmail: user?.email || '',
+        documentHash,
+        ipAddress: ip || null,
+        userAgent: userAgent || null,
+        metadata: metadata || null,
+      },
+    });
+  }
+
+  async respond(id, data, userId, { ip, userAgent } = {}) {
     const correspondence = await this.getById(id);
 
     if (correspondence.status === 'closed') {
@@ -644,7 +671,33 @@ class CorrespondenceService {
       },
     });
 
-    await this.createThread(id, { message: data.response }, userId);
+    const thread = await this.createThread(id, { message: data.response }, userId);
+
+    // Crear firma electrónica si se solicitó
+    let signatureToken = null;
+    let signatureInfo = null;
+    if (data.sign === true) {
+      try {
+        const sig = await this.createElectronicSignature({
+          correspondenceId: parseInt(id),
+          threadId: thread.id,
+          userId,
+          message: data.response,
+          ip,
+          userAgent,
+          metadata: { correspondenceTitle: updated.title, companyId: Number(updated.companyId) },
+        });
+        signatureToken = sig.signatureToken;
+        signatureInfo = {
+          signatureToken: sig.signatureToken,
+          documentHash: sig.documentHash,
+          signedAt: sig.createdAt,
+          // signerName y signerEmail se complementan con `responder` en el bloque de email
+        };
+      } catch (sigErr) {
+        console.error('[CorrespondenceService] ❌ Error creando firma electrónica:', sigErr);
+      }
+    }
 
     // Variable para almacenar el PDF generado (usado tanto para email como para guardar en carpeta)
     let pdfBuffer = null;
@@ -737,6 +790,9 @@ class CorrespondenceService {
               logoUrl: logoUrl || `${clientUrl}/Horizontal_Logo.jpeg`,
               responderName: responder?.name || '',
               responderSignature: signatureUrl || '',
+              electronicSignature: signatureInfo
+                ? { ...signatureInfo, signerName: responder?.name || '', signerEmail: responder?.email || '' }
+                : null,
             });
           }
         } else {
@@ -771,6 +827,9 @@ class CorrespondenceService {
             logoUrl: logoUrl || `${clientUrl}/Horizontal_Logo.jpeg`,
             hasAttachment: emailAttachments.length > 0,
             attachmentName: emailAttachments[0]?.filename || '',
+            electronicSignature: signatureInfo
+              ? { ...signatureInfo, signerName: responder?.name || '', signerEmail: responder?.email || '' }
+              : null,
           });
         }
 
@@ -785,6 +844,9 @@ class CorrespondenceService {
             responderSignature: signatureUrl || '',
             companyName: updated.company?.name || process.env.MAIL_FROM_NAME || 'Simplia',
             logoUrl: logoUrl || `${clientUrl}/Horizontal_Logo.jpeg`,
+            electronicSignature: signatureInfo
+              ? { ...signatureInfo, signerName: responder?.name || '', signerEmail: responder?.email || '' }
+              : null,
           });
         }
 
@@ -883,7 +945,7 @@ class CorrespondenceService {
       console.error('[CorrespondenceService] Error stack:', docError.stack);
     }
 
-    return updated;
+    return { ...updated, signatureToken };
   }
 
   async getOrCreateResponseFolder(correspondenceId) {
@@ -943,6 +1005,13 @@ class CorrespondenceService {
     return prisma.correspondenceFolder.findMany({
       where: { correspondenceId: parseInt(correspondenceId), deletedAt: null },
       orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async moveDocumentToFolder(correspondenceId, documentId, folderId) {
+    await prisma.correspondence_document.updateMany({
+      where: { correspondence_id: parseInt(correspondenceId), document_id: parseInt(documentId) },
+      data: { folder_id: folderId ? parseInt(folderId) : null },
     });
   }
 

@@ -77,12 +77,18 @@ const proceedingService = {
     return response.data;
   },
 
-  uploadDocument: async (proceedingId, file) => {
+  uploadDocument: async (proceedingId, file, folderId = null) => {
     const formData = new FormData();
     formData.append('file', file);
+    if (folderId) formData.append('folderId', folderId);
     const response = await axiosInstance.post(`/proceedings/${proceedingId}/upload-document`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return response.data;
+  },
+
+  moveDocument: async (proceedingId, documentId, folderId) => {
+    const response = await axiosInstance.patch(`/proceedings/${proceedingId}/documents/${documentId}/folder`, { folderId });
     return response.data;
   },
 

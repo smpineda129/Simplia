@@ -100,11 +100,11 @@ class ProceedingService {
           where: { deletedAt: null },
           include: {
             document: {
-              select: { 
-                id: true, 
-                name: true, 
-                file: true, 
-                createdAt: true, 
+              select: {
+                id: true,
+                name: true,
+                file: true,
+                createdAt: true,
                 file_original_name: true,
                 documentDate: true,
                 medium: true,
@@ -113,6 +113,9 @@ class ProceedingService {
                 companyId: true,
                 fileSize: true,
               },
+            },
+            folder: {
+              select: { id: true, name: true },
             },
           },
         },
@@ -156,6 +159,8 @@ class ProceedingService {
       documents: proceeding.documentProceedings.map(dp => ({
         ...dp.document,
         documentProceedingId: dp.id,
+        folderId: dp.folderId ? dp.folderId.toString() : null,
+        folderName: dp.folder?.name || null,
       })),
       sharedWith: proceeding.externalUserProceedings.map(eup => ({
         ...eup.externalUser,
@@ -474,7 +479,7 @@ class ProceedingService {
 
   // ─── Documents ────────────────────────────────────────────────────────────
 
-  async uploadAndAttachDocument(proceedingId, file) {
+  async uploadAndAttachDocument(proceedingId, file, folderId = null) {
     const proceeding = await prisma.proceeding.findFirst({
       where: { id: parseInt(proceedingId), deletedAt: null },
     });
@@ -497,6 +502,7 @@ class ProceedingService {
       data: {
         proceedingId: parseInt(proceedingId),
         documentId: document.id,
+        ...(folderId && { folderId: parseInt(folderId) }),
       },
     });
 
@@ -525,6 +531,55 @@ class ProceedingService {
 
     return prisma.documentProceeding.update({
       where: { id: record.id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  // ─── Folders ──────────────────────────────────────────────────────────────
+
+  async getFolders(proceedingId) {
+    return prisma.proceedingFolder.findMany({
+      where: { proceedingId: parseInt(proceedingId), deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async createFolder(proceedingId, name) {
+    const proceeding = await prisma.proceeding.findFirst({
+      where: { id: parseInt(proceedingId), deletedAt: null },
+    });
+    if (!proceeding) throw new Error('Expediente no encontrado');
+
+    return prisma.proceedingFolder.create({
+      data: {
+        proceedingId: parseInt(proceedingId),
+        name,
+        createdAt: new Date(),
+      },
+    });
+  }
+
+  async moveDocumentToFolder(proceedingId, documentId, folderId) {
+    await prisma.documentProceeding.updateMany({
+      where: { proceedingId: parseInt(proceedingId), documentId: BigInt(documentId), deletedAt: null },
+      data: { folderId: folderId ? parseInt(folderId) : null },
+    });
+  }
+
+  async deleteFolder(proceedingId, folderId) {
+    const folder = await prisma.proceedingFolder.findFirst({
+      where: { id: parseInt(folderId), proceedingId: parseInt(proceedingId), deletedAt: null },
+    });
+    if (!folder) throw new Error('Carpeta no encontrada');
+
+    // Desvincular documentos de la carpeta (quitar folderId)
+    await prisma.documentProceeding.updateMany({
+      where: { folderId: parseInt(folderId), deletedAt: null },
+      data: { folderId: null },
+    });
+
+    return prisma.proceedingFolder.update({
+      where: { id: parseInt(folderId) },
       data: { deletedAt: new Date() },
     });
   }
@@ -581,7 +636,7 @@ class ProceedingService {
       { header: 'Código Expediente', key: 'code', width: 20 },
       { header: 'Nombre Expediente', key: 'name', width: 40 },
       { header: 'Código Serie', key: 'retentionCode', width: 18 },
-      { header: 'Documentos', key: 'documents', width: 50 },
+      { header: 'Documento', key: 'document', width: 50 },
       { header: 'Fecha Inicio', key: 'startDate', width: 15 },
       { header: 'Fecha Fin', key: 'endDate', width: 15 },
       { header: 'Estado Préstamo', key: 'loan', width: 18 },
@@ -589,17 +644,24 @@ class ProceedingService {
     ];
 
     proceedings.forEach(p => {
-      const docNames = p.documentProceedings.map(dp => dp.document?.name || '').filter(Boolean).join(', ');
-      worksheet.addRow({
+      const commonFields = {
         code: p.code,
         name: p.name,
         retentionCode: p.retentionLine?.code || '',
-        documents: docNames,
         startDate: p.startDate ? new Date(p.startDate).toLocaleDateString('es-ES') : '',
         endDate: p.endDate ? new Date(p.endDate).toLocaleDateString('es-ES') : '',
         loan: p.loan || 'custody',
         company: p.company?.name || '',
-      });
+      };
+
+      const docs = p.documentProceedings.filter(dp => dp.document);
+      if (docs.length === 0) {
+        worksheet.addRow({ ...commonFields, document: '' });
+      } else {
+        docs.forEach(dp => {
+          worksheet.addRow({ ...commonFields, document: dp.document.name || '' });
+        });
+      }
     });
 
     worksheet.getRow(1).font = { bold: true };

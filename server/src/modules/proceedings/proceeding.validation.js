@@ -8,13 +8,6 @@ export const createProceedingValidation = [
     .isLength({ min: 2, max: 255 })
     .withMessage('El nombre debe tener entre 2 y 255 caracteres'),
 
-  body('code')
-    .trim()
-    .notEmpty()
-    .withMessage('El código es requerido')
-    .isLength({ min: 2, max: 255 })
-    .withMessage('El código debe tener entre 2 y 255 caracteres'),
-
   body('startDate')
     .notEmpty()
     .withMessage('La fecha inicial es requerida')

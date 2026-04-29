@@ -24,12 +24,10 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Visibility,
   Download,
   PictureAsPdf,
   History,
   Terminal,
-  Person,
   Language,
   Fingerprint,
 } from '@mui/icons-material';
@@ -234,7 +232,9 @@ const AuditTable = ({ userId }) => {
                   <TableRow
                     key={event.id}
                     hover
+                    onClick={() => setSelectedEvent(event)}
                     sx={{
+                      cursor: 'pointer',
                       '&:last-child td, &:last-child th': { border: 0 },
                       bgcolor: index % 2 === 0 ? 'transparent' : 'rgba(252, 252, 252, 0.5)',
                       transition: 'background-color 0.2s',
@@ -290,19 +290,7 @@ const AuditTable = ({ userId }) => {
                         </Box>
                       </Tooltip>
                     </TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => setSelectedEvent(event)}
-                        sx={{
-                          color: 'primary.main',
-                          bgcolor: 'primary.50',
-                          '&:hover': { bgcolor: 'primary.100' }
-                        }}
-                      >
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </TableCell>
+                    <TableCell align="right" />
                   </TableRow>
                 );
               })

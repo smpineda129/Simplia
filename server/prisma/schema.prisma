@@ -8,37 +8,37 @@ datasource db {
 }
 
 model Company {
-  id              BigInt           @id @default(autoincrement())
-  name            String           @db.VarChar(191)
-  identifier      String           @db.VarChar(191)
-  short           String           @db.VarChar(191)
-  createdAt       DateTime?        @map("created_at") @db.Timestamp(0)
-  updatedAt       DateTime?        @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt       DateTime?        @map("deleted_at") @db.Timestamp(0)
-  stripeId        String?          @map("stripe_id") @db.VarChar(191)
-  cardBrand       String?          @map("card_brand") @db.VarChar(191)
-  cardLastFour    String?          @map("card_last_four") @db.VarChar(4)
-  trialEndsAt     DateTime?        @map("trial_ends_at") @db.Timestamp(0)
-  email           String?          @db.VarChar(191)
-  codeName        String           @default("Código") @map("code_name") @db.VarChar(191)
-  codeDescription String?          @map("code_description") @db.VarChar(191)
-  imageUrl        String?          @map("image_url") @db.VarChar(191)
-  website         String?          @db.VarChar(191)
-  watermarkUrl    String?          @map("watermark_url") @db.VarChar(191)
-  maxUsers        Int              @default(0) @map("max_users")
-  areas           Area[]
-  boxes           Box[]
-  correspondences Correspondence[]
-  documents       Document[]
-  externalUsers   ExternalUser[]
-  proceedings     Proceeding[]
-  retentions      Retention[]
-  templates       Template[]
-  users           User[]
-  warehouses      Warehouse[]
-  supportTickets  SupportTicket[]
-  entities        Entity[]
-
+  id                BigInt              @id @default(autoincrement())
+  name              String              @db.VarChar(191)
+  identifier        String              @db.VarChar(191)
+  short             String              @db.VarChar(191)
+  createdAt         DateTime?           @map("created_at") @db.Timestamp(0)
+  updatedAt         DateTime?           @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt         DateTime?           @map("deleted_at") @db.Timestamp(0)
+  stripeId          String?             @map("stripe_id") @db.VarChar(191)
+  cardBrand         String?             @map("card_brand") @db.VarChar(191)
+  cardLastFour      String?             @map("card_last_four") @db.VarChar(4)
+  trialEndsAt       DateTime?           @map("trial_ends_at") @db.Timestamp(0)
+  email             String?             @db.VarChar(191)
+  codeName          String              @default("Código") @map("code_name") @db.VarChar(191)
+  codeDescription   String?             @map("code_description") @db.VarChar(191)
+  imageUrl          String?             @map("image_url") @db.VarChar(191)
+  website           String?             @db.VarChar(191)
+  watermarkUrl      String?             @map("watermark_url") @db.VarChar(191)
+  maxUsers          Int                 @default(0) @map("max_users")
+  areas             Area[]
+  boxes             Box[]
+  correspondences   Correspondence[]
+  documents         Document[]
+  entity_categories entity_categories[]
+  externalUsers     ExternalUser[]
+  proceedings       Proceeding[]
+  retentions        Retention[]
+  subscriptions     subscriptions[]
+  supportTickets    SupportTicket[]
+  templates         Template[]
+  users             User[]
+  warehouses        Warehouse[]
 
   @@map("companies")
 }
@@ -46,7 +46,7 @@ model Company {
 model User {
   id                                                           BigInt                 @id @default(autoincrement())
   name                                                         String                 @db.VarChar(191)
-  email                                                        String                 @unique @db.VarChar(191)
+  email                                                        String                 @db.VarChar(191)
   emailVerifiedAt                                              DateTime?              @map("email_verified_at") @db.Timestamp(0)
   password                                                     String                 @db.VarChar(191)
   rememberToken                                                String?                @map("remember_token") @db.VarChar(100)
@@ -64,33 +64,32 @@ model User {
   correspondence_threads_correspondence_threads_to_idTousers   CorrespondenceThread[] @relation("correspondence_threads_to_idTousers")
   correspondences_correspondences_recipient_idTousers          Correspondence[]       @relation("correspondences_recipient_idTousers")
   correspondences_correspondences_sender_idTousers             Correspondence[]       @relation("correspondences_sender_idTousers")
+  otp_verifications                                            otp_verifications[]
   proceedingThreadsAssigned                                    ProceedingThread[]     @relation("ProceedingThreadAssigned")
   proceedingThreadsFrom                                        ProceedingThread[]     @relation("ProceedingThreadFrom")
-  company                                                      Company?               @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   ticketsCreated                                               SupportTicket[]        @relation("TicketCreator")
   ticketsAssigned                                              SupportTicket[]        @relation("TicketAssignee")
   ticketComments                                               TicketComment[]
   ticketHistory                                                TicketHistory[]
+  company                                                      Company?               @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
   @@map("users")
 }
 
 model Area {
-  id                                                         BigInt           @id @default(autoincrement())
-  companyId                                                  BigInt           @map("company_id")
-  name                                                       String           @db.VarChar(191)
-  code                                                       String           @db.VarChar(191)
-  createdAt                                                  DateTime?        @map("created_at") @db.Timestamp(0)
-  updatedAt                                                  DateTime?        @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt                                                  DateTime?        @map("deleted_at") @db.Timestamp(0)
+  id         BigInt      @id @default(autoincrement())
+  companyId  BigInt      @map("company_id")
+  name       String      @db.VarChar(191)
+  code       String      @db.VarChar(191)
+  createdAt  DateTime?   @map("created_at") @db.Timestamp(0)
+  updatedAt  DateTime?   @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt  DateTime?   @map("deleted_at") @db.Timestamp(0)
   areaUsers                                                  AreaUser[]
   company                                                    Company          @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   correspondences_correspondences_destination_area_idToareas Correspondence[] @relation("correspondences_destination_area_idToareas")
   correspondences_correspondences_origin_area_idToareas      Correspondence[] @relation("correspondences_origin_area_idToareas")
   retentions                                                 Retention[]
 
-  @@index([companyId])
   @@map("areas")
 }
 
@@ -122,7 +121,6 @@ model Retention {
   area           Area            @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   company        Company         @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
   @@map("retentions")
 }
 
@@ -167,30 +165,33 @@ model Proceeding {
   companyTwo              String?                  @map("company_two")
   boxProceedings          BoxProceeding[]
   documentProceedings     DocumentProceeding[]
+  entity_proceeding       entity_proceeding[]
   externalUserProceedings ExternalUserProceeding[]
+  proceedingFolders       ProceedingFolder[]
   proceedingThreads       ProceedingThread[]
   company                 Company                  @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   retentionLine           RetentionLine?           @relation(fields: [retentionLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
+  @@index([companyId], map: "proceedings_company_id_index")
+  @@index([retentionLineId], map: "proceedings_retention_line_id_index")
   @@map("proceedings")
 }
 
 model Correspondence {
-  id                                               BigInt                    @id @default(autoincrement())
-  title                                            String                    @db.VarChar(191)
-  comments                                         String?
-  answer                                           String?
-  in_settled                                       String                    @db.VarChar(191)
-  out_settled                                      String?                   @db.VarChar(191)
-  status                                           String                    @default("registered") @db.VarChar(191)
-  user_type                                        String                    @db.VarChar(191)
-  user_id                                          Int
-  correspondenceTypeId                             Int?                      @map("correspondence_type_id")
-  companyId                                        BigInt                    @map("company_id")
-  createdAt                                        DateTime?                 @map("created_at") @db.Timestamp(0)
-  updatedAt                                        DateTime?                 @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt                                        DateTime?                 @map("deleted_at") @db.Timestamp(0)
+  id                      BigInt                    @id @default(autoincrement())
+  title                   String                    @db.VarChar(191)
+  comments                String?
+  answer                  String?
+  in_settled              String                    @db.VarChar(191)
+  out_settled             String?                   @db.VarChar(191)
+  status                  String                    @default("registered") @db.VarChar(191)
+  user_type               String                    @db.VarChar(191)
+  user_id                 Int
+  correspondenceTypeId    Int?                      @map("correspondence_type_id")
+  companyId               BigInt                    @map("company_id")
+  createdAt               DateTime?                 @map("created_at") @db.Timestamp(0)
+  updatedAt               DateTime?                 @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt               DateTime?                 @map("deleted_at") @db.Timestamp(0)
   code                                             String?                   @db.VarChar(191)
   physical_delivered                               Boolean                   @default(false)
   type                                             String                    @default("general") @db.VarChar(255)
@@ -212,8 +213,8 @@ model Correspondence {
   users_correspondences_recipient_idTousers        User?                     @relation("correspondences_recipient_idTousers", fields: [recipient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_correspondences_recipient")
   users_correspondences_sender_idTousers           User?                     @relation("correspondences_sender_idTousers", fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_correspondences_sender")
   sentEmails                                       SentEmail[]
+  electronicSignatures                             ElectronicSignature[]
 
-  @@index([companyId])
   @@map("correspondences")
 }
 
@@ -228,9 +229,10 @@ model CorrespondenceThread {
   createdAt                                   DateTime?      @map("created_at") @db.Timestamp(0)
   updatedAt                                   DateTime?      @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt                                   DateTime?      @map("deleted_at") @db.Timestamp(0)
-  correspondence                              Correspondence @relation(fields: [correspondenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_correspondence_threads_from_idTousers User           @relation("correspondence_threads_from_idTousers", fields: [from_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_correspondence_threads_to_idTousers   User?          @relation("correspondence_threads_to_idTousers", fields: [to_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  correspondence                              Correspondence      @relation(fields: [correspondenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_correspondence_threads_from_idTousers User                @relation("correspondence_threads_from_idTousers", fields: [from_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_correspondence_threads_to_idTousers   User?               @relation("correspondence_threads_to_idTousers", fields: [to_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  electronicSignature                         ElectronicSignature?
 
   @@map("correspondence_threads")
 }
@@ -259,23 +261,22 @@ model Document {
   textracts               DocumentTextract[]
   company                 Company                   @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
+  @@index([companyId], map: "company_id_index")
   @@map("documents")
 }
 
 model Entity {
-  id               BigInt    @id @default(autoincrement())
-  companyId        BigInt?   @map("company_id")
-  entityCategoryId BigInt?   @map("entity_category_id")
-  name             String    @db.VarChar(191)
-  identification   String?   @db.VarChar(191)
-  meta             Json?     @db.Json
-  createdAt        DateTime? @map("created_at") @db.Timestamp(0)
-  updatedAt        DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt        DateTime? @map("deleted_at") @db.Timestamp(0)
-  company          Company?  @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                BigInt              @id @default(autoincrement())
+  entityCategoryId  BigInt              @map("entity_category_id")
+  name              String              @db.VarChar(191)
+  identification    String              @db.VarChar(191)
+  meta              Json                @db.Json
+  createdAt         DateTime?           @map("created_at") @db.Timestamp(0)
+  updatedAt         DateTime?           @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt         DateTime?           @map("deleted_at") @db.Timestamp(0)
+  entity_categories entity_categories   @relation(fields: [entityCategoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  entity_proceeding entity_proceeding[]
 
-  @@index([companyId])
   @@map("entities")
 }
 
@@ -292,122 +293,7 @@ model Warehouse {
   box_warehouse box_warehouse[]
   company       Company         @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
   @@map("warehouses")
-}
-
-// ==================== SUPPORT TICKETS SYSTEM ====================
-
-enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  WAITING_RESPONSE
-  RESOLVED
-  CLOSED
-  CANCELLED
-}
-
-enum TicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
-enum TicketType {
-  PQRS
-  TECHNICAL_SUPPORT
-  BILLING
-  FEATURE_REQUEST
-  BUG_REPORT
-  OTHER
-}
-
-model SupportTicket {
-  id              BigInt              @id @default(autoincrement())
-  ticketNumber    String              @unique @map("ticket_number") @db.VarChar(20)
-  subject         String              @db.VarChar(255)
-  description     String              @db.Text
-  type            TicketType
-  module          String?             @db.VarChar(100)
-  status          TicketStatus        @default(OPEN)
-  priority        TicketPriority      @default(MEDIUM)
-  
-  // User info (null for anonymous PQRS)
-  userId          BigInt?             @map("user_id")
-  companyId       BigInt?             @map("company_id")
-  
-  // Anonymous PQRS info
-  isAnonymous     Boolean             @default(false) @map("is_anonymous")
-  contactName     String?             @map("contact_name") @db.VarChar(191)
-  contactEmail    String?             @map("contact_email") @db.VarChar(191)
-  contactPhone    String?             @map("contact_phone") @db.VarChar(40)
-  
-  // Assignment
-  assignedToId    BigInt?             @map("assigned_to_id")
-  
-  // Tracking
-  imageUrl        String?             @map("image_url") @db.VarChar(500)
-  resolvedAt      DateTime?           @map("resolved_at") @db.Timestamp(0)
-  closedAt        DateTime?           @map("closed_at") @db.Timestamp(0)
-  
-  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt       DateTime?           @map("deleted_at") @db.Timestamp(0)
-  
-  // Relations
-  user            User?               @relation("TicketCreator", fields: [userId], references: [id], onDelete: SetNull)
-  company         Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  assignedTo      User?               @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-  comments        TicketComment[]
-  history         TicketHistory[]
-  
-  @@index([userId])
-  @@index([companyId])
-  @@index([assignedToId])
-  @@index([status])
-  @@index([priority])
-  @@index([createdAt])
-  @@map("support_tickets")
-}
-
-model TicketComment {
-  id              BigInt              @id @default(autoincrement())
-  ticketId        BigInt              @map("ticket_id")
-  userId          BigInt?             @map("user_id")
-  comment         String              @db.Text
-  isInternal      Boolean             @default(false) @map("is_internal")
-  attachmentUrl   String?             @map("attachment_url") @db.VarChar(500)
-  
-  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt       DateTime?           @map("deleted_at") @db.Timestamp(0)
-  
-  ticket          SupportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  @@index([ticketId])
-  @@index([userId])
-  @@map("ticket_comments")
-}
-
-model TicketHistory {
-  id              BigInt              @id @default(autoincrement())
-  ticketId        BigInt              @map("ticket_id")
-  userId          BigInt?             @map("user_id")
-  action          String              @db.VarChar(100)
-  field           String?             @db.VarChar(50)
-  oldValue        String?             @map("old_value") @db.Text
-  newValue        String?             @map("new_value") @db.Text
-  
-  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamp(0)
-  
-  ticket          SupportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  @@index([ticketId])
-  @@index([userId])
-  @@map("ticket_history")
 }
 
 model Box {
@@ -421,7 +307,6 @@ model Box {
   box_warehouse  box_warehouse[]
   company        Company?        @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
   @@map("boxes")
 }
 
@@ -437,7 +322,6 @@ model CorrespondenceType {
   deletedAt   DateTime? @map("deleted_at") @db.Timestamp(0)
   public      Boolean   @default(true)
 
-  @@index([companyId])
   @@map("correspondence_types")
 }
 
@@ -452,22 +336,38 @@ model Template {
   deletedAt   DateTime? @map("deleted_at") @db.Timestamp(0)
   company     Company   @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
   @@map("templates")
 }
 
 model DocumentProceeding {
-  id           BigInt     @id @default(autoincrement())
-  documentId   BigInt     @map("document_id")
-  proceedingId BigInt     @map("proceeding_id")
+  id           BigInt            @id @default(autoincrement())
+  documentId   BigInt            @map("document_id")
+  proceedingId BigInt            @map("proceeding_id")
+  folderId     BigInt?           @map("folder_id")
   consecutive  Int?
-  createdAt    DateTime?  @map("created_at") @db.Timestamp(0)
-  updatedAt    DateTime?  @updatedAt @map("updated_at") @db.Timestamp(0)
-  deletedAt    DateTime?  @map("deleted_at") @db.Timestamp(0)
-  document     Document   @relation(fields: [documentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  proceeding   Proceeding @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt    DateTime?         @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime?         @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt    DateTime?         @map("deleted_at") @db.Timestamp(0)
+  document     Document          @relation(fields: [documentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proceeding   Proceeding        @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folder       ProceedingFolder? @relation(fields: [folderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([documentId], map: "document_proceeding_document_id_index")
+  @@index([proceedingId], map: "document_proceeding_proceeding_id_index")
   @@map("document_proceeding")
+}
+
+model ProceedingFolder {
+  id                  BigInt               @id @default(autoincrement())
+  proceedingId        BigInt               @map("proceeding_id")
+  name                String               @db.VarChar(191)
+  createdAt           DateTime?            @map("created_at") @db.Timestamp(0)
+  updatedAt           DateTime?            @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt           DateTime?            @map("deleted_at") @db.Timestamp(0)
+  proceeding          Proceeding           @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documentProceedings DocumentProceeding[]
+
+  @@map("proceeding_folders")
 }
 
 model BoxProceeding {
@@ -501,9 +401,9 @@ model ProceedingThread {
   updatedAt       DateTime?  @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt       DateTime?  @map("deleted_at") @db.Timestamp(0)
   isFinished      Boolean    @default(false) @map("is_finished")
-  assignedUser    User?      @relation("ProceedingThreadAssigned", fields: [assignedId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  fromUser        User       @relation("ProceedingThreadFrom", fields: [fromId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  proceeding      Proceeding @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assignedUser    User?      @relation("ProceedingThreadAssigned", fields: [assignedId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proceeding_threads_assigned_id_foreign")
+  fromUser        User       @relation("ProceedingThreadFrom", fields: [fromId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proceeding_threads_from_id_foreign")
+  proceeding      Proceeding @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proceeding_threads_proceeding_id_foreign")
 
   @@map("proceeding_threads")
 }
@@ -529,7 +429,6 @@ model ExternalUser {
   externalUserProceedings ExternalUserProceeding[]
   company                 Company?                 @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([companyId])
   @@map("external_users")
 }
 
@@ -539,8 +438,8 @@ model ExternalUserProceeding {
   proceedingId   BigInt       @map("proceeding_id")
   createdAt      DateTime?    @map("created_at") @db.Timestamp(0)
   updatedAt      DateTime?    @updatedAt @map("updated_at") @db.Timestamp(0)
-  externalUser   ExternalUser @relation(fields: [externalUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  proceeding     Proceeding   @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  externalUser   ExternalUser @relation(fields: [externalUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "external_user_proceeding_external_user_id_foreign")
+  proceeding     Proceeding   @relation(fields: [proceedingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "external_user_proceeding_proceeding_id_foreign")
 
   @@map("external_user_proceeding")
 }
@@ -580,7 +479,7 @@ model SentEmail {
   clickedAt        DateTime?             @map("clicked_at") @db.Timestamp(0)
   openedAt         DateTime?             @map("opened_at") @db.Timestamp(0)
   correspondenceId BigInt?               @map("correspondence_id")
-  correspondence   Correspondence?       @relation(fields: [correspondenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  correspondence   Correspondence?       @relation(fields: [correspondenceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sent_emails_correspondence_id_foreign")
   urlClicks        SentEmailUrlClicked[]
 
   @@index([messageId], map: "sent_emails_message_id_index")
@@ -595,7 +494,7 @@ model SentEmailUrlClicked {
   clicks      Int       @default(1)
   createdAt   DateTime? @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
-  sentEmail   SentEmail @relation(fields: [sentEmailId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sentEmail   SentEmail @relation(fields: [sentEmailId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sent_emails_url_clicked_sent_email_id_foreign")
 
   @@map("sent_emails_url_clicked")
 }
@@ -624,7 +523,6 @@ model Role {
   modelHasRoles      ModelHasRole[]
   roleHasPermissions RoleHasPermission[]
 
-  @@index([companyId])
   @@map("roles")
 }
 
@@ -658,27 +556,6 @@ model RoleHasPermission {
   @@map("role_has_permissions")
 }
 
-model Audit {
-  id            BigInt    @id @default(autoincrement())
-  userType      String?   @map("user_type") @db.VarChar(255)
-  userId        BigInt?   @map("user_id")
-  event         String    @db.VarChar(255)
-  auditableType String    @map("auditable_type") @db.VarChar(255)
-  auditableId   BigInt    @map("auditable_id")
-  oldValues     String?   @map("old_values")
-  newValues     String?   @map("new_values")
-  url           String?
-  ipAddress     String?   @map("ip_address") @db.Inet
-  userAgent     String?   @map("user_agent") @db.VarChar(1023)
-  tags          String?   @db.VarChar(255)
-  createdAt     DateTime? @map("created_at") @db.Timestamp(0)
-  updatedAt     DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
-
-  @@index([auditableType, auditableId], map: "audits_auditable_type_auditable_id_index")
-  @@index([userId, userType], map: "audits_user_id_user_type_index")
-  @@map("audits")
-}
-
 model Notification {
   id             String    @id @default(uuid()) @db.Uuid
   type           String    @db.VarChar(191)
@@ -706,6 +583,27 @@ model Metric {
   @@map("metrics")
 }
 
+model Audit {
+  id            BigInt    @id @default(autoincrement())
+  userType      String?   @map("user_type") @db.VarChar(255)
+  userId        BigInt?   @map("user_id")
+  event         String    @db.VarChar(255)
+  auditableType String    @map("auditable_type") @db.VarChar(255)
+  auditableId   BigInt    @map("auditable_id")
+  oldValues     String?   @map("old_values")
+  newValues     String?   @map("new_values")
+  url           String?
+  ipAddress     String?   @map("ip_address") @db.Inet
+  userAgent     String?   @map("user_agent") @db.VarChar(1023)
+  tags          String?   @db.VarChar(255)
+  createdAt     DateTime? @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@index([auditableType, auditableId], map: "audits_auditable_type_auditable_id_index")
+  @@index([userId, userType], map: "audits_user_id_user_type_index")
+  @@map("audits")
+}
+
 model Session {
   id           String  @id @db.VarChar(255)
   userId       BigInt? @map("user_id")
@@ -717,6 +615,12 @@ model Session {
   @@index([lastActivity], map: "sessions_last_activity_index")
   @@index([userId], map: "sessions_user_id_index")
   @@map("sessions")
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -761,8 +665,6 @@ model action_events {
   companyId       BigInt?   @map("company_id")
   ipAddress       String?   @map("ip_address") @db.VarChar(45)
   userAgent       String?   @map("user_agent") @db.Text
-
-  @@index([companyId])
 }
 
 model box_warehouse {
@@ -812,12 +714,6 @@ model migrations {
   batch     Int
 }
 
-model password_reset_tokens {
-  email      String    @id @db.VarChar(255)
-  token      String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamp(0)
-}
-
 model state_histories {
   id                BigInt    @id @default(autoincrement())
   model_type        String    @db.VarChar(191)
@@ -841,4 +737,335 @@ model visits {
   expired_at    DateTime? @db.Timestamp(0)
   created_at    DateTime? @db.Timestamp(0)
   updated_at    DateTime? @db.Timestamp(0)
+}
+
+model board_filter {
+  id            Int       @id @default(autoincrement())
+  dashboard_id  Int
+  datafilter_id Int
+  sort_order    Int       @default(0)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+}
+
+model board_standard {
+  id               Int       @id @default(autoincrement())
+  extra_attributes Json?     @db.Json
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+}
+
+model board_widget {
+  id            Int       @id @default(autoincrement())
+  dashboard_id  Int
+  datawidget_id Int
+  sort_order    Int       @default(0)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+}
+
+model boards {
+  id                 Int       @id @default(autoincrement())
+  name               String    @db.VarChar(191)
+  description        String?
+  dashboardable_id   Int
+  dashboardable_type String    @db.VarChar(191)
+  extra_attributes   Json?     @db.Json
+  sort_order         Int       @default(0)
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+}
+
+model entity_categories {
+  id         BigInt    @id @default(autoincrement())
+  company_id BigInt
+  name       String    @db.VarChar(191)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  entities   Entity[]
+  companies  Company   @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model entity_proceeding {
+  id            BigInt     @id @default(autoincrement())
+  entity_id     BigInt
+  proceeding_id BigInt
+  created_at    DateTime?  @db.Timestamp(0)
+  updated_at    DateTime?  @db.Timestamp(0)
+  deleted_at    DateTime?  @db.Timestamp(0)
+  entities      Entity     @relation(fields: [entity_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proceedings   Proceeding @relation(fields: [proceeding_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model filter_standard {
+  id               Int       @id @default(autoincrement())
+  extra_attributes Json?     @db.Json
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+}
+
+model filters {
+  id               Int       @id @default(autoincrement())
+  name             String    @db.VarChar(191)
+  description      String?
+  filterable_id    Int
+  filterable_type  String    @db.VarChar(191)
+  extra_attributes Json?     @db.Json
+  sort_order       Int       @default(0)
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+}
+
+model forms {
+  id          BigInt    @id @default(autoincrement())
+  uuid        String    @db.Uuid
+  company_id  BigInt
+  user_id     BigInt
+  name        String    @db.VarChar(191)
+  slug        String    @db.VarChar(191)
+  description String
+  fields      Json
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+  status      String?   @default("open") @db.VarChar(40)
+  ends_at     DateTime? @db.Timestamptz(0)
+  emails      Json?     @db.Json
+}
+
+model metric_standard {
+  id               Int       @id @default(autoincrement())
+  visualable_id    Int
+  visualable_type  String    @db.VarChar(191)
+  extra_attributes Json?     @db.Json
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+}
+
+model otp_verifications {
+  id          BigInt    @id @default(autoincrement())
+  user_id     BigInt
+  phone       String    @db.VarChar(40)
+  code        Int
+  verified_at DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+  users       User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pending_transitions {
+  id                BigInt    @id @default(autoincrement())
+  model_type        String    @db.VarChar(191)
+  model_id          BigInt
+  field             String    @db.VarChar(191)
+  from              String?   @db.VarChar(191)
+  to                String?   @db.VarChar(191)
+  custom_properties Json?     @db.Json
+  responsible_type  String?   @db.VarChar(191)
+  responsible_id    BigInt?
+  transition_at     DateTime  @db.Timestamp(0)
+  applied_at        DateTime? @db.Timestamp(0)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+}
+
+model submissions {
+  id         BigInt    @id @default(autoincrement())
+  form_id    BigInt
+  data       Json
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model subscription_items {
+  id              BigInt        @id @default(autoincrement())
+  subscription_id BigInt
+  stripe_id       String        @db.VarChar(191)
+  stripe_plan     String        @db.VarChar(191)
+  quantity        Int
+  created_at      DateTime?     @db.Timestamp(0)
+  updated_at      DateTime?     @db.Timestamp(0)
+  subscriptions   subscriptions @relation(fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model subscriptions {
+  id                 BigInt               @id @default(autoincrement())
+  company_id         BigInt
+  name               String               @db.VarChar(191)
+  stripe_id          String               @db.VarChar(191)
+  stripe_status      String               @db.VarChar(191)
+  stripe_plan        String?              @db.VarChar(191)
+  quantity           Int?
+  trial_ends_at      DateTime?            @db.Timestamp(0)
+  ends_at            DateTime?            @db.Timestamp(0)
+  created_at         DateTime?            @db.Timestamp(0)
+  updated_at         DateTime?            @db.Timestamp(0)
+  subscription_items subscription_items[]
+  companies          Company              @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tags {
+  id          BigInt    @id @default(autoincrement())
+  title       String    @db.VarChar(191)
+  value       String    @db.VarChar(191)
+  description String    @db.VarChar(191)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+}
+
+model visual_standard {
+  id               Int       @id @default(autoincrement())
+  extra_attributes Json?     @db.Json
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+}
+
+model widget_configurations {
+  id          BigInt    @id @default(autoincrement())
+  user_id     Int
+  dashboard   String    @db.VarChar(191)
+  view        String    @db.VarChar(191)
+  key         String    @db.VarChar(191)
+  options     Json      @db.Json
+  coordinates Json?     @db.Json
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+model widgets {
+  id               Int       @id @default(autoincrement())
+  name             String    @db.VarChar(191)
+  description      String?
+  metricable_id    Int
+  metricable_type  String    @db.VarChar(191)
+  extra_attributes Json?     @db.Json
+  sort_order       Int       @default(0)
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+}
+
+// ==================== SUPPORT TICKETS SYSTEM ====================
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_RESPONSE
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketType {
+  PQRS
+  TECHNICAL_SUPPORT
+  BILLING
+  FEATURE_REQUEST
+  BUG_REPORT
+  OTHER
+}
+
+model SupportTicket {
+  id           BigInt         @id @default(autoincrement())
+  ticketNumber String         @unique @map("ticket_number") @db.VarChar(20)
+  subject      String         @db.VarChar(255)
+  description  String         @db.Text
+  type         TicketType
+  module       String?        @db.VarChar(100)
+  status       TicketStatus   @default(OPEN)
+  priority     TicketPriority @default(MEDIUM)
+  userId       BigInt?        @map("user_id")
+  companyId    BigInt?        @map("company_id")
+  isAnonymous  Boolean        @default(false) @map("is_anonymous")
+  contactName  String?        @map("contact_name") @db.VarChar(191)
+  contactEmail String?        @map("contact_email") @db.VarChar(191)
+  contactPhone String?        @map("contact_phone") @db.VarChar(40)
+  assignedToId BigInt?        @map("assigned_to_id")
+  imageUrl     String?        @map("image_url") @db.VarChar(500)
+  resolvedAt   DateTime?      @map("resolved_at") @db.Timestamp(0)
+  closedAt     DateTime?      @map("closed_at") @db.Timestamp(0)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt    DateTime?      @map("deleted_at") @db.Timestamp(0)
+  user         User?          @relation("TicketCreator", fields: [userId], references: [id], onDelete: SetNull)
+  company      Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  assignedTo   User?          @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  comments     TicketComment[]
+  history      TicketHistory[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model TicketComment {
+  id            BigInt        @id @default(autoincrement())
+  ticketId      BigInt        @map("ticket_id")
+  userId        BigInt?       @map("user_id")
+  comment       String        @db.Text
+  isInternal    Boolean       @default(false) @map("is_internal")
+  attachmentUrl String?       @map("attachment_url") @db.VarChar(500)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt     DateTime?     @map("deleted_at") @db.Timestamp(0)
+  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@map("ticket_comments")
+}
+
+model TicketHistory {
+  id        BigInt        @id @default(autoincrement())
+  ticketId  BigInt        @map("ticket_id")
+  userId    BigInt?       @map("user_id")
+  action    String        @db.VarChar(100)
+  field     String?       @db.VarChar(50)
+  oldValue  String?       @map("old_value") @db.Text
+  newValue  String?       @map("new_value") @db.Text
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@map("ticket_history")
+}
+
+// ==================== ELECTRONIC SIGNATURE ====================
+
+model ElectronicSignature {
+  id               BigInt         @id @default(autoincrement())
+  correspondenceId BigInt         @map("correspondence_id")
+  threadId         BigInt         @unique @map("thread_id")
+  userId           BigInt         @map("user_id")
+  signerName       String         @map("signer_name") @db.VarChar(255)
+  signerEmail      String         @map("signer_email") @db.VarChar(255)
+  documentHash     String         @map("document_hash") @db.VarChar(64)
+  signatureToken   String         @unique @default(uuid()) @map("signature_token") @db.VarChar(36)
+  ipAddress        String?        @map("ip_address") @db.VarChar(45)
+  userAgent        String?        @map("user_agent") @db.Text
+  metadata         Json?          @db.Json
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
+  correspondence   Correspondence @relation(fields: [correspondenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  thread           CorrespondenceThread @relation(fields: [threadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([correspondenceId])
+  @@index([userId])
+  @@map("electronic_signatures")
 }

@@ -12,7 +12,7 @@ import {
   TablePagination,
   Tooltip,
 } from '@mui/material';
-import { Edit, Delete, Visibility, Mail } from '@mui/icons-material';
+import { Edit, Delete, Mail } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 const CorrespondenceTable = ({ correspondences, onEdit, onDelete, page, onPageChange, pagination }) => {
@@ -71,7 +71,12 @@ const CorrespondenceTable = ({ correspondences, onEdit, onDelete, page, onPageCh
           </TableHead>
           <TableBody>
             {correspondences.map((correspondence) => (
-              <TableRow key={correspondence.id} hover>
+              <TableRow
+                key={correspondence.id}
+                hover
+                onClick={() => navigate(`/correspondences/${correspondence.id}`)}
+                sx={{ cursor: 'pointer' }}
+              >
                 <TableCell>
                   <Box>
                     <Chip
@@ -132,20 +137,11 @@ const CorrespondenceTable = ({ correspondences, onEdit, onDelete, page, onPageCh
                   />
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Ver detalle">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => navigate(`/correspondences/${correspondence.id}`)}
-                    >
-                      <Visibility />
-                    </IconButton>
-                  </Tooltip>
                   <Tooltip title="Editar">
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={() => onEdit(correspondence)}
+                      onClick={(e) => { e.stopPropagation(); onEdit(correspondence); }}
                       disabled={correspondence.status === 'closed'}
                     >
                       <Edit />
@@ -155,7 +151,7 @@ const CorrespondenceTable = ({ correspondences, onEdit, onDelete, page, onPageCh
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => onDelete(correspondence.id)}
+                      onClick={(e) => { e.stopPropagation(); onDelete(correspondence.id); }}
                     >
                       <Delete />
                     </IconButton>

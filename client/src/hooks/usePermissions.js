@@ -70,32 +70,31 @@ export const usePermissions = () => {
     };
 
     /**
-     * Verifica si el usuario puede personificar a otro usuario (solo rol Owner)
+     * Verifica si el usuario puede personificar a otro usuario
+     * Requiere permiso 'user.impersonate' y mayor autoridad (menor roleLevel) que el objetivo.
      * @param {object} targetUser - Usuario objetivo con roles
      * @returns {boolean}
      */
     const canImpersonateUser = (targetUser) => {
         if (!user || !targetUser) return false;
-        if (user.id === targetUser.id) return false;
+        if (String(user.id) === String(targetUser.id)) return false;
 
         // No permitir personificación anidada
-        if (user.impersonatorId || user.impersonator_id) return false;
+        if (user.isImpersonated || user.impersonatorId || user.impersonator_id) return false;
 
-        // Solo el rol Owner (roleLevel 1) puede personificar
-        const isOwner = user?.roles?.some(r =>
-            (typeof r === 'object' ? r.name : r) === 'Owner' ||
-            (typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null) === 1
+        // Requiere permiso explícito
+        if (!hasPermission('user.impersonate')) return false;
+
+        // Comparar roleLevels: menor número = mayor autoridad
+        const currentMinLevel = Math.min(
+            ...(user.roles?.map(r => (typeof r === 'object' ? (r.roleLevel ?? r.role_level ?? 99) : 99)) ?? [99])
         );
-        if (!isOwner) return false;
-
-        // No permitir personificar a otro Owner
-        const isTargetOwner = targetUser?.roles?.some(r =>
-            (typeof r === 'object' ? r.name : r) === 'Owner' ||
-            (typeof r === 'object' ? (r.roleLevel ?? r.role_level) : null) === 1
+        const targetMinLevel = Math.min(
+            ...(targetUser.roles?.map(r => (typeof r === 'object' ? (r.roleLevel ?? r.role_level ?? 99) : 99)) ?? [99])
         );
-        if (isTargetOwner) return false;
 
-        return true;
+        // Solo puede impersonar a usuarios con estrictamente menor autoridad (mayor roleLevel)
+        return targetMinLevel > currentMinLevel;
     };
 
     return {

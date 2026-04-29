@@ -13,13 +13,19 @@ import {
   Typography,
   MenuItem,
   CircularProgress,
+  FormControlLabel,
+  Checkbox,
+  Paper,
+  Divider,
 } from '@mui/material';
-import { AttachFile, CheckCircle } from '@mui/icons-material';
+import { AttachFile, CheckCircle, VerifiedUser, Gavel } from '@mui/icons-material';
 import correspondenceService from '../services/correspondenceService';
 import templateService from '../../templates/services/templateService';
 import RichTextEditor from '../../../components/RichTextEditor';
+import { useAuth } from '../../../hooks/useAuth';
 
 const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, companyId }) => {
+  const { user } = useAuth();
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
@@ -31,6 +37,9 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [responseFile, setResponseFile] = useState(null); // { key, originalName }
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [applySignature, setApplySignature] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -41,6 +50,8 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
       setCc('');
       setSelectedTemplateId('');
       setResponseFile(null);
+      setApplySignature(false);
+      setPendingPayload(null);
       loadUsers();
       if (isReply) loadTemplates();
     }
@@ -74,10 +85,9 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
       return;
     }
     try {
-      const response = await templateService.getById(templateId);
-      const raw = response.data?.content || response.template?.content || '';
-      // Set the HTML content directly
-      setMessage(raw);
+      const response = await templateService.processTemplate(templateId, { correspondenceId });
+      const processed = response.data?.processedContent || '';
+      setMessage(processed);
     } catch (err) {
       console.error('Error loading template:', err);
     }
@@ -98,29 +108,48 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
     }
   };
 
+  const buildPayload = () => {
+    const payload = {
+      message: message.trim(),
+      taggedUserIds: taggedUsers.map(u => Number(u.id)),
+    };
+    if (isReply && cc) {
+      payload.cc = cc.split(',').map(e => e.trim()).filter(Boolean);
+    }
+    if (isReply && selectedTemplateId) {
+      payload.templateId = selectedTemplateId;
+    }
+    if (isReply && responseFile) {
+      payload.documentKey = responseFile.key;
+      payload.documentName = responseFile.originalName;
+    }
+    if (isReply && applySignature) {
+      payload.sign = true;
+    }
+    return payload;
+  };
+
   const handleSubmit = async () => {
     if (!message.trim()) {
       setError('El mensaje es requerido');
       return;
     }
 
+    const payload = buildPayload();
+
+    if (isReply && applySignature) {
+      setPendingPayload(payload);
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    await executeSubmit(payload);
+  };
+
+  const executeSubmit = async (payload) => {
     try {
       setError('');
       setSubmitting(true);
-      const payload = {
-        message: message.trim(),
-        taggedUserIds: taggedUsers.map(u => Number(u.id)),
-      };
-      if (isReply && cc) {
-        payload.cc = cc.split(',').map(e => e.trim()).filter(Boolean);
-      }
-      if (isReply && selectedTemplateId) {
-        payload.templateId = selectedTemplateId;
-      }
-      if (isReply && responseFile) {
-        payload.documentKey = responseFile.key;
-        payload.documentName = responseFile.originalName;
-      }
       await onSave(payload);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al guardar el hilo');
@@ -129,7 +158,16 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
     }
   };
 
+  const handleConfirmSignature = async () => {
+    setShowConfirmDialog(false);
+    if (pendingPayload) {
+      await executeSubmit(pendingPayload);
+      setPendingPayload(null);
+    }
+  };
+
   return (
+    <>
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         {isReply ? 'Responder al usuario' : thread ? 'Editar Hilo' : 'Nuevo Hilo de Conversación'}
@@ -251,17 +289,110 @@ const ThreadForm = ({ open, onClose, onSave, thread, correspondenceId, isReply, 
             />
           </Box>
         )}
+
+        {isReply && (
+          <Box sx={{ mt: 2 }}>
+            <Divider sx={{ mb: 2 }} />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={applySignature}
+                  onChange={(e) => setApplySignature(e.target.checked)}
+                  color="primary"
+                  icon={<VerifiedUser />}
+                  checkedIcon={<VerifiedUser />}
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography variant="body2" fontWeight={500}>Aplicar firma electrónica</Typography>
+                  <Gavel fontSize="small" color="action" />
+                </Box>
+              }
+            />
+
+            {applySignature && (
+              <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: 'primary.50', borderColor: 'primary.200' }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Datos del firmante
+                </Typography>
+                <Box sx={{ mt: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Nombre</Typography>
+                    <Typography variant="body2" fontWeight={500}>{user?.name || '—'}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Correo electrónico</Typography>
+                    <Typography variant="body2" fontWeight={500}>{user?.email || '—'}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Fecha y hora</Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      {new Date().toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Alert severity="info" sx={{ mt: 1.5 }} icon={<Gavel fontSize="small" />}>
+                  Al firmar, usted acepta que esta comunicación tiene validez jurídica conforme al{' '}
+                  <strong>Decreto 2364 de 2012</strong>. La firma electrónica vincula su identidad al documento de forma irrevocable.
+                </Alert>
+              </Paper>
+            )}
+          </Box>
+        )}
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} disabled={submitting}>
           Cancelar
         </Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? 'Guardando...' : isReply ? 'Enviar respuesta' : 'Guardar'}
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={submitting}
+          startIcon={isReply && applySignature ? <VerifiedUser /> : undefined}
+          color={isReply && applySignature ? 'primary' : 'primary'}
+        >
+          {submitting ? 'Guardando...' : isReply && applySignature ? 'Firmar y enviar' : isReply ? 'Enviar respuesta' : 'Guardar'}
         </Button>
       </DialogActions>
     </Dialog>
+
+    {/* Confirmation dialog for electronic signature */}
+    <Dialog open={showConfirmDialog} onClose={() => setShowConfirmDialog(false)} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <VerifiedUser color="primary" />
+        Confirmar firma electrónica
+      </DialogTitle>
+      <DialogContent>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Está a punto de firmar electrónicamente esta respuesta. Esta acción no puede revertirse.
+        </Alert>
+        <Typography variant="body2" gutterBottom>
+          Al confirmar, se registrará su firma con los siguientes datos:
+        </Typography>
+        <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
+          <Box sx={{ display: 'grid', gap: 0.5 }}>
+            <Typography variant="body2"><strong>Firmante:</strong> {user?.name}</Typography>
+            <Typography variant="body2"><strong>Correo:</strong> {user?.email}</Typography>
+            <Typography variant="body2"><strong>Fecha:</strong> {new Date().toLocaleString('es-ES')}</Typography>
+            <Typography variant="body2"><strong>Base legal:</strong> Decreto 2364 de 2012 (Colombia)</Typography>
+          </Box>
+        </Paper>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setShowConfirmDialog(false)}>Cancelar</Button>
+        <Button
+          variant="contained"
+          onClick={handleConfirmSignature}
+          disabled={submitting}
+          startIcon={<VerifiedUser />}
+        >
+          {submitting ? 'Firmando...' : 'Confirmar firma'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+    </>
   );
 };
 

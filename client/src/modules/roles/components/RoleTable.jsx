@@ -2,7 +2,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   IconButton, Tooltip, Chip, TablePagination, Box,
 } from '@mui/material';
-import { Edit, Delete, Visibility } from '@mui/icons-material';
+import { Edit, Delete } from '@mui/icons-material';
 
 const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageChange, pagination, canEdit, canDelete }) => {
   const handleChangePage = (event, newPage) => {
@@ -30,7 +30,12 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
               </TableRow>
             ) : (
               roles.map((role) => (
-                <TableRow key={role.id} hover>
+                <TableRow
+                  key={role.id}
+                  hover
+                  onClick={() => onViewPermissions(role)}
+                  sx={{ cursor: 'pointer' }}
+                >
                   <TableCell>
                     <Box>
                       <Box sx={{ fontWeight: 500 }}>{role.name}</Box>
@@ -52,19 +57,9 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <Tooltip title="Ver permisos">
-                      <IconButton
-                        size="small"
-                        color="info"
-                        onClick={() => onViewPermissions(role)}
-                      >
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Chip
                       label={role.roleHasPermissions?.length || 0}
                       size="small"
-                      sx={{ ml: 1 }}
                     />
                   </TableCell>
                   <TableCell align="right">
@@ -74,7 +69,7 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => onEdit(role)}
+                            onClick={(e) => { e.stopPropagation(); onEdit(role); }}
                             disabled={!role.companyId}
                           >
                             <Edit fontSize="small" />
@@ -88,7 +83,7 @@ const RoleTable = ({ roles, onEdit, onDelete, onViewPermissions, page, onPageCha
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => onDelete(role.id)}
+                            onClick={(e) => { e.stopPropagation(); onDelete(role.id); }}
                             disabled={!role.companyId}
                           >
                             <Delete fontSize="small" />

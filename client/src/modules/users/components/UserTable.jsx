@@ -19,7 +19,7 @@ import {
   InputLabel,
   InputAdornment,
 } from '@mui/material';
-import { Edit, Delete, Visibility, Face, Search, MarkEmailUnread } from '@mui/icons-material';
+import { Edit, Delete, Face, Search, MarkEmailUnread } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useAuth } from '../../../hooks/useAuth';
@@ -118,7 +118,12 @@ const UserTable = ({
             </TableHead>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id} hover>
+                <TableRow
+                  key={user.id}
+                  hover
+                  onClick={() => navigate(`/users/${user.id}`)}
+                  sx={{ cursor: 'pointer' }}
+                >
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
@@ -149,7 +154,7 @@ const UserTable = ({
                         <IconButton
                           aria-label="Personificar usuario"
                           color="secondary"
-                          onClick={() => handleImpersonate(user.email)}
+                          onClick={(e) => { e.stopPropagation(); handleImpersonate(user.email); }}
                           size="small"
                           disabled={impersonating === user.email}
                         >
@@ -157,22 +162,12 @@ const UserTable = ({
                         </IconButton>
                       </Tooltip>
                     )}
-                    <Tooltip title="Ver perfil">
-                      <IconButton
-                        aria-label="Ver perfil"
-                        color="info"
-                        onClick={() => navigate(`/users/${user.id}`)}
-                        size="small"
-                      >
-                        <Visibility />
-                      </IconButton>
-                    </Tooltip>
                     {canEdit && onSendSetPasswordEmail && (
                       <Tooltip title="Enviar email para establecer contraseña">
                         <IconButton
                           aria-label="Enviar email de contraseña"
                           color="default"
-                          onClick={() => onSendSetPasswordEmail(user.id)}
+                          onClick={(e) => { e.stopPropagation(); onSendSetPasswordEmail(user.id); }}
                           size="small"
                         >
                           <MarkEmailUnread fontSize="small" />
@@ -184,7 +179,7 @@ const UserTable = ({
                         <IconButton
                           aria-label="Editar usuario"
                           color="primary"
-                          onClick={() => onEdit(user)}
+                          onClick={(e) => { e.stopPropagation(); onEdit(user); }}
                           size="small"
                         >
                           <Edit />
@@ -196,7 +191,7 @@ const UserTable = ({
                         <IconButton
                           aria-label="Eliminar usuario"
                           color="error"
-                          onClick={() => onDelete(user.id)}
+                          onClick={(e) => { e.stopPropagation(); onDelete(user.id); }}
                           size="small"
                         >
                           <Delete />

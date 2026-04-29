@@ -11,6 +11,7 @@ import UserTable from '../components/UserTable';
 import UserModalForm from '../components/UserModalForm';
 import userService from '../services/userService';
 import { usePermissions } from '../../../hooks/usePermissions';
+import useDebounce from '../../../hooks/useDebounce';
 
 const UserList = () => {
   const { hasPermission } = usePermissions();
@@ -23,15 +24,16 @@ const UserList = () => {
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
     loadUsers();
-  }, [search, roleFilter, page]);
+  }, [debouncedSearch, roleFilter, page]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const response = await userService.getAll({ search, role: roleFilter || undefined, page, limit: 10 });
+      const response = await userService.getAll({ search: debouncedSearch, role: roleFilter || undefined, page, limit: 10 });
       setUsers(response.data);
       setPagination(response.pagination);
     } catch (error) {

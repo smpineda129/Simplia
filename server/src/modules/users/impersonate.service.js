@@ -57,8 +57,8 @@ export const impersonateService = {
      */
     async assertCanImpersonate(impersonatorId) {
         const level = await this.getUserLowestRoleLevel(impersonatorId);
-        if (level !== 1) {
-            throw new ApiError(403, 'Solo el rol Owner puede personificar usuarios');
+        if (level > 2) {
+            throw new ApiError(403, 'Solo el rol Owner o Admin puede personificar usuarios');
         }
     },
 
@@ -100,13 +100,15 @@ export const impersonateService = {
             throw new ApiError(400, 'No puedes personificarte a ti mismo');
         }
 
-        // No permitir personificar a otro Owner
+        // No permitir personificar a un usuario con nivel de rol mayor o igual al impersonador
+        const impersonatorLevel = await this.getUserLowestRoleLevel(impersonatorId);
         const targetRoles = await userRoleService.getUserRoles(parseInt(targetUser.id));
-        const isTargetOwnerLvl1 = targetRoles.some(r =>
-            (r.role_level === 1 || r.roleLevel === 1) && r.name === 'Owner'
-        );
-        if (isTargetOwnerLvl1) {
-            throw new ApiError(403, 'Un Owner no puede personificar a otro Owner');
+        const targetLevel = targetRoles.length > 0
+            ? Math.min(...targetRoles.map(r => r.role_level || r.roleLevel || 999))
+            : 999;
+
+        if (targetLevel <= impersonatorLevel) {
+            throw new ApiError(403, 'No puedes personificar a un usuario con igual o mayor nivel de privilegio');
         }
 
         // Obtener roles y permisos del usuario objetivo

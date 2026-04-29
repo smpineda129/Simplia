@@ -108,7 +108,7 @@ class TemplateController {
 
   async processTemplate(req, res) {
     try {
-      const result = await templateService.processTemplate(req.params.id, req.body);
+      const result = await templateService.processTemplate(req.params.id, req.body, req.user?.id);
 
       res.json({
         success: true,

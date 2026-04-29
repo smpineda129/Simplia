@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -12,10 +13,18 @@ import {
   Avatar,
   Typography,
   Chip,
+  Link,
 } from '@mui/material';
-import { Delete, Person } from '@mui/icons-material';
+import { Delete, Person, ExpandMore, ExpandLess, VerifiedUser } from '@mui/icons-material';
+
+const stripHtml = (html) => html?.replace(/<[^>]*>/g, '') || '';
 
 const ThreadTable = ({ threads, onDelete }) => {
+  const [expanded, setExpanded] = useState({});
+
+  const toggleExpanded = (id) => {
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  };
   const formatDate = (date) => {
     return new Date(date).toLocaleString('es-ES', {
       year: 'numeric',
@@ -35,13 +44,14 @@ const ThreadTable = ({ threads, onDelete }) => {
               <TableCell>USUARIO</TableCell>
               <TableCell>MENSAJE</TableCell>
               <TableCell>FECHA</TableCell>
+              <TableCell>FIRMA</TableCell>
               <TableCell align="right">ACCIONES</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {threads.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   No hay hilos de conversación. Haz clic en "Crear Hilo" para agregar uno.
                 </TableCell>
               </TableRow>
@@ -71,16 +81,39 @@ const ThreadTable = ({ threads, onDelete }) => {
                     </TableCell>
                     <TableCell>
                       <Box>
-                        <Box
-                          sx={{
-                            maxWidth: 400,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {thread.message}
-                        </Box>
+                        {expanded[thread.id] ? (
+                          <Box>
+                            <Box
+                              sx={{ maxWidth: 500, '& *': { maxWidth: '100%' } }}
+                              dangerouslySetInnerHTML={{ __html: thread.message }}
+                            />
+                            <Link
+                              component="button"
+                              variant="caption"
+                              onClick={() => toggleExpanded(thread.id)}
+                              sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}
+                            >
+                              <ExpandLess fontSize="small" /> Ver menos
+                            </Link>
+                          </Box>
+                        ) : (
+                          <Box>
+                            <Typography variant="body2" sx={{ maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {stripHtml(thread.message).slice(0, 100)}{stripHtml(thread.message).length > 100 ? '…' : ''}
+                            </Typography>
+                            {thread.message && (
+                              <Link
+                                component="button"
+                                variant="caption"
+                                onClick={() => toggleExpanded(thread.id)}
+                                sx={{ display: 'flex', alignItems: 'center' }}
+                              >
+                                <ExpandMore fontSize="small" /> Ver mensaje
+                              </Link>
+                            )}
+                          </Box>
+                        )}
+
                         {taggedUsers.length > 0 && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                             {taggedUsers.map((u) => (
@@ -101,6 +134,22 @@ const ThreadTable = ({ threads, onDelete }) => {
                       <Typography variant="body2">
                         {formatDate(thread.createdAt)}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {thread.electronicSignature ? (
+                        <Tooltip
+                          title={`Firmado electrónicamente — Token: ${thread.electronicSignature.signatureToken} | Firmante: ${thread.electronicSignature.signerName} | Decreto 2364/2012`}
+                          arrow
+                        >
+                          <Chip
+                            icon={<VerifiedUser fontSize="small" />}
+                            label="Firmado"
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                          />
+                        </Tooltip>
+                      ) : null}
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Eliminar">

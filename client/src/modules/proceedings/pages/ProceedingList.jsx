@@ -30,6 +30,8 @@ const ProceedingList = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
   const [openModal, setOpenModal] = useState(false);
@@ -148,7 +150,7 @@ const ProceedingList = () => {
           <Button
             variant="outlined"
             startIcon={<Download />}
-            onClick={() => proceedingService.exportExcel({ search, companyId: selectedCompany })}
+            onClick={() => proceedingService.exportExcel({ search, companyId: selectedCompany, startDate, endDate })}
           >
             Exportar Excel
           </Button>
@@ -202,6 +204,26 @@ const ProceedingList = () => {
               ))}
             </Select>
           </FormControl>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            label="Fecha inicio"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            label="Fecha fin"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
         </Grid>
       </Grid>
 

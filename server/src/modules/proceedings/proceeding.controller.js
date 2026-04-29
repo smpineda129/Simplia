@@ -141,7 +141,8 @@ class ProceedingController {
       if (!req.file) {
         return res.status(400).json({ success: false, message: 'No se recibió ningún archivo' });
       }
-      const document = await proceedingService.uploadAndAttachDocument(req.params.id, req.file);
+      const folderId = req.body?.folderId || null;
+      const document = await proceedingService.uploadAndAttachDocument(req.params.id, req.file, folderId);
       res.status(201).json({ success: true, data: document });
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });
@@ -173,6 +174,48 @@ class ProceedingController {
       await proceedingService.exportExcel({ ...req.query, companyId }, res);
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // ─── Folders ────────────────────────────────────────────────────────────────
+
+  async moveDocumentToFolder(req, res) {
+    try {
+      await proceedingService.moveDocumentToFolder(req.params.id, req.params.documentId, req.body.folderId);
+      res.json({ success: true, message: 'Documento movido correctamente' });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  async getFolders(req, res) {
+    try {
+      const folders = await proceedingService.getFolders(req.params.id);
+      res.json({ success: true, data: folders });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  async createFolder(req, res) {
+    try {
+      const { name } = req.body;
+      if (!name?.trim()) {
+        return res.status(400).json({ success: false, message: 'El nombre de la carpeta es requerido' });
+      }
+      const folder = await proceedingService.createFolder(req.params.id, name.trim());
+      res.status(201).json({ success: true, data: folder });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  async deleteFolder(req, res) {
+    try {
+      await proceedingService.deleteFolder(req.params.id, req.params.folderId);
+      res.json({ success: true, message: 'Carpeta eliminada correctamente' });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 }

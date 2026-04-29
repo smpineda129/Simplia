@@ -68,4 +68,9 @@ export const respondValidation = [
     .withMessage('La respuesta es requerida')
     .isLength({ min: 10 })
     .withMessage('La respuesta debe tener al menos 10 caracteres'),
+
+  body('sign')
+    .optional()
+    .isBoolean()
+    .withMessage('sign debe ser un valor booleano'),
 ];

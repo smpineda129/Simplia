@@ -39,4 +39,10 @@ router.post('/:id/upload-document', authenticate, hasPermission('proceeding.upda
 router.post('/:id/documents', authenticate, hasPermission('proceeding.update'), proceedingController.attachDocument);
 router.delete('/:id/documents/:documentId', authenticate, hasPermission('proceeding.update'), proceedingController.detachDocument);
 
+// ─── Folders ──────────────────────────────────────────────────────────────
+router.patch('/:id/documents/:documentId/folder', authenticate, hasPermission('proceeding.update'), proceedingController.moveDocumentToFolder);
+router.get('/:id/folders', authenticate, hasPermission('proceeding.view'), proceedingController.getFolders);
+router.post('/:id/folders', authenticate, hasPermission('proceeding.update'), proceedingController.createFolder);
+router.delete('/:id/folders/:folderId', authenticate, hasPermission('proceeding.update'), proceedingController.deleteFolder);
+
 export default router;

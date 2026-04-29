@@ -96,6 +96,18 @@ const correspondenceService = {
       });
   },
 
+  // ─── Documents ───────────────────────────────────────────────────────────
+
+  moveDocument: async (correspondenceId, documentId, folderId) => {
+    const response = await axiosInstance.patch(`/correspondences/${correspondenceId}/documents/${documentId}/folder`, { folderId });
+    return response.data;
+  },
+
+  attachDocument: async (correspondenceId, documentId) => {
+    const response = await axiosInstance.post(`/correspondences/${correspondenceId}/documents`, { documentId });
+    return response.data;
+  },
+
   // ─── Folders ─────────────────────────────────────────────────────────────
 
   createFolder: async (correspondenceId, name) => {

@@ -1,4 +1,5 @@
 import { prisma } from '../../db/prisma.js';
+import { presignValue } from '../../utils/s3Presign.js';
 
 class TemplateService {
   // Helpers disponibles para las plantillas
@@ -167,21 +168,17 @@ class TemplateService {
   }
 
   // Procesar plantilla con datos reales
-  async processTemplate(templateId, data) {
+  async processTemplate(templateId, data, userId = null) {
     const template = await this.getById(templateId);
-    
+
     let content = template.content;
-    
-    // Reemplazar helpers con datos reales
+
+    const now = new Date();
     const replacements = {
-      '{dia}': new Date().getDate(),
-      '{mes}': new Date().toLocaleString('es-ES', { month: 'long' }),
-      '{ano}': new Date().getFullYear(),
-      '{fecha}': new Date().toLocaleDateString('es-ES', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      }),
+      '{dia}': now.getDate(),
+      '{mes}': now.toLocaleString('es-ES', { month: 'long' }),
+      '{ano}': now.getFullYear(),
+      '{fecha}': now.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }),
       '{nombre}': data.destinatario?.nombre || '',
       '{apellido}': data.destinatario?.apellido || '',
       '{dni}': data.destinatario?.dni || '',
@@ -196,8 +193,60 @@ class TemplateService {
       '{mi_cargo}': data.usuario?.cargo || '',
     };
 
+    // If correspondenceId provided, look up correspondence data from DB
+    if (data.correspondenceId) {
+      try {
+        const correspondence = await prisma.correspondence.findFirst({
+          where: { id: parseInt(data.correspondenceId), deletedAt: null },
+        });
+        if (correspondence) {
+          replacements['{radicado_entrada}'] = correspondence.in_settled || '';
+          replacements['{radicado_salida}'] = correspondence.out_settled || '';
+
+          if (correspondence.user_id) {
+            let corrUser = null;
+            if (correspondence.user_type === 'internal') {
+              corrUser = await prisma.user.findUnique({
+                where: { id: BigInt(correspondence.user_id) },
+                select: { name: true, email: true },
+              });
+            } else {
+              corrUser = await prisma.externalUser.findUnique({
+                where: { id: BigInt(correspondence.user_id) },
+                select: { name: true, email: true },
+              });
+            }
+            if (corrUser) {
+              const parts = (corrUser.name || '').split(' ');
+              replacements['{nombre}'] = parts[0] || '';
+              replacements['{apellido}'] = parts.slice(1).join(' ') || '';
+              replacements['{correo}'] = corrUser.email || '';
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // If userId provided, look up current user for {mi_*} and {firma}
+    if (userId) {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: BigInt(userId) },
+          select: { name: true, email: true, signature: true },
+        });
+        if (user) {
+          replacements['{mi_nombre}'] = user.name || '';
+          replacements['{mi_correo}'] = user.email || '';
+          if (user.signature) {
+            const signatureUrl = await presignValue(user.signature);
+            replacements['{firma}'] = `<img src="${signatureUrl}" alt="Firma" style="max-height:80px;max-width:200px;display:block;" />`;
+          }
+        }
+      } catch (_) {}
+    }
+
     Object.keys(replacements).forEach(key => {
-      content = content.replace(new RegExp(key, 'g'), replacements[key]);
+      content = content.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), String(replacements[key]));
     });
 
     return {

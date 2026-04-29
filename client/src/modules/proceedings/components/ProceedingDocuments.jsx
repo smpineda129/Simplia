@@ -48,6 +48,7 @@ import {
   ArrowUpward,
   ArrowDownward,
   Edit,
+  DriveFileMove,
 } from '@mui/icons-material';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useAuth } from '../../../hooks/useAuth';
@@ -138,12 +139,24 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
   const [mergeMode, setMergeMode] = useState(false);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [mergeOrder, setMergeOrder] = useState([]);
+  const [mergeDocs, setMergeDocs] = useState([]); // docs con metadata para el dialog
   const [mergeName, setMergeName] = useState('');
   const [merging, setMerging] = useState(false);
+  const [uploadingMergeFile, setUploadingMergeFile] = useState(false);
+  const mergeFileInputRef = useRef(null);
 
   // Edit state
   const [editDoc, setEditDoc] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // Move state (single)
+  const [moveDoc, setMoveDoc] = useState(null);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+
+  // Move mode (batch)
+  const [moveMode, setMoveMode] = useState(false);
+  const [batchSelectedDocs, setBatchSelectedDocs] = useState([]);
+  const [batchMoveDialogOpen, setBatchMoveDialogOpen] = useState(false);
 
   useEffect(() => {
     loadFolders();
@@ -291,6 +304,46 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
     }
   };
 
+  const handleMoveDocument = async (targetFolderId) => {
+    try {
+      await proceedingService.moveDocument(proceedingId, moveDoc.id, targetFolderId);
+      showSnackbar('Documento movido exitosamente');
+      setMoveDialogOpen(false);
+      setMoveDoc(null);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al mover el documento', 'error');
+    }
+  };
+
+  const handleToggleBatchSelectDoc = (doc) => {
+    setBatchSelectedDocs(prev => {
+      const exists = prev.find(d => d.id === doc.id);
+      if (exists) return prev.filter(d => d.id !== doc.id);
+      return [...prev, doc];
+    });
+  };
+
+  const handleCancelMoveMode = () => {
+    setMoveMode(false);
+    setBatchSelectedDocs([]);
+  };
+
+  const handleBatchMoveDocument = async (targetFolderId) => {
+    try {
+      await Promise.all(
+        batchSelectedDocs.map(doc => proceedingService.moveDocument(proceedingId, doc.id, targetFolderId))
+      );
+      showSnackbar(`${batchSelectedDocs.length} documento(s) movido(s) exitosamente`);
+      setBatchMoveDialogOpen(false);
+      setMoveMode(false);
+      setBatchSelectedDocs([]);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      showSnackbar(error.response?.data?.message || 'Error al mover los documentos', 'error');
+    }
+  };
+
   const handleEdit = (doc) => {
     setEditDoc({ ...doc, companyId: user?.companyId || doc.companyId });
     setEditDialogOpen(true);
@@ -329,18 +382,49 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
   };
 
   const handleStartMerge = () => {
-    if (selectedDocs.length < 2) {
-      showSnackbar('Selecciona al menos 2 documentos PDF para mezclar', 'warning');
+    if (selectedDocs.length < 1) {
+      showSnackbar('Selecciona al menos 1 documento PDF para mezclar', 'warning');
       return;
     }
-    setMergeOrder(selectedDocs.map(d => d.id));
+    const initialDocs = selectedDocs.map(d => ({ id: d.id, name: d.file_original_name || d.name, isNew: false }));
+    setMergeDocs(initialDocs);
+    setMergeOrder(initialDocs.map(d => d.id));
     setMergeName('Documento_Mezclado.pdf');
     setMergeDialogOpen(true);
+  };
+
+  const handleAddMergeFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showSnackbar('Solo se pueden agregar archivos PDF', 'warning');
+      return;
+    }
+    try {
+      setUploadingMergeFile(true);
+      const response = await proceedingService.uploadDocument(proceedingId, file);
+      const newDoc = response.data;
+      const entry = { id: newDoc.id, name: newDoc.file_original_name || newDoc.name || file.name, isNew: true };
+      setMergeDocs(prev => [...prev, entry]);
+      setMergeOrder(prev => [...prev, newDoc.id]);
+    } catch (err) {
+      showSnackbar('Error al subir el archivo', 'error');
+    } finally {
+      setUploadingMergeFile(false);
+      if (mergeFileInputRef.current) mergeFileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFromMerge = (id) => {
+    setMergeDocs(prev => prev.filter(d => d.id !== id));
+    setMergeOrder(prev => prev.filter(docId => docId !== id));
   };
 
   const handleCancelMerge = () => {
     setMergeMode(false);
     setSelectedDocs([]);
+    setMergeDocs([]);
+    setMergeOrder([]);
   };
 
   const handleMoveUp = (index) => {
@@ -348,6 +432,9 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
     const newOrder = [...mergeOrder];
     [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
     setMergeOrder(newOrder);
+    const newDocs = [...mergeDocs];
+    [newDocs[index - 1], newDocs[index]] = [newDocs[index], newDocs[index - 1]];
+    setMergeDocs(newDocs);
   };
 
   const handleMoveDown = (index) => {
@@ -355,6 +442,9 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
     const newOrder = [...mergeOrder];
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
     setMergeOrder(newOrder);
+    const newDocs = [...mergeDocs];
+    [newDocs[index], newDocs[index + 1]] = [newDocs[index + 1], newDocs[index]];
+    setMergeDocs(newDocs);
   };
 
   const handleConfirmMerge = async () => {
@@ -362,18 +452,23 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
       showSnackbar('Ingresa un nombre para el documento mezclado', 'warning');
       return;
     }
+    if (mergeOrder.length < 2) {
+      showSnackbar('Se necesitan al menos 2 documentos para mezclar', 'warning');
+      return;
+    }
     try {
       setMerging(true);
       const response = await documentService.merge(mergeOrder, mergeName.trim());
       const mergedDoc = response.data;
-      
+
       // Vincular el documento mezclado al expediente
       await proceedingService.attachDocument(proceedingId, mergedDoc.id);
-      
+
       showSnackbar('Documentos mezclados exitosamente');
       setMergeDialogOpen(false);
       setMergeMode(false);
       setSelectedDocs([]);
+      setMergeDocs([]);
       setMergeOrder([]);
       setMergeName('');
       if (onUpdate) onUpdate();
@@ -401,7 +496,7 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
       <Table size="small">
         <TableHead>
           <TableRow sx={{ bgcolor: '#fafafa' }}>
-            {mergeMode && <TableCell sx={{ width: 50 }}>SELECCIONAR</TableCell>}
+            {(mergeMode || moveMode) && <TableCell sx={{ width: 50 }}>SELECCIONAR</TableCell>}
             <TableCell>Nombre</TableCell>
             <TableCell sx={{ width: 110 }}>Fecha</TableCell>
             <TableCell align="right" sx={{ width: 120 }}>Acciones</TableCell>
@@ -410,7 +505,7 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
         <TableBody>
           {docs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={mergeMode ? 4 : 3} align="center" sx={{ color: 'text.secondary', py: 2 }}>
+              <TableCell colSpan={(mergeMode || moveMode) ? 4 : 3} align="center" sx={{ color: 'text.secondary', py: 2 }}>
                 {emptyMsg}
               </TableCell>
             </TableRow>
@@ -420,12 +515,12 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
               const canSelect = isPDF(doc);
               return (
                 <TableRow key={doc.id} hover selected={!!isSelected}>
-                  {mergeMode && (
+                  {(mergeMode || moveMode) && (
                     <TableCell>
                       <Checkbox
-                        checked={!!isSelected}
-                        onChange={() => handleToggleSelectDoc(doc)}
-                        disabled={!canSelect}
+                        checked={moveMode ? !!batchSelectedDocs.find(d => d.id === doc.id) : !!isSelected}
+                        onChange={() => moveMode ? handleToggleBatchSelectDoc(doc) : handleToggleSelectDoc(doc)}
+                        disabled={mergeMode && !canSelect}
                         size="small"
                       />
                     </TableCell>
@@ -467,6 +562,13 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
                             </IconButton>
                           </span>
                         </Tooltip>
+                        {folders.length > 0 && !isClosed && !moveMode && (
+                          <Tooltip title="Mover a carpeta">
+                            <IconButton size="small" color="info" onClick={() => { setMoveDoc(doc); setMoveDialogOpen(true); }}>
+                              <DriveFileMove fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         {hasPermission('document.delete') && (
                           <Tooltip title={isClosed ? "Expediente cerrado" : "Desvincular"}>
                             <span>
@@ -494,9 +596,9 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
           <Description sx={{ mr: 1 }} /> Documentos
-          {mergeMode && (
+          {(mergeMode || moveMode) && (
             <Chip
-              label={`${selectedDocs.length} seleccionados`}
+              label={`${mergeMode ? selectedDocs.length : batchSelectedDocs.length} seleccionados`}
               size="small"
               color="primary"
               sx={{ ml: 2 }}
@@ -518,10 +620,25 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
                 variant="contained"
                 startIcon={<MergeType />}
                 onClick={handleStartMerge}
-                disabled={selectedDocs.length < 2}
+                disabled={selectedDocs.length < 1}
                 size="small"
               >
                 Mezclar ({selectedDocs.length})
+              </Button>
+            </>
+          ) : moveMode ? (
+            <>
+              <Button variant="outlined" onClick={handleCancelMoveMode} size="small">
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<DriveFileMove />}
+                onClick={() => setBatchMoveDialogOpen(true)}
+                disabled={batchSelectedDocs.length === 0}
+                size="small"
+              >
+                Mover ({batchSelectedDocs.length})
               </Button>
             </>
           ) : (
@@ -537,6 +654,16 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
                   >
                     Mezclar PDFs
                   </Button>
+                  {folders.length > 0 && !isClosed && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<DriveFileMove />}
+                      onClick={() => setMoveMode(true)}
+                      size="small"
+                    >
+                      Mover documentos
+                    </Button>
+                  )}
                   <Button
                     startIcon={<CreateNewFolder />}
                     onClick={() => setNewFolderOpen(true)}
@@ -707,7 +834,7 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
       </Dialog>
 
       {/* Merge Dialog */}
-      <Dialog open={mergeDialogOpen} onClose={() => setMergeDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={mergeDialogOpen} onClose={() => !merging && setMergeDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Mezclar Documentos PDF</DialogTitle>
         <DialogContent>
           <TextField
@@ -715,50 +842,67 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
             fullWidth
             value={mergeName}
             onChange={(e) => setMergeName(e.target.value)}
-            sx={{ mt: 2, mb: 3 }}
+            sx={{ mt: 2, mb: 2 }}
             placeholder="Documento_Mezclado.pdf"
           />
-          <Typography variant="subtitle2" gutterBottom>
-            Orden de mezcla (usa las flechas para reordenar):
-          </Typography>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="subtitle2">
+              Orden de mezcla ({mergeOrder.length} documentos):
+            </Typography>
+            <Button
+              component="label"
+              size="small"
+              startIcon={uploadingMergeFile ? <CircularProgress size={14} /> : <Add />}
+              disabled={uploadingMergeFile || merging}
+              variant="outlined"
+            >
+              {uploadingMergeFile ? 'Subiendo...' : 'Agregar PDF'}
+              <input
+                ref={mergeFileInputRef}
+                type="file"
+                hidden
+                accept=".pdf"
+                onChange={handleAddMergeFile}
+              />
+            </Button>
+          </Box>
+
           <List dense>
             {mergeOrder.map((docId, index) => {
-              const doc = documents.find(d => d.id === docId);
+              const doc = mergeDocs.find(d => d.id === docId);
               if (!doc) return null;
               return (
                 <ListItem
-                  key={docId}
+                  key={`${docId}-${index}`}
                   sx={{
                     border: '1px solid #e0e0e0',
                     borderRadius: 1,
                     mb: 1,
-                    bgcolor: '#fafafa'
+                    bgcolor: doc.isNew ? '#F0FDF4' : '#fafafa',
                   }}
                 >
                   <Chip
                     label={index + 1}
                     size="small"
                     color="primary"
-                    sx={{ mr: 2 }}
+                    sx={{ mr: 1, flexShrink: 0 }}
                   />
                   <ListItemText
-                    primary={doc.file_original_name || doc.name}
-                    primaryTypographyProps={{ variant: 'body2' }}
+                    primary={doc.name}
+                    secondary={doc.isNew ? 'Nuevo' : null}
+                    primaryTypographyProps={{ variant: 'body2', noWrap: true }}
+                    secondaryTypographyProps={{ variant: 'caption', color: 'success.main' }}
                   />
                   <ListItemSecondaryAction>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                    >
+                    <IconButton size="small" onClick={() => handleMoveUp(index)} disabled={index === 0}>
                       <ArrowUpward fontSize="small" />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === mergeOrder.length - 1}
-                    >
+                    <IconButton size="small" onClick={() => handleMoveDown(index)} disabled={index === mergeOrder.length - 1}>
                       <ArrowDownward fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleRemoveFromMerge(docId)}>
+                      <Delete fontSize="small" />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
@@ -773,11 +917,65 @@ const ProceedingDocuments = ({ proceedingId, documents = [], onUpdate, isClosed 
           <Button
             variant="contained"
             onClick={handleConfirmMerge}
-            disabled={merging || !mergeName.trim()}
+            disabled={merging || !mergeName.trim() || mergeOrder.length < 2}
             startIcon={merging ? <CircularProgress size={16} /> : <MergeType />}
           >
             {merging ? 'Mezclando...' : 'Mezclar'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Batch Move Dialog */}
+      <Dialog open={batchMoveDialogOpen} onClose={() => setBatchMoveDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Mover {batchSelectedDocs.length} documento(s) a carpeta</DialogTitle>
+        <DialogContent>
+          <List dense>
+            <ListItem
+              sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+              onClick={() => handleBatchMoveDocument(null)}
+            >
+              <ListItemText primary="Sin carpeta" secondary="Quitar de la carpeta actual" />
+            </ListItem>
+            {folders.map((folder) => (
+              <ListItem
+                key={folder.id}
+                sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                onClick={() => handleBatchMoveDocument(folder.id)}
+              >
+                <ListItemText primary={folder.name} />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBatchMoveDialogOpen(false)}>Cancelar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Move Document Dialog */}
+      <Dialog open={moveDialogOpen} onClose={() => { setMoveDialogOpen(false); setMoveDoc(null); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Mover documento a carpeta</DialogTitle>
+        <DialogContent>
+          <List dense>
+            <ListItem
+              sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+              onClick={() => handleMoveDocument(null)}
+            >
+              <ListItemText primary="Sin carpeta" secondary="Quitar de la carpeta actual" />
+            </ListItem>
+            {folders.map((folder) => (
+              <ListItem
+                key={folder.id}
+                sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                onClick={() => handleMoveDocument(folder.id)}
+              >
+                <ListItemText primary={folder.name} />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setMoveDialogOpen(false); setMoveDoc(null); }}>Cancelar</Button>
         </DialogActions>
       </Dialog>
 

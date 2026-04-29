@@ -12,7 +12,7 @@ import {
   TablePagination,
   Tooltip,
 } from '@mui/material';
-import { Edit, Delete, Folder, Visibility } from '@mui/icons-material';
+import { Edit, Delete, Folder } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pagination, canView, canEdit, canDelete }) => {
@@ -50,7 +50,12 @@ const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pa
           </TableHead>
           <TableBody>
             {proceedings.map((proceeding) => (
-              <TableRow key={proceeding.id} hover>
+              <TableRow
+                key={proceeding.id}
+                hover
+                onClick={() => navigate(`/proceedings/${proceeding.id}`)}
+                sx={{ cursor: 'pointer' }}
+              >
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Folder color="primary" />
@@ -82,23 +87,12 @@ const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pa
                 </TableCell>
                 <TableCell>{formatDate(proceeding.startDate)}</TableCell>
                 <TableCell align="right">
-                  {canView && (
-                    <Tooltip title="Ver Detalle">
-                      <IconButton
-                        size="small"
-                        color="info"
-                        onClick={() => navigate(`/proceedings/${proceeding.id}`)}
-                      >
-                        <Visibility />
-                      </IconButton>
-                    </Tooltip>
-                  )}
                   {canEdit && (
                     <Tooltip title="Editar">
                       <IconButton
                         size="small"
                         color="primary"
-                        onClick={() => onEdit(proceeding)}
+                        onClick={(e) => { e.stopPropagation(); onEdit(proceeding); }}
                       >
                         <Edit />
                       </IconButton>
@@ -109,7 +103,7 @@ const ProceedingTable = ({ proceedings, onEdit, onDelete, page, onPageChange, pa
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => onDelete(proceeding.id)}
+                        onClick={(e) => { e.stopPropagation(); onDelete(proceeding.id); }}
                       >
                         <Delete />
                       </IconButton>

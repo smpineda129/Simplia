@@ -12,7 +12,7 @@ import {
   TablePagination,
   Tooltip,
 } from '@mui/material';
-import { Edit, Delete, Description, ViewList, Visibility } from '@mui/icons-material';
+import { Edit, Delete, Description, ViewList } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 const RetentionTable = ({ retentions, onEdit, onDelete, page, onPageChange, pagination }) => {
@@ -56,7 +56,12 @@ const RetentionTable = ({ retentions, onEdit, onDelete, page, onPageChange, pagi
           </TableHead>
           <TableBody>
             {retentions.map((retention) => (
-              <TableRow key={retention.id} hover>
+              <TableRow
+                key={retention.id}
+                hover
+                onClick={() => navigate(`/retentions/${retention.id}`)}
+                sx={{ cursor: 'pointer' }}
+              >
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Description color="primary" />
@@ -95,20 +100,11 @@ const RetentionTable = ({ retentions, onEdit, onDelete, page, onPageChange, pagi
                   </Tooltip>
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Ver Detalle">
-                    <IconButton
-                      size="small"
-                      color="info"
-                      onClick={() => navigate(`/retentions/${retention.id}`)}
-                    >
-                      <Visibility />
-                    </IconButton>
-                  </Tooltip>
                   <Tooltip title="Editar">
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={() => onEdit(retention)}
+                      onClick={(e) => { e.stopPropagation(); onEdit(retention); }}
                     >
                       <Edit />
                     </IconButton>
@@ -117,7 +113,7 @@ const RetentionTable = ({ retentions, onEdit, onDelete, page, onPageChange, pagi
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => onDelete(retention.id)}
+                      onClick={(e) => { e.stopPropagation(); onDelete(retention.id); }}
                     >
                       <Delete />
                     </IconButton>

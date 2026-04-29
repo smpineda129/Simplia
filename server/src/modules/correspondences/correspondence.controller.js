@@ -102,12 +102,19 @@ class CorrespondenceController {
   async respond(req, res) {
     try {
       const userId = req.user.id;
-      const correspondence = await correspondenceService.respond(req.params.id, req.body, userId);
+      const ip = req.ip || req.headers['x-forwarded-for'] || null;
+      const userAgent = req.headers['user-agent'] || null;
+      const result = await correspondenceService.respond(req.params.id, req.body, userId, { ip, userAgent });
+
+      const { signatureToken, ...correspondence } = result;
 
       res.json({
         success: true,
-        message: 'Respuesta enviada exitosamente',
+        message: signatureToken
+          ? 'Respuesta enviada y firmada electrónicamente'
+          : 'Respuesta enviada exitosamente',
         data: correspondence,
+        signatureToken: signatureToken || null,
       });
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });
@@ -173,6 +180,15 @@ class CorrespondenceController {
       await correspondenceService.exportExcel({ ...req.query, companyId }, res);
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async moveDocumentToFolder(req, res) {
+    try {
+      await correspondenceService.moveDocumentToFolder(req.params.id, req.params.documentId, req.body.folderId);
+      res.json({ success: true, message: 'Documento movido correctamente' });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 

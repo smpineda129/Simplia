@@ -7,6 +7,7 @@ export const correspondenceTemplateResponseEmailTemplate = ({
   logoUrl = '',
   responderName = '',
   responderSignature = '',
+  electronicSignature = null, // { signatureToken, signerName, signerEmail, documentHash, signedAt }
 }) => {
   const date = new Date().toLocaleDateString('es-CO', {
     year: 'numeric',
@@ -153,6 +154,64 @@ export const correspondenceTemplateResponseEmailTemplate = ({
                   </td>
                 </tr>
               </table>
+
+              ${electronicSignature ? `
+              <!-- Electronic Signature Block -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border-radius: 10px; border: 1px solid #86EFAC; margin-top: 20px;">
+                <tr>
+                  <td style="padding: 18px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding-bottom: 10px;">
+                          <p style="margin: 0; color: #166534; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                            &#10003;&#10003;&nbsp; Firmado Electrónicamente — Decreto 2364 de 2012
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="border-top: 1px solid #BBF7D0; padding-top: 12px;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="padding-bottom: 6px; width: 50%;">
+                                <p style="margin: 0; color: #4B5563; font-size: 12px;"><strong style="color: #166534;">Firmante:</strong></p>
+                                <p style="margin: 2px 0 0; color: #1E293B; font-size: 13px; font-weight: 600;">${electronicSignature.signerName}</p>
+                              </td>
+                              <td style="padding-bottom: 6px;">
+                                <p style="margin: 0; color: #4B5563; font-size: 12px;"><strong style="color: #166534;">Correo:</strong></p>
+                                <p style="margin: 2px 0 0; color: #1E293B; font-size: 13px;">${electronicSignature.signerEmail}</p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding-bottom: 6px; width: 50%;">
+                                <p style="margin: 0; color: #4B5563; font-size: 12px;"><strong style="color: #166534;">Fecha de firma:</strong></p>
+                                <p style="margin: 2px 0 0; color: #1E293B; font-size: 13px;">${new Date(electronicSignature.signedAt).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' })}</p>
+                              </td>
+                              <td style="padding-bottom: 6px;">
+                                <p style="margin: 0; color: #4B5563; font-size: 12px;"><strong style="color: #166534;">Token de firma:</strong></p>
+                                <p style="margin: 2px 0 0; color: #1E293B; font-size: 11px; font-family: monospace; word-break: break-all;">${electronicSignature.signatureToken}</p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="2">
+                                <p style="margin: 0; color: #4B5563; font-size: 12px;"><strong style="color: #166534;">Hash SHA-256 del documento:</strong></p>
+                                <p style="margin: 4px 0 0; color: #374151; font-size: 10px; font-family: monospace; word-break: break-all; background-color: #F0FFF4; padding: 6px 8px; border-radius: 4px; border: 1px solid #BBF7D0;">${electronicSignature.documentHash}</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding-top: 12px; border-top: 1px solid #BBF7D0;">
+                          <p style="margin: 0; color: #6B7280; font-size: 11px; line-height: 1.5; font-style: italic;">
+                            Esta comunicación ha sido firmada electrónicamente conforme al <strong>Decreto 2364 de 2012</strong> del Ministerio de Comercio, Industria y Turismo de Colombia. El hash SHA-256 garantiza la integridad del documento y vincula lógicamente al firmante con el contenido. El token de firma es único e irrepetible.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>` : ''}
 
             </td>
           </tr>

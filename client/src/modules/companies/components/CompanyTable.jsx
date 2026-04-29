@@ -12,7 +12,7 @@ import {
   TablePagination,
   Tooltip,
 } from '@mui/material';
-import { Edit, Delete, Business, People, Visibility } from '@mui/icons-material';
+import { Edit, Delete, Business, People } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, pagination, canEdit, canDelete }) => {
@@ -47,7 +47,12 @@ const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, paginat
           </TableHead>
           <TableBody>
             {companies.map((company) => (
-              <TableRow key={company.id} hover>
+              <TableRow
+                key={company.id}
+                hover
+                onClick={() => navigate(`/companies/${company.id}`)}
+                sx={{ cursor: 'pointer' }}
+              >
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {company.imageUrl && (
@@ -89,21 +94,12 @@ const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, paginat
                   )}
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Ver Detalles">
-                    <IconButton
-                      size="small"
-                      color="info"
-                      onClick={() => navigate(`/companies/${company.id}`)}
-                    >
-                      <Visibility />
-                    </IconButton>
-                  </Tooltip>
                   {canEdit && (
                     <Tooltip title="Editar">
                       <IconButton
                         size="small"
                         color="primary"
-                        onClick={() => onEdit(company)}
+                        onClick={(e) => { e.stopPropagation(); onEdit(company); }}
                       >
                         <Edit />
                       </IconButton>
@@ -114,7 +110,7 @@ const CompanyTable = ({ companies, onEdit, onDelete, page, onPageChange, paginat
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => onDelete(company.id)}
+                        onClick={(e) => { e.stopPropagation(); onDelete(company.id); }}
                       >
                         <Delete />
                       </IconButton>
