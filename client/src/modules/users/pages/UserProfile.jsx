@@ -12,10 +12,12 @@ import {
   Chip,
   Tabs,
   Tab,
+  Autocomplete,
 } from '@mui/material';
 import { AccountCircle, Edit, Save, History, PhotoCamera, Palette, CloudUpload } from '@mui/icons-material';
 import { useAuth } from '../../../hooks/useAuth';
 import userService from '../services/userService';
+import companyService from '../../companies/services/companyService';
 import UserAssociations from '../components/UserAssociations';
 import AuditTable from '../../audit/components/AuditTable';
 import LoadingSpinner from '../../../components/LoadingSpinner';
@@ -36,6 +38,7 @@ const UserProfile = () => {
   const [signatureImagePreview, setSignatureImagePreview] = useState(null);
   // Presigned display URLs (separate from formData which stores S3 keys)
   const [displayUrls, setDisplayUrls] = useState({ avatar: null, signature: null });
+  const [companies, setCompanies] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -43,6 +46,7 @@ const UserProfile = () => {
     locale: '',
     signature: '',
     avatar: '',
+    companyId: '',
   });
 
   useEffect(() => {
@@ -54,7 +58,18 @@ const UserProfile = () => {
         locale: user.locale || 'es',
         signature: user.signature || '',
         avatar: user.avatar || 'person',
+        companyId: user.companyId || user.company?.id || '',
       });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const userIsOwner = user?.roles?.some((r) => (typeof r === 'object' ? r.name : r) === 'Owner') || user?.role === 'Owner';
+    if (userIsOwner) {
+      companyService.getAll().then((res) => {
+        const list = res.data || res;
+        setCompanies(Array.isArray(list) ? list : []);
+      }).catch(() => {});
     }
   }, [user]);
 
@@ -139,7 +154,8 @@ const UserProfile = () => {
       await userService.update(user.userId || user.id, formData);
 
       if (updateUser) {
-        updateUser(formData);
+        const selectedCompany = companies.find((c) => String(c.id) === String(formData.companyId)) || user.company;
+        updateUser({ ...formData, company: selectedCompany });
       }
 
       showSnackbar('Perfil actualizado exitosamente', 'success');
@@ -165,6 +181,7 @@ const UserProfile = () => {
   }
 
   const currentUserId = user.userId || user.id;
+  const isOwner = user.roles?.some((r) => (typeof r === 'object' ? r.name : r) === 'Owner') || user.role === 'Owner';
 
   // Use the fresh presigned display URL if available, otherwise fall back to user.avatar
   const currentAvatar = displayUrls.avatar || user.avatar || formData.avatar || 'person';
@@ -567,12 +584,37 @@ const UserProfile = () => {
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Empresa"
-                      value={user.company?.name || 'Sin empresa asignada'}
-                      disabled
-                    />
+                    {isOwner ? (
+                      <Autocomplete
+                        options={companies}
+                        getOptionLabel={(option) => option.name || ''}
+                        value={companies.find((c) => String(c.id) === String(formData.companyId)) || null}
+                        onChange={(_, selected) => {
+                          setFormData((prev) => ({ ...prev, companyId: selected ? String(selected.id) : '' }));
+                        }}
+                        filterOptions={(options, { inputValue }) =>
+                          options.filter((o) =>
+                            o.name.toLowerCase().includes(inputValue.toLowerCase())
+                          )
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Empresa"
+                            helperText="Escribe para filtrar empresas"
+                          />
+                        )}
+                        noOptionsText="Sin resultados"
+                        isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+                      />
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label="Empresa"
+                        value={user.company?.name || 'Sin empresa asignada'}
+                        disabled
+                      />
+                    )}
                   </Grid>
 
                   {/* Action Buttons */}
@@ -588,6 +630,7 @@ const UserProfile = () => {
                           locale: user.locale || 'es',
                           signature: user.signature || '',
                           avatar: user.avatar || 'person',
+                          companyId: user.companyId || user.company?.id || '',
                         });
                       }}
                       disabled={loading}
