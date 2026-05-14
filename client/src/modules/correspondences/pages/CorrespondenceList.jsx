@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useDebounce from '../../../hooks/useDebounce';
+import { useAuth } from '../../../hooks/useAuth';
 import {
   Box,
   Typography,
@@ -25,6 +26,7 @@ import { companyService } from '../../companies';
 import { correspondenceTypeService } from '../../correspondence-types';
 
 const CorrespondenceList = () => {
+  const { user } = useAuth();
   const [correspondences, setCorrespondences] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [types, setTypes] = useState([]);
@@ -45,6 +47,12 @@ const CorrespondenceList = () => {
   useEffect(() => {
     loadCompanies();
   }, []);
+
+  useEffect(() => {
+    if (user?.companyId && !selectedCompany) {
+      setSelectedCompany(user.companyId.toString());
+    }
+  }, [user?.companyId]);
 
   useEffect(() => {
     if (selectedCompany) {
@@ -160,6 +168,17 @@ const CorrespondenceList = () => {
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
+
+  // Polling: silently refresh every 30 seconds when no modal is open
+  const pollingRef = useRef(null);
+  useEffect(() => {
+    pollingRef.current = setInterval(() => {
+      if (!openModal) {
+        loadCorrespondences();
+      }
+    }, 30000);
+    return () => clearInterval(pollingRef.current);
+  }, [debouncedSearch, selectedCompany, selectedStatus, page, openModal]);
 
   return (
     <Box>

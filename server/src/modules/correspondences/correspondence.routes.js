@@ -630,6 +630,7 @@ router.post('/:id/mark-delivered', authenticate, hasPermission('correspondence.u
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
+router.post('/:id/documents', authenticate, hasPermission('correspondence.update'), correspondenceController.attachDocument);
 router.patch('/:id/documents/:documentId/folder', authenticate, hasPermission('correspondence.update'), correspondenceController.moveDocumentToFolder);
 router.post('/:id/folders', authenticate, hasPermission('correspondence.update'), correspondenceController.createFolder);
 router.get('/:id/folders', authenticate, hasPermission('correspondence.view'), correspondenceController.getFolders);

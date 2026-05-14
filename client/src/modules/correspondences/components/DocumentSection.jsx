@@ -26,11 +26,12 @@ import {
   ListItemText,
   ListItemSecondaryAction,
 } from '@mui/material';
-import { Add, Delete, InsertDriveFile, Download, Visibility, Close, OpenInNew, CreateNewFolder, Search, FolderOpen, Folder, ExpandMore, ExpandLess, MergeType, ArrowUpward, ArrowDownward, Edit, DriveFileMove } from '@mui/icons-material';
+import { Add, Delete, InsertDriveFile, Download, Visibility, Close, OpenInNew, CreateNewFolder, Search, FolderOpen, Folder, ExpandMore, ExpandLess, MergeType, ArrowUpward, ArrowDownward, Edit, DriveFileMove, AccountTree } from '@mui/icons-material';
 import TextField from '@mui/material/TextField';
 import Collapse from '@mui/material/Collapse';
 import { documentService } from '../../documents';
 import correspondenceService from '../services/correspondenceService';
+import proceedingService from '../../proceedings/services/proceedingService';
 import { useAuth } from '../../../hooks/useAuth';
 import DocumentEditForm from '../../documents/components/DocumentEditForm';
 
@@ -112,10 +113,6 @@ const PreviewModal = ({ doc, url, open, onClose, onDownload }) => {
 const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
   const { user } = useAuth();
   const companyId = propCompanyId || user?.companyId;
-  console.log('Usuario en DocumentSection:', user);
-  console.log('CompanyId del usuario:', user?.companyId);
-  console.log('CompanyId de la prop:', propCompanyId);
-  console.log('CompanyId final a usar:', companyId);
   const [documents, setDocuments] = useState([]);
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +152,17 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
   const [moveMode, setMoveMode] = useState(false);
   const [batchSelectedDocs, setBatchSelectedDocs] = useState([]);
   const [batchMoveDialogOpen, setBatchMoveDialogOpen] = useState(false);
+
+  // Link to proceeding mode
+  const [linkMode, setLinkMode] = useState(false);
+  const [linkSelectedDocs, setLinkSelectedDocs] = useState([]);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [proceedingSearch, setProceedingSearch] = useState('');
+  const [proceedingResults, setProceedingResults] = useState([]);
+  const [proceedingSearchLoading, setProceedingSearchLoading] = useState(false);
+  const [selectedProceeding, setSelectedProceeding] = useState(null);
+  const [linking, setLinking] = useState(false);
+  const proceedingSearchTimeout = useRef(null);
 
   useEffect(() => {
     loadDocuments();
@@ -263,8 +271,6 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
     const { key, originalName } = uploadResponse.data;
     
     const companyIdToUse = parseInt(companyId);
-    console.log('CompanyId en uploadSingleFile:', companyId);
-    console.log('CompanyId parseado:', companyIdToUse);
     
     if (!companyIdToUse || isNaN(companyIdToUse)) {
       throw new Error('CompanyId inválido o no disponible');
@@ -345,10 +351,7 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
   };
 
   const handleEdit = (doc) => {
-    console.log('Documento original:', doc);
-    console.log('CompanyId a usar:', companyId);
     const docWithCompany = { ...doc, companyId: companyId || doc.companyId };
-    console.log('Documento con companyId:', docWithCompany);
     setEditDoc(docWithCompany);
     setEditDialogOpen(true);
   };
@@ -376,6 +379,91 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
   const handleCancelMoveMode = () => {
     setMoveMode(false);
     setBatchSelectedDocs([]);
+  };
+
+  // ── Link to proceeding handlers ───────────────────────────────────────────
+
+  const handleToggleLinkSelectDoc = (doc) => {
+    setLinkSelectedDocs(prev => {
+      const exists = prev.find(d => d.id === doc.id);
+      if (exists) return prev.filter(d => d.id !== doc.id);
+      return [...prev, doc];
+    });
+  };
+
+  const handleCancelLinkMode = () => {
+    setLinkMode(false);
+    setLinkSelectedDocs([]);
+  };
+
+  const handleOpenLinkDialog = () => {
+    if (linkSelectedDocs.length === 0) {
+      showSnackbar('Selecciona al menos un documento para asociar', 'warning');
+      return;
+    }
+    setProceedingSearch('');
+    setProceedingResults([]);
+    setSelectedProceeding(null);
+    setLinkDialogOpen(true);
+  };
+
+  const handleProceedingSearchChange = async (value) => {
+    setProceedingSearch(value);
+    setSelectedProceeding(null);
+    clearTimeout(proceedingSearchTimeout.current);
+    if (value.trim().length < 2) {
+      setProceedingResults([]);
+      return;
+    }
+    proceedingSearchTimeout.current = setTimeout(async () => {
+      try {
+        setProceedingSearchLoading(true);
+        const response = await proceedingService.getAll({ search: value.trim(), limit: 10 });
+        setProceedingResults(response.data || []);
+      } catch {
+        setProceedingResults([]);
+      } finally {
+        setProceedingSearchLoading(false);
+      }
+    }, 350);
+  };
+
+  const handleConfirmLink = async () => {
+    if (!selectedProceeding) {
+      showSnackbar('Selecciona un expediente', 'warning');
+      return;
+    }
+    try {
+      setLinking(true);
+      let successCount = 0;
+      let errorCount = 0;
+      for (const doc of linkSelectedDocs) {
+        try {
+          await proceedingService.attachDocument(selectedProceeding.id, doc.id);
+          successCount++;
+        } catch (err) {
+          // Ignore "already linked" errors
+          if (err.response?.data?.message?.includes('ya está vinculado')) {
+            successCount++;
+          } else {
+            errorCount++;
+            console.error('Error linking doc', doc.id, err);
+          }
+        }
+      }
+      setLinkDialogOpen(false);
+      setLinkMode(false);
+      setLinkSelectedDocs([]);
+      if (errorCount === 0) {
+        showSnackbar(`${successCount} documento(s) asociado(s) al expediente "${selectedProceeding.name}" exitosamente`);
+      } else {
+        showSnackbar(`${successCount} asociado(s), ${errorCount} con error`, 'warning');
+      }
+    } catch (err) {
+      showSnackbar('Error al asociar los documentos', 'error');
+    } finally {
+      setLinking(false);
+    }
   };
 
   const handleBatchMoveDocument = async (targetFolderId) => {
@@ -571,7 +659,7 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
       <Table size="small">
         <TableHead>
           <TableRow sx={{ bgcolor: '#fafafa' }}>
-            {(mergeMode || moveMode) && <TableCell sx={{ width: 50 }}>SELECCIONAR</TableCell>}
+            {(mergeMode || moveMode || linkMode) && <TableCell sx={{ width: 50 }}>SELECCIONAR</TableCell>}
             <TableCell>NOMBRE</TableCell>
             <TableCell sx={{ width: 90 }}>MEDIO</TableCell>
             <TableCell sx={{ width: 110 }}>FECHA</TableCell>
@@ -581,7 +669,7 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
         <TableBody>
           {docs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={(mergeMode || moveMode) ? 5 : 4} align="center" sx={{ color: 'text.secondary', py: 2 }}>
+              <TableCell colSpan={(mergeMode || moveMode || linkMode) ? 5 : 4} align="center" sx={{ color: 'text.secondary', py: 2 }}>
                 {emptyMsg}
               </TableCell>
             </TableRow>
@@ -589,13 +677,22 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
             docs.map((doc) => {
               const isSelected = selectedDocs.find(d => d.id === doc.id);
               const canSelect = isPDF(doc);
+              const isLinkSelected = !!linkSelectedDocs.find(d => d.id === doc.id);
               return (
-                <TableRow key={doc.id} hover selected={!!isSelected}>
-                  {(mergeMode || moveMode) && (
+                <TableRow key={doc.id} hover selected={linkMode ? isLinkSelected : !!isSelected}>
+                  {(mergeMode || moveMode || linkMode) && (
                     <TableCell>
                       <Checkbox
-                        checked={moveMode ? !!batchSelectedDocs.find(d => d.id === doc.id) : !!isSelected}
-                        onChange={() => moveMode ? handleToggleBatchSelectDoc(doc) : handleToggleSelectDoc(doc)}
+                        checked={
+                          linkMode ? isLinkSelected :
+                          moveMode ? !!batchSelectedDocs.find(d => d.id === doc.id) :
+                          !!isSelected
+                        }
+                        onChange={() =>
+                          linkMode ? handleToggleLinkSelectDoc(doc) :
+                          moveMode ? handleToggleBatchSelectDoc(doc) :
+                          handleToggleSelectDoc(doc)
+                        }
                         disabled={mergeMode && !canSelect}
                         size="small"
                       />
@@ -671,11 +768,11 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5" component="h2">
           Documentos de la Correspondencia
-          {(mergeMode || moveMode) && (
+          {(mergeMode || moveMode || linkMode) && (
             <Chip
-              label={`${mergeMode ? selectedDocs.length : batchSelectedDocs.length} seleccionados`}
+              label={`${mergeMode ? selectedDocs.length : moveMode ? batchSelectedDocs.length : linkSelectedDocs.length} seleccionados`}
               size="small"
-              color="primary"
+              color={linkMode ? 'secondary' : 'primary'}
               sx={{ ml: 2 }}
             />
           )}
@@ -683,11 +780,7 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
         <Box sx={{ display: 'flex', gap: 1 }}>
           {mergeMode ? (
             <>
-              <Button
-                variant="outlined"
-                onClick={handleCancelMerge}
-                size="small"
-              >
+              <Button variant="outlined" onClick={handleCancelMerge} size="small">
                 Cancelar
               </Button>
               <Button
@@ -715,8 +808,33 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
                 Mover ({batchSelectedDocs.length})
               </Button>
             </>
+          ) : linkMode ? (
+            <>
+              <Button variant="outlined" onClick={handleCancelLinkMode} size="small">
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AccountTree />}
+                onClick={handleOpenLinkDialog}
+                disabled={linkSelectedDocs.length === 0}
+                size="small"
+              >
+                Asociar ({linkSelectedDocs.length})
+              </Button>
+            </>
           ) : (
             <>
+              <Button
+                variant="outlined"
+                startIcon={<AccountTree />}
+                onClick={() => setLinkMode(true)}
+                size="small"
+                color="secondary"
+              >
+                Asociar a Expediente
+              </Button>
               <Button
                 variant="outlined"
                 startIcon={<MergeType />}
@@ -1051,6 +1169,116 @@ const DocumentSection = ({ correspondenceId, companyId: propCompanyId }) => {
           onSave={handleSaveEdit}
         />
       )}
+
+      {/* Link to Proceeding Dialog */}
+      <Dialog open={linkDialogOpen} onClose={() => !linking && setLinkDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AccountTree color="secondary" />
+          Asociar {linkSelectedDocs.length} documento(s) a un Expediente
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Los documentos quedarán vinculados tanto a esta correspondencia como al expediente seleccionado.
+          </Typography>
+
+          {/* Docs selected */}
+          <Box sx={{ mb: 2, p: 1.5, bgcolor: '#F8FAFC', borderRadius: 1, border: '1px solid #E2E8F0' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+              DOCUMENTOS A ASOCIAR
+            </Typography>
+            {linkSelectedDocs.map(doc => (
+              <Box key={doc.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, py: 0.25 }}>
+                <InsertDriveFile sx={{ fontSize: 14, color: 'primary.main' }} />
+                <Typography variant="body2">{doc.file_original_name || doc.name}</Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Proceeding search */}
+          <TextField
+            fullWidth
+            label="Buscar expediente"
+            placeholder="Escribe el nombre o código del expediente..."
+            value={proceedingSearch}
+            onChange={(e) => handleProceedingSearchChange(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <Box sx={{ mr: 0.5, display: 'flex', alignItems: 'center' }}>
+                  {proceedingSearchLoading
+                    ? <CircularProgress size={16} />
+                    : <Search sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  }
+                </Box>
+              ),
+            }}
+            sx={{ mb: 1 }}
+            autoFocus
+          />
+
+          {/* Results list */}
+          {proceedingResults.length > 0 && (
+            <List dense sx={{ border: '1px solid #E2E8F0', borderRadius: 1, maxHeight: 220, overflowY: 'auto' }}>
+              {proceedingResults.map(p => (
+                <ListItem
+                  key={p.id}
+                  onClick={() => setSelectedProceeding(p)}
+                  sx={{
+                    cursor: 'pointer',
+                    bgcolor: selectedProceeding?.id === p.id ? 'secondary.50' : 'transparent',
+                    borderLeft: selectedProceeding?.id === p.id ? '3px solid' : '3px solid transparent',
+                    borderLeftColor: selectedProceeding?.id === p.id ? 'secondary.main' : 'transparent',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" fontWeight={selectedProceeding?.id === p.id ? 700 : 400}>
+                          {p.name}
+                        </Typography>
+                        <Chip label={p.code} size="small" sx={{ height: 18, fontSize: '0.65rem' }} />
+                      </Box>
+                    }
+                    secondary={p.company?.name}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+
+          {proceedingSearch.length >= 2 && !proceedingSearchLoading && proceedingResults.length === 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+              No se encontraron expedientes con "{proceedingSearch}"
+            </Typography>
+          )}
+
+          {selectedProceeding && (
+            <Box sx={{ mt: 2, p: 1.5, bgcolor: '#F0FDF4', borderRadius: 1, border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AccountTree sx={{ color: 'success.main', fontSize: 18 }} />
+              <Box>
+                <Typography variant="body2" fontWeight={600} color="success.dark">
+                  Expediente seleccionado: {selectedProceeding.name}
+                </Typography>
+                <Typography variant="caption" color="success.main">{selectedProceeding.code}</Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLinkDialogOpen(false)} disabled={linking}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleConfirmLink}
+            disabled={!selectedProceeding || linking}
+            startIcon={linking ? <CircularProgress size={16} color="inherit" /> : <AccountTree />}
+          >
+            {linking ? 'Asociando...' : `Asociar a "${selectedProceeding?.name || '...'}"`}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

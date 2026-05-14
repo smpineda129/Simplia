@@ -183,6 +183,15 @@ class CorrespondenceController {
     }
   }
 
+  async attachDocument(req, res) {
+    try {
+      const record = await correspondenceService.attachDocument(req.params.id, req.body.documentId);
+      res.status(201).json({ success: true, data: record });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
   async moveDocumentToFolder(req, res) {
     try {
       await correspondenceService.moveDocumentToFolder(req.params.id, req.params.documentId, req.body.folderId);

@@ -5,7 +5,7 @@ import ExcelJS from 'exceljs';
 
 class ProceedingService {
   async getAll(filters = {}) {
-    const { search, companyId, retentionLineId, retentionId, page = 1, limit = 10 } = filters;
+    const { search, companyId, retentionLineId, retentionId, page = 1, limit = 10, startDate, endDate } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
@@ -13,6 +13,12 @@ class ProceedingService {
       ...(companyId && { companyId: parseInt(companyId) }),
       ...(retentionLineId && { retentionLineId: parseInt(retentionLineId) }),
       ...(retentionId && { retentionLine: { is: { retentionId: parseInt(retentionId) } } }),
+      ...((startDate || endDate) && {
+        startDate: {
+          ...(startDate && { gte: new Date(startDate) }),
+          ...(endDate && { lte: new Date(endDate + 'T23:59:59') }),
+        },
+      }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
@@ -173,27 +179,30 @@ class ProceedingService {
   async create(data) {
     // Generar código automáticamente
     const companyId = parseInt(data.companyId);
-    
-    // Obtener el último expediente de la empresa para generar el código secuencial
+
+    // Generar código: formato "EXP-{año}-{secuencial}"
+    const year = new Date().getFullYear();
+    const yearPrefix = `EXP-${year}-`;
+
+    // Buscar el último expediente del año actual para obtener el siguiente secuencial
     const lastProceeding = await prisma.proceeding.findFirst({
-      where: { companyId },
+      where: {
+        companyId,
+        code: { startsWith: yearPrefix },
+      },
       orderBy: { id: 'desc' },
       select: { code: true },
     });
 
-    // Generar código: formato "EXP-{año}-{secuencial}"
-    const year = new Date().getFullYear();
     let sequential = 1;
-    
     if (lastProceeding?.code) {
-      // Extraer el número secuencial del último código
       const match = lastProceeding.code.match(/EXP-\d{4}-(\d+)/);
       if (match) {
         sequential = parseInt(match[1]) + 1;
       }
     }
-    
-    const generatedCode = `EXP-${year}-${sequential.toString().padStart(4, '0')}`;
+
+    const generatedCode = `${yearPrefix}${sequential.toString().padStart(4, '0')}`;
 
     const proceeding = await prisma.proceeding.create({
       data: {

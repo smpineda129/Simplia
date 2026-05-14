@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -19,11 +19,13 @@ import ProceedingModalForm from '../components/ProceedingModalForm';
 import LoadingLogo from '../../../components/LoadingLogo';
 import proceedingService from '../services/proceedingService';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { useAuth } from '../../../hooks/useAuth';
 import { companyService } from '../../companies';
 import { retentionService } from '../../retentions';
 
 const ProceedingList = () => {
   const { hasPermission } = usePermissions();
+  const { user } = useAuth();
   const [proceedings, setProceedings] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [retentions, setRetentions] = useState([]);
@@ -51,8 +53,14 @@ const ProceedingList = () => {
   }, [selectedCompany]);
 
   useEffect(() => {
+    if (user?.companyId && !selectedCompany) {
+      setSelectedCompany(user.companyId.toString());
+    }
+  }, [user?.companyId]);
+
+  useEffect(() => {
     loadProceedings();
-  }, [page, search, selectedCompany]);
+  }, [page, search, selectedCompany, startDate, endDate]);
 
   const loadCompanies = async () => {
     try {
@@ -80,6 +88,8 @@ const ProceedingList = () => {
         companyId: selectedCompany,
         page,
         limit: 10,
+        startDate,
+        endDate,
       });
       setProceedings(response.data);
       setPagination(response.pagination);
@@ -141,6 +151,17 @@ const ProceedingList = () => {
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
+
+  // Polling: silently refresh every 30 seconds when no modal is open
+  const pollingRef = useRef(null);
+  useEffect(() => {
+    pollingRef.current = setInterval(() => {
+      if (!openModal) {
+        loadProceedings();
+      }
+    }, 30000);
+    return () => clearInterval(pollingRef.current);
+  }, [search, selectedCompany, page, startDate, endDate, openModal]);
 
   return (
     <Box>

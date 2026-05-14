@@ -3,14 +3,16 @@ import proceedingService from './proceeding.service.js';
 class ProceedingController {
   async getAll(req, res) {
     try {
-      const { search, retentionLineId, retentionId, page, limit } = req.query;
+      const { search, retentionLineId, retentionId, page, limit, startDate, endDate } = req.query;
       let { companyId } = req.query;
 
-      if (req.user.companyId) {
+      // Only force companyId for users with a fixed company (not owners/super_admins)
+      const isPrivileged = !req.user.companyId;
+      if (!isPrivileged) {
         companyId = req.user.companyId;
       }
 
-      const result = await proceedingService.getAll({ search, companyId, retentionLineId, retentionId, page, limit });
+      const result = await proceedingService.getAll({ search, companyId, retentionLineId, retentionId, page, limit, startDate, endDate });
 
       res.json({
         success: true,

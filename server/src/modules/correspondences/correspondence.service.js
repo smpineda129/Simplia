@@ -21,16 +21,16 @@ class CorrespondenceService {
     const year = now.getFullYear();
     const dateStr = `${month}${day}${year}`;
 
-    const correspondenceType = await prisma.correspondenceType.findUnique({
-      where: { id: BigInt(correspondenceTypeId) },
-      select: { name: true },
-    });
-
-    if (!correspondenceType) {
-      throw new Error('Tipo de correspondencia no encontrado');
+    let prefix = 'GE';
+    if (correspondenceTypeId) {
+      const correspondenceType = await prisma.correspondenceType.findUnique({
+        where: { id: BigInt(correspondenceTypeId) },
+        select: { name: true },
+      });
+      if (correspondenceType) {
+        prefix = correspondenceType.name.substring(0, 2).toUpperCase();
+      }
     }
-
-    const prefix = correspondenceType.name.substring(0, 2).toUpperCase();
 
     const lastCorrespondence = await prisma.correspondence.findFirst({
       where: {
@@ -297,6 +297,66 @@ class CorrespondenceService {
         company: true,
       },
     });
+
+    // Send confirmation email to sender
+    try {
+      let senderEmail = null;
+      let senderName = '';
+
+      if (data.user_type === 'external' && data.comments) {
+        try {
+          const parsed = typeof data.comments === 'string' ? JSON.parse(data.comments) : data.comments;
+          senderEmail = parsed?.senderEmail;
+          senderName = parsed?.senderName || '';
+        } catch (_) {}
+      } else if (data.user_type === 'internal' && data.user_id) {
+        const senderUser = await prisma.user.findUnique({
+          where: { id: BigInt(data.user_id) },
+          select: { name: true, email: true },
+        });
+        senderEmail = senderUser?.email;
+        senderName = senderUser?.name || '';
+      }
+
+      if (senderEmail) {
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const emailHtml = `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <h2 style="color:#1a237e;">Confirmación de Correspondencia Recibida</h2>
+            <p>Estimado/a ${senderName || 'Usuario'},</p>
+            <p>Su correspondencia ha sido registrada exitosamente en el sistema.</p>
+            <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+              <tr>
+                <td style="padding:8px;font-weight:bold;background:#f5f5f5;border:1px solid #ddd;">Radicado:</td>
+                <td style="padding:8px;border:1px solid #ddd;">${correspondence.in_settled}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px;font-weight:bold;background:#f5f5f5;border:1px solid #ddd;">Título:</td>
+                <td style="padding:8px;border:1px solid #ddd;">${correspondence.title}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px;font-weight:bold;background:#f5f5f5;border:1px solid #ddd;">Empresa:</td>
+                <td style="padding:8px;border:1px solid #ddd;">${correspondence.company?.name || ''}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px;font-weight:bold;background:#f5f5f5;border:1px solid #ddd;">Fecha:</td>
+                <td style="padding:8px;border:1px solid #ddd;">${new Date().toLocaleDateString('es-ES')}</td>
+              </tr>
+            </table>
+            <p>Su correspondencia está siendo procesada por nuestro equipo.</p>
+            <p style="color:#666;font-size:12px;">Este es un mensaje automático, por favor no responda a este correo.</p>
+          </div>
+        `;
+        await emailService.send({
+          to: senderEmail,
+          subject: `Correspondencia registrada: ${correspondence.in_settled}`,
+          html: emailHtml,
+        });
+        console.log(`[CorrespondenceService] ✅ Confirmation email sent to ${senderEmail}`);
+      }
+    } catch (emailErr) {
+      console.error('[CorrespondenceService] ❌ Error sending confirmation email:', emailErr);
+    }
 
     if (data.assignedUserId) {
       try {
@@ -654,10 +714,6 @@ class CorrespondenceService {
       throw new Error('La correspondencia ya está cerrada');
     }
 
-    if (!correspondence.correspondenceTypeId) {
-      throw new Error('La correspondencia no tiene un tipo asociado');
-    }
-
     const outgoingRadicado = await this.generateRadicado(correspondence.correspondenceTypeId);
 
     const updated = await prisma.correspondence.update({
@@ -986,6 +1042,28 @@ class CorrespondenceService {
     ]);
 
     return { total, registered, assigned, closed };
+  }
+
+  // ─── Documents ────────────────────────────────────────────────────────────
+
+  async attachDocument(correspondenceId, documentId) {
+    const existing = await prisma.correspondence_document.findFirst({
+      where: {
+        correspondence_id: parseInt(correspondenceId),
+        document_id: parseInt(documentId),
+        deleted_at: null,
+      },
+    });
+    if (existing) throw new Error('El documento ya está vinculado a esta correspondencia');
+
+    return prisma.correspondence_document.create({
+      data: {
+        correspondence_id: parseInt(correspondenceId),
+        document_id: parseInt(documentId),
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
   }
 
   // ─── Document Folders ─────────────────────────────────────────────────────

@@ -55,6 +55,10 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
   useEffect(() => {
     if (open) {
       resetForm();
+      // Force reload users since resetForm clears userOptions but effectiveCompanyId/userType didn't change
+      if (effectiveCompanyId && userType) {
+        loadUsers();
+      }
     }
   }, [open]);
 
@@ -111,7 +115,6 @@ const CorrespondenceModalForm = ({ open, onClose, onSave, correspondence, compan
     }
     setComments(commentsValue);
     setError('');
-    setUserOptions([]);
     setAreaUsers([]);
     setUploadedFiles([]);
   };

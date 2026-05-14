@@ -17,6 +17,11 @@ import {
   MenuItem,
   Avatar,
   Tooltip,
+  TextField,
+  InputAdornment,
+  Paper,
+  Chip,
+  ClickAwayListener,
 } from '@mui/material';
 import {
   Dashboard,
@@ -37,12 +42,14 @@ import {
   Assignment,
   Storage,
   KeyboardArrowDown,
+  Search as SearchIcon,
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import { NotificationPanel } from '../modules/notifications';
 import ImpersonationBanner from '../components/ImpersonationBanner';
-import { getAvatarConfig } from '../utils/avatarUtils';
+import { getAvatarConfig, isAvatarUrl } from '../utils/avatarUtils';
 
 const drawerWidth = 256;
 
@@ -66,6 +73,12 @@ const MainLayout = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
@@ -84,6 +97,47 @@ const MainLayout = () => {
   const handleLogout = () => {
     handleMenuClose();
     logout();
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    clearTimeout(searchTimeoutRef.current);
+    if (value.length < 2) {
+      setSearchResults([]);
+      setSearchOpen(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+        const response = await axiosInstance.get('/search', { params: { q: value } });
+        setSearchResults(response.data?.data || []);
+        setSearchOpen(true);
+      } catch (err) {
+        console.error('Search error:', err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
+  };
+
+  const handleSearchSelect = (item) => {
+    setSearchQuery('');
+    setSearchOpen(false);
+    setSearchResults([]);
+    if (item.type === 'correspondence') navigate(`/correspondences/${item.id}`);
+    else if (item.type === 'proceeding') navigate(`/proceedings/${item.id}`);
+    else if (item.type === 'document') navigate('/documents/dashboard');
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
   };
 
   const hasPermission = (permission) => {
@@ -266,8 +320,9 @@ const MainLayout = () => {
         }}
       >
         {(() => {
-          const avatarConfig = getAvatarConfig(user?.avatar);
-          const AvatarIcon = avatarConfig.icon;
+          const avatarIsUrl = isAvatarUrl(user?.avatar);
+          const avatarConfig = avatarIsUrl ? null : getAvatarConfig(user?.avatar);
+          const AvatarIcon = avatarConfig?.icon;
           return (
             <Box
               sx={{
@@ -282,8 +337,8 @@ const MainLayout = () => {
               }}
               onClick={handleMenuOpen}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: avatarConfig.color, flexShrink: 0 }}>
-                <AvatarIcon sx={{ fontSize: 18 }} />
+              <Avatar src={avatarIsUrl ? user.avatar : undefined} sx={{ width: 32, height: 32, bgcolor: avatarIsUrl ? 'grey.500' : avatarConfig?.color, flexShrink: 0 }}>
+                {!avatarIsUrl && AvatarIcon && <AvatarIcon sx={{ fontSize: 18 }} />}
               </Avatar>
               <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                 <Typography sx={{ color: '#E2E8F0', fontWeight: 600, fontSize: '0.8125rem', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -301,8 +356,9 @@ const MainLayout = () => {
     </Box>
   );
 
-  const avatarConfig = getAvatarConfig(user?.avatar);
-  const AvatarIcon = avatarConfig.icon;
+  const avatarIsUrl = isAvatarUrl(user?.avatar);
+  const avatarConfig = avatarIsUrl ? null : getAvatarConfig(user?.avatar);
+  const AvatarIcon = avatarConfig?.icon;
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -328,7 +384,88 @@ const MainLayout = () => {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 2, position: 'relative' }}>
+            <ClickAwayListener onClickAway={() => setSearchOpen(false)}>
+              <Box sx={{ position: 'relative', width: '100%', maxWidth: 480 }}>
+                <TextField
+                  ref={searchRef}
+                  size="small"
+                  placeholder="Buscar correspondencias, expedientes, documentos..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleSearchKeyDown}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    width: '100%',
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: '#F8FAFC',
+                      borderRadius: 2,
+                      fontSize: '0.875rem',
+                      '& fieldset': { borderColor: '#E2E8F0' },
+                      '&:hover fieldset': { borderColor: '#CBD5E1' },
+                      '&.Mui-focused fieldset': { borderColor: '#2563EB' },
+                    },
+                  }}
+                />
+                {searchOpen && searchResults.length > 0 && (
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      mt: 0.5,
+                      zIndex: 9999,
+                      maxHeight: 400,
+                      overflowY: 'auto',
+                      borderRadius: 2,
+                      border: '1px solid #E2E8F0',
+                    }}
+                  >
+                    {searchResults.map((item, idx) => (
+                      <Box
+                        key={`${item.type}-${item.id}-${idx}`}
+                        onClick={() => handleSearchSelect(item)}
+                        sx={{
+                          px: 2,
+                          py: 1.25,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          '&:hover': { bgcolor: '#F8FAFC' },
+                          borderBottom: idx < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
+                        }}
+                      >
+                        <Chip
+                          label={item.type === 'correspondence' ? 'Corresp.' : item.type === 'proceeding' ? 'Expediente' : 'Documento'}
+                          size="small"
+                          sx={{
+                            fontSize: '0.65rem',
+                            height: 20,
+                            bgcolor: item.type === 'correspondence' ? '#EFF6FF' : item.type === 'proceeding' ? '#F0FDF4' : '#FFF7ED',
+                            color: item.type === 'correspondence' ? '#2563EB' : item.type === 'proceeding' ? '#16A34A' : '#EA580C',
+                            border: 'none',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Typography sx={{ fontSize: '0.8375rem', color: '#1E293B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Paper>
+                )}
+              </Box>
+            </ClickAwayListener>
+          </Box>
 
           {/* Right side: Notifications + User */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -353,8 +490,8 @@ const MainLayout = () => {
                   },
                 }}
               >
-                <Avatar sx={{ width: 30, height: 30, bgcolor: avatarConfig.color }}>
-                  <AvatarIcon sx={{ fontSize: 17 }} />
+                <Avatar src={avatarIsUrl ? user?.avatar : undefined} sx={{ width: 30, height: 30, bgcolor: avatarIsUrl ? 'grey.300' : avatarConfig?.color }}>
+                  {!avatarIsUrl && AvatarIcon && <AvatarIcon sx={{ fontSize: 17 }} />}
                 </Avatar>
                 <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'left' }}>
                   <Typography sx={{ fontWeight: 600, fontSize: '0.8125rem', color: '#1E293B', lineHeight: 1.2 }}>
@@ -397,8 +534,8 @@ const MainLayout = () => {
                 onClick={handleProfile}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Avatar sx={{ width: 36, height: 36, bgcolor: avatarConfig.color }}>
-                    <AvatarIcon sx={{ fontSize: 20 }} />
+                  <Avatar src={avatarIsUrl ? user?.avatar : undefined} sx={{ width: 36, height: 36, bgcolor: avatarIsUrl ? 'grey.300' : avatarConfig?.color }}>
+                    {!avatarIsUrl && AvatarIcon && <AvatarIcon sx={{ fontSize: 20 }} />}
                   </Avatar>
                   <Box>
                     <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#1E293B' }}>
