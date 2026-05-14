@@ -274,7 +274,6 @@ model Entity {
   createdAt         DateTime?           @map("created_at") @db.Timestamp(0)
   updatedAt         DateTime?           @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt         DateTime?           @map("deleted_at") @db.Timestamp(0)
-  entity_categories entity_categories?  @relation(fields: [entityCategoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   entity_proceeding entity_proceeding[]
 
   @@map("entities")
@@ -783,7 +782,6 @@ model entity_categories {
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
-  entities   Entity[]
   companies  Company   @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
